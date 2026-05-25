@@ -1,0 +1,21 @@
+services:
+
+# Telemetry TimescaleDB
+  timescaledb:
+    container_name: telemetry-timescaledb
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-db} 
+    ports:
+      - "5433:5432"
+    volumes:
+    # store data in a named volume that survives container restarts
+      - saved_timescaledb_data:/var/lib/postgresql/data
+    # run initialization scripts on container first startup
+      - ./database/initialization:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+
+volumes:
+  saved_timescaledb_data:
