@@ -3,10 +3,10 @@
 apiVersion: 1
 
 datasources:
-  - name: Car Telemetry TimescaleDB
+  - name: Car Telemetry PostgreSQL
     type: postgres
-    uid: timescaledbUID
-    url: timescaledb:5432
+    uid: postgresUID
+    url: postgresdb:5432
     user: $POSTGRES_USER
     jsonData:
       database: $POSTGRES_DB

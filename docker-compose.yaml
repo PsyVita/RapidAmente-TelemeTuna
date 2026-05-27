@@ -1,9 +1,9 @@
 services:
 
-# Telemetry TimescaleDB
-  timescaledb:
-    container_name: telemetry-timescaledb
-    image: timescale/timescaledb:latest-pg16
+  # PostgreSQL 
+  postgresdb:
+    container_name: telemetry-postgresdb
+    image: postgres:16
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
@@ -12,11 +12,10 @@ services:
       - "5433:5432"
     volumes:
       # store data in a named volume that survives container restarts
-      - saved_timescaledb_data:/var/lib/postgresql/data
-      # run initialization scripts on container first startup
-      - ./database/initialization:/docker-entrypoint-initdb.d:ro
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  # Grafana
   grafana:
     container_name: telemetry-grafana
     image: grafana/grafana:latest
@@ -25,7 +24,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      # set environment variables for Grafana to connect to TimescaleDB datasource
+      # set environment variables for Grafana to connect to PostgreSQL datasource
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-db} 
@@ -34,10 +33,30 @@ services:
       - grafana_data:/var/lib/grafana
       # provision Grafana with pre-configured datasources and dashboards
       - ./grafana/provisioning:/etc/grafana/provisioning
+    # ensure Grafana starts after PostgreSQL is ready to accept connections
     depends_on:
-      - timescaledb
+      - postgresdb
     restart: unless-stopped
 
+  # Flyway
+  flyway:
+    image: flyway/flyway:latest
+    # Tells Flyway to run the database migrations when the container starts. 
+    command: migrate
+    environment:
+      # Tells Flyway where the db is located and how to connect to it. 
+      FLYWAY_URL: jdbc:postgresql://postgresdb:5432/${POSTGRES_DB:-db}
+      FLYWAY_USER: ${POSTGRES_USER:-user}
+      FLYWAY_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      # FLYWAY_CONNECT_RETRIES is set to 10 to allow Flyway to retry the connection to the PostgreSQL database multiple times in case the database is not yet ready when Flyway starts. 
+      FLYWAY_CONNECT_RETRIES: "10"
+    volumes:
+      # Mount the local directory containing the SQL migration scripts to the Flyway container. 
+      - ./database/migrations:/flyway/sql
+    # Ensure that Flyway starts after the PostgreSQL database is ready to accept connections.
+    depends_on:
+      - postgresdb
+
 volumes:
-  saved_timescaledb_data:
+  postgres_data:
   grafana_data:
