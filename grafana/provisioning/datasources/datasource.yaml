@@ -1,0 +1,22 @@
+# This file is read by Grafana to provision the data source for TimescaleDB. It uses environment variables defined in the .env file to set up the connection details for the PostgreSQL database. The data source is configured to be the default one for Grafana, and it specifies that it is a TimescaleDB instance by setting the appropriate jsonData fields.
+
+apiVersion: 1
+
+datasources:
+  - name: Car Telemetry TimescaleDB
+    type: postgres
+    uid: timescaledbUID
+    url: timescaledb:5432
+    user: $POSTGRES_USER
+    jsonData:
+      database: $POSTGRES_DB
+      # no encryption needed for a local container-to-container link
+      sslmode: disable
+      postgresVersion: 1600
+      # set this to true to enable TimescaleDB-specific features in Grafana, such as time-series optimizations and support for hypertables
+      timescaledb: true
+    # secureJsonData is used to store sensitive information like passwords, which are not exposed in the Grafana UI or logs. The password is passed as an environment variable from the .env file, ensuring that it is not hardcoded in the configuration file.
+    secureJsonData:
+      password: $POSTGRES_PASSWORD
+    isDefault: true
+      

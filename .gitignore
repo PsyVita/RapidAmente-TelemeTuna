@@ -1,7 +1,13 @@
 # Files to ignore when pushing to git repository.
 
-# Security
+# Secrets
 .env
+.env.*
+!.env.example
 
-# Miscellaneous files
-processDocumentation.md
+# Node libraries — rebuildable with `npm install` from package.json
+node_modules/
+
+# Editor / OS junk
+.vscode/
+.DS_Store

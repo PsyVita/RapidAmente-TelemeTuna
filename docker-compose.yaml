@@ -11,11 +11,33 @@ services:
     ports:
       - "5433:5432"
     volumes:
-    # store data in a named volume that survives container restarts
+      # store data in a named volume that survives container restarts
       - saved_timescaledb_data:/var/lib/postgresql/data
-    # run initialization scripts on container first startup
+      # run initialization scripts on container first startup
       - ./database/initialization:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+
+  grafana:
+    container_name: telemetry-grafana
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      # set environment variables for Grafana to connect to TimescaleDB datasource
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-db} 
+    volumes:
+      # store data in a named volume that survives container restarts
+      - grafana_data:/var/lib/grafana
+      # provision Grafana with pre-configured datasources and dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - timescaledb
     restart: unless-stopped
 
 volumes:
   saved_timescaledb_data:
+  grafana_data:
