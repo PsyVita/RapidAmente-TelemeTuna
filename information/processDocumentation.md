@@ -50,8 +50,14 @@ Stage 5 (Flyway)
 3. Test run the docker. Flyway should only appear for migration check then exit.  
     docker compose logs flyway
     docker exec -it telemetry-postgresdb psql -U <POSTGRES_USER> -d <POSTGRES_DB> -c "\dt"
+    **telemetry_records = our table **flyway_schema_history = flyway's migration history
 
+Stage 6 (Node-RED)
+1. Added Node-RED section into docker-compose.yaml.
+2. Code on Node-RED. (parsing, converting raw to real data, and postgresql node.)
+3. Change directory of Node-RED so the file is saved in the repo.
 
-
-
+Stage 7 (Connecting the Whole System Together)
+1. Run docker exec -it <your_container_name> psql -U <your_username> -d <your_database_name> to type SELECT count(*) FROM telemetry_records; and SELECT * FROM telemetry_records ORDER BY time DESC LIMIT 5; (check that it works)
+2. Open Grafana to start building dashboard.
 

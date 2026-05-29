@@ -8,6 +8,18 @@
 # Node libraries — rebuildable with `npm install` from package.json
 node_modules/
 
+# Node-RED
+nodered/.config*
+nodered/.sessions*
+nodered/lib/
+nodered/node_modules/
+nodered/flows_cred.json
+nodered/settings.js
+nodered/package.json
+nodered/package-lock.json
+nodered/.flows.json.backup
+nodered/.npm/
+
 # Editor / OS junk
 .vscode/
 .DS_Store

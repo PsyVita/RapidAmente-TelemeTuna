@@ -53,9 +53,22 @@ services:
     volumes:
       # Mount the local directory containing the SQL migration scripts to the Flyway container. 
       - ./database/migrations:/flyway/sql
-    # Ensure that Flyway starts after the PostgreSQL database is ready to accept connections.
     depends_on:
       - postgresdb
+
+  # Node-RED
+  node-red:
+    container_name: telemetry-nodered
+    image: nodered/node-red:latest
+    ports:
+      - "1880:1880"
+    environment:
+      TZ: Asia/Bangkok
+    volumes:
+      - ./nodered:/data
+    depends_on:
+      - postgresdb
+    restart: unless-stopped
 
 volumes:
   postgres_data:

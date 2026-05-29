@@ -1,0 +1,323 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "pg-config",
+        "type": "postgreSQLConfig",
+        "name": "Telemetry DB",
+        "host": "postgresdb",
+        "hostFieldType": "str",
+        "port": "5432",
+        "portFieldType": "num",
+        "database": "telemetry",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "node-red-telemetry",
+        "applicationNameType": "str",
+        "max": "10",
+        "maxFieldType": "num",
+        "idle": "1000",
+        "idleFieldType": "num",
+        "connectionTimeout": "10000",
+        "connectionTimeoutFieldType": "num",
+        "user": "yippaa",
+        "userFieldType": "str",
+        "password": "yippee",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "0df177c55f290a4a",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "ad3caa33a44b36e6",
+        "type": "ui-page",
+        "name": "Page 1",
+        "ui": "0df177c55f290a4a",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "5657ad64c9fe65aa",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": 0,
+                "cols": 3
+            },
+            {
+                "name": "Tablet",
+                "px": 576,
+                "cols": 6
+            },
+            {
+                "name": "Small Desktop",
+                "px": 768,
+                "cols": 9
+            },
+            {
+                "name": "Desktop",
+                "px": 1024,
+                "cols": 12
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "c79e6457f22dda84",
+        "type": "ui-group",
+        "name": "Group 1",
+        "page": "ad3caa33a44b36e6",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false,
+        "groupType": "default"
+    },
+    {
+        "id": "5657ad64c9fe65aa",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094CE",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "6dc119dca255f8c0",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "Click this ONLY to Start Test Runs",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 320,
+        "wires": [
+            [
+                "e46f4e14fa357fb2"
+            ]
+        ]
+    },
+    {
+        "id": "e46f4e14fa357fb2",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Fake Data Generator",
+        "func": "// ════════════════════════════════════════════════════════════\n// RANDOM CONTINUOUS DRIVING SIMULATOR\n// Click inject → one self-paced cycle → stop.\n// Status line is fixed-width — bar position and length never shift.\n// ════════════════════════════════════════════════════════════\n\nvar TICK_MS = 300;\nvar BAR_WIDTH = 12;\n\nfunction clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }\nfunction noise(amp) { return (Math.random() * 2 - 1) * amp; }\nfunction approach(cur, tgt, step) { return cur + clamp(tgt - cur, -step, step); }\n\n// Fixed-width bar using true block-element chars (same glyph width)\nfunction makeBar(pct) {\n    var filled = Math.round((pct / 100) * BAR_WIDTH);\n    if (filled < 0) filled = 0;\n    if (filled > BAR_WIDTH) filled = BAR_WIDTH;\n    return \"[\" + \"█\".repeat(filled) + \"░\".repeat(BAR_WIDTH - filled) + \"]\";\n}\n\n// Always 4 chars: \"  0%\" … \" 42%\" … \"100%\"\nfunction padPct(pct) {\n    var s = Math.round(pct) + \"%\";\n    while (s.length < 4) s = \" \" + s;\n    return s;\n}\n\n// Always 6 chars (longest phase name is \"CRUISE\")\nfunction padPhase(name) {\n    var s = name;\n    while (s.length < 6) s = s + \" \";\n    return s;\n}\n\nfunction buildPhaseList() {\n    return [\n        { name: \"IDLE\", dur: 1.5 + Math.random() * 1.5 },\n        { name: \"ACCEL\", dur: 5 + Math.random() * 4 },\n        { name: \"CRUISE\", dur: 4 + Math.random() * 5 },\n        { name: \"COAST\", dur: 2 + Math.random() * 2 },\n        { name: \"REGEN\", dur: 3 + Math.random() * 3 },\n        { name: \"STOP\", dur: 1.5 + Math.random() * 1.5 }\n    ];\n}\n\n// Kill previous run\nvar oldHandle = context.get(\"handle\");\nif (oldHandle) { clearInterval(oldHandle); context.set(\"handle\", null); }\n\n// Fresh state\nvar phaseList = buildPhaseList();\nvar totalDur = phaseList.reduce(function (a, p) { return a + p.dur; }, 0);\n\nvar s = {\n    startMs: Date.now(), lastMs: Date.now(), elapsed: 0,\n    phaseList: phaseList,\n    totalDur: totalDur,\n    phaseIdx: 0,\n    phase: phaseList[0].name,\n    phaseStartSec: 0,\n    phaseDurSec: phaseList[0].dur,\n    rpm: 0, targetRpm: 0,\n    amp: 0, trq: 0,\n    volt: 19660, igbtC: 19739, motC: 11644,\n    L_REGEN: 0, warn: 0, err: 0,\n    done: false\n};\ncontext.set(\"state\", s);\nnode.status({\n    fill: \"blue\", shape: \"dot\",\n    text: makeBar(0) + \" \" + padPct(0) + \" \" + padPhase(s.phase)\n});\n\nvar handle = setInterval(function () {\n    var s = context.get(\"state\");\n    if (!s || s.done) {\n        clearInterval(handle);\n        context.set(\"handle\", null);\n        if (s) node.status({\n            fill: \"grey\", shape: \"dot\",\n            text: makeBar(100) + \" \" + padPct(100) + \" \" + padPhase(\"DONE\")\n        });\n        return;\n    }\n\n    var now = Date.now();\n    var dt = (now - s.lastMs) / 1000;\n    if (dt <= 0) dt = 0.001;\n    if (dt > 1.0) dt = 1.0;\n    s.lastMs = now;\n    s.elapsed = (now - s.startMs) / 1000;\n\n    while (!s.done && s.elapsed >= s.phaseStartSec + s.phaseDurSec) {\n        s.phaseStartSec += s.phaseDurSec;\n        s.phaseIdx++;\n        if (s.phaseIdx >= s.phaseList.length) { s.done = true; break; }\n        s.phase = s.phaseList[s.phaseIdx].name;\n        s.phaseDurSec = s.phaseList[s.phaseIdx].dur;\n        switch (s.phase) {\n            case \"ACCEL\": s.targetRpm = 12000 + Math.floor(Math.random() * 20000); break;\n            case \"CRUISE\": s.targetRpm = s.rpm + Math.floor(noise(1500)); break;\n            case \"COAST\": s.targetRpm = Math.floor(s.rpm * 0.6); break;\n            case \"REGEN\": s.targetRpm = 0;\n                s.L_REGEN = 1 + Math.floor(Math.random() * 3); break;\n            case \"STOP\": s.targetRpm = 0; s.L_REGEN = 0; break;\n        }\n    }\n\n    if (s.done) {\n        context.set(\"state\", s);\n        clearInterval(handle);\n        context.set(\"handle\", null);\n        node.status({\n            fill: \"grey\", shape: \"dot\",\n            text: makeBar(100) + \" \" + padPct(100) + \" \" + padPhase(\"DONE\")\n        });\n        return;\n    }\n\n    // ── Physics ──\n    var rpmRate = (s.phase === \"REGEN\" || s.phase === \"COAST\") ? 6000 : 5000;\n    s.rpm = approach(s.rpm, s.targetRpm, rpmRate * dt) + noise(250 * Math.sqrt(dt));\n    s.rpm = clamp(Math.round(s.rpm), -32767, 32767);\n\n    switch (s.phase) {\n        case \"IDLE\": case \"STOP\":\n            s.amp = Math.round(noise(400)); s.trq = Math.round(noise(400)); s.L_REGEN = 0; break;\n        case \"ACCEL\":\n            s.amp = clamp(Math.round(18000 + noise(3500) - Math.abs(s.rpm) * 0.2), 0, 32767);\n            s.trq = clamp(Math.round(22000 + noise(3500) - Math.abs(s.rpm) * 0.3), 0, 32767);\n            s.L_REGEN = 0; break;\n        case \"CRUISE\":\n            s.amp = clamp(Math.round(5000 + noise(1800)), 0, 32767);\n            s.trq = clamp(Math.round(4000 + noise(1800)), 0, 32767);\n            s.L_REGEN = 0; break;\n        case \"COAST\":\n            s.amp = Math.round(noise(700)); s.trq = Math.round(noise(700));\n            s.L_REGEN = 0; break;\n        case \"REGEN\":\n            var rg = 4000 * s.L_REGEN;\n            s.amp = clamp(Math.round(-rg + noise(1200)), -32767, 0);\n            s.trq = clamp(Math.round(-rg * 1.7 + noise(1200)), -32767, 0);\n            break;\n    }\n\n    var voltTarget = 19660 - (s.amp / 32767) * 3000 + noise(120);\n    s.volt = clamp(Math.round(approach(s.volt, voltTarget, 1500 * dt)), 0, 32767);\n\n    var loadFactor = Math.abs(s.amp) / 32767;\n    var heatRate = loadFactor * 30;\n    var coolRate = 8;\n    s.igbtC += (heatRate - coolRate) * dt + noise(15 * Math.sqrt(dt));\n    s.motC += (heatRate * 0.6 - coolRate * 0.5) * dt + noise(10 * Math.sqrt(dt));\n    s.igbtC = clamp(Math.round(s.igbtC), 18387, 28000);\n    s.motC = clamp(Math.round(s.motC), 11446, 16500);\n\n    s.warn = 0; s.err = 0;\n    if (s.igbtC >= 24775) s.warn |= 1;\n    if (Math.abs(s.amp) > 28000) s.warn |= 2;\n    if (Math.random() < 0.005) s.warn |= 256;\n    if (s.igbtC >= 26702) { s.err = 8; s.rpm = 0; s.amp = 0; s.trq = 0; }\n\n    var L_OK = (s.err === 0) ? 1 : 0;\n    var L_ERR = (s.err !== 0) ? 1 : 0;\n    var L_WARN = (s.warn !== 0) ? 1 : 0;\n    var L_PUMP = (s.igbtC >= 21357 || s.motC >= 12747) ? 1 : 0;\n    var drive_ena = (s.err === 0) ? 1 : 0;\n\n    context.set(\"state\", s);\n\n    node.send({\n        payload: [\n            s.rpm, s.amp, s.volt, s.trq, \"D\",\n            s.igbtC, s.motC, s.err, s.warn,\n            s.L_REGEN, L_ERR, L_WARN, L_OK, L_PUMP, drive_ena\n        ].join(\",\")\n    });\n\n    var pct = clamp((s.elapsed / s.totalDur) * 100, 0, 100);\n\n    node.status({\n        fill: (s.err ? \"red\" : (s.warn ? \"yellow\" : \"green\")),\n        shape: \"dot\",\n        text: makeBar(pct) + \" \" + padPct(pct) + \" \" + padPhase(s.phase)\n    });\n}, TICK_MS);\n\ncontext.set(\"handle\", handle);\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "var h = context.get(\"handle\");\nif (h) clearInterval(h);",
+        "libs": [],
+        "x": 440,
+        "y": 320,
+        "wires": [
+            [
+                "96914126869b24ea"
+            ]
+        ]
+    },
+    {
+        "id": "30b6983ed19d0419",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2020,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "39e9bc35557318e6",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Raw Data Conversion",
+        "func": "//\n\nconst RAW_MAX = 32767;\n\n// Simple scaling converters (rpm/amp/volt/trq all share the same shape).\nconst conv_rpm = raw => Math.round((raw / RAW_MAX) * 5500);\nconst conv_amp = raw => +((raw / RAW_MAX) * 212.1).toFixed(1);\nconst conv_volt = raw => +((raw / RAW_MAX) * 200).toFixed(1);\nconst conv_trq = raw => +((raw / RAW_MAX) * 125).toFixed(1);\n\n// IGBT temperature: lookup table + linear interpolation (the senior's exact table).\nconst IGBT_TABLE = [\n    [16308, -30], [16387, -25], [16487, -20], [16609, -15], [16757, -10],\n    [16938, -5], [17151, 0], [17400, 5], [17688, 10], [18017, 15],\n    [18387, 20], [18797, 25], [19247, 30], [19733, 35], [20250, 40],\n    [20793, 45], [21357, 50], [21933, 55], [22515, 60], [23097, 65],\n    [23671, 70], [24232, 75], [24775, 80], [25296, 85], [25792, 90],\n    [26261, 95], [26702, 100], [27114, 105], [27497, 110], [27851, 115],\n    [28179, 120], [28480, 125]\n];\nfunction conv_igbt(x) {\n    if (x <= IGBT_TABLE[0][0]) return IGBT_TABLE[0][1];\n    if (x >= IGBT_TABLE[IGBT_TABLE.length - 1][0]) return IGBT_TABLE[IGBT_TABLE.length - 1][1];\n    for (let i = 0; i < IGBT_TABLE.length - 1; i++) {\n        const [x0, y0] = IGBT_TABLE[i], [x1, y1] = IGBT_TABLE[i + 1];\n        if (x >= x0 && x <= x1) return +(y0 + (x - x0) * (y1 - y0) / (x1 - x0)).toFixed(2);\n    }\n    return 0;\n}\n\n// Motor temperature: two-point linear (also from the senior's function node).\nconst conv_mot = raw => {\n    const x1 = 11446, y1 = 30, x2 = 16000, y2 = 100;\n    return +(y1 + (raw - x1) * (y2 - y1) / (x2 - x1)).toFixed(2);\n};\n\n// Parse the CSV frame.\nconst parts = String(msg.payload).split(\",\");\nif (parts.length < 15) {\n    node.warn(\"Bad frame: expected 15 fields, got \" + parts.length);\n    return null;\n}\n\n// Drive mode arrives as a letter (\"D\"); store as a small numeric code.\nconst modeMap = { \"D\": 1, \"R\": 2, \"N\": 0 };\nconst mode = modeMap[parts[4]] ?? 0;\n\nconst reading = {\n    time: new Date().toISOString(),\n    rpm: conv_rpm(Number(parts[0])),\n    amp: conv_amp(Number(parts[1])),\n    volt: conv_volt(Number(parts[2])),\n    trq: conv_trq(Number(parts[3])),\n    mode: mode,\n    igbt_c: conv_igbt(Number(parts[5])),\n    mot_c: conv_mot(Number(parts[6])),\n    err: Number(parts[7]) | 0,\n    warn: Number(parts[8]) | 0,\n    l_regen: Number(parts[9]) !== 0,\n    l_err: Number(parts[10]) !== 0,\n    l_warn: Number(parts[11]) !== 0,\n    l_ok: Number(parts[12]) !== 0,\n    l_pump: Number(parts[13]) !== 0,\n    drive_ena: Number(parts[14]) !== 0\n};\n\n// Validation: drop physically-impossible frames (the original README claimed this,\n// but the senior's flow never actually did it).\nconst ranges = {\n    rpm: [0, 6000], amp: [-250, 250], volt: [0, 250], trq: [-150, 150],\n    igbt_c: [-40, 200], mot_c: [-40, 200]\n};\nfor (const k of Object.keys(ranges)) {\n    const [lo, hi] = ranges[k];\n    if (Number.isNaN(reading[k]) || reading[k] < lo || reading[k] > hi) {\n        node.warn(`Dropped: ${k}=${reading[k]} out of [${lo}, ${hi}]`);\n        return null;\n    }\n}\n\n// Build the params array, in the exact column order of the INSERT.\nmsg.params = [\n    reading.time,\n    reading.rpm, reading.amp, reading.volt, reading.trq,\n    reading.mode, reading.err, reading.warn,\n    reading.igbt_c, reading.mot_c,\n    reading.l_regen, reading.l_err, reading.l_warn,\n    reading.l_ok, reading.l_pump, reading.drive_ena\n];\nmsg.payload = reading;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "96914126869b24ea",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Parse CSV",
+        "func": "// Parse the 15-field CSV frame. \nconst rawDataFrame = String(msg.payload).split(\",\");\n\n// If any required field is missing, drop the frame with a clear warning.\nif (rawDataFrame.length < 15) {\n    node.warn(`Bad frame: got ${rawDataFrame.length} fields, expected 15`);\n    return null; // dropping the flow entirely\n}\n\n// Mode (rawDataFrame[4]) is checked separately because it is expected as a string. \n// It defaults to an empty string in case there's no value.\n// It trims spaces just in case.\nconst mode = String(rawDataFrame[4] ?? \"\").trim();\nif (!mode) { node.warn(\"Missing mode\"); return null; }\n\n// Mark all the numeric fields. \nconst numericFields = [\n    [\"rpm\", 0], [\"amp\", 1], [\"volt\", 2], [\"trq\", 3],\n    [\"igbtC\", 5], [\"motC\", 6], [\"err\", 7], [\"warn\", 8],\n    [\"L_REGEN\", 9], [\"L_ERR\", 10], [\"L_WARN\", 11], [\"L_OK\", 12],\n    [\"L_PUMP\", 13], [\"drive_ena\", 14]\n];\n\n// Initialize the output object and put 'mode' in there.\nmsg.raw = { mode };\n// Process other telemetry fields sequentially using the mapping checklist\nfor (const [name, idx] of numericFields) {\n    const rawNumber = pick(idx, name);\n    if (rawNumber === null) return null; // dropping the frame entirely\n    // Put the verified values into the output object.\n    msg.raw[name] = rawNumber;\n}\n\nreturn msg;\n\n// -----------------------------------------\n// Defining Functions\n// -----------------------------------------\n\n// pick: Parsing a numeric field and returning null and warns if it's not a number.\nfunction pick(idx, name) {\n    const raw = rawDataFrame[idx];\n    // Check if it's undefined or if there is no value.\n    if (raw === undefined || raw === \"\") {\n        node.warn(`Missing field: ${name}`);\n        return null; \n    }\n    // Before this, all of them are strings. Try converting them into numbers. \n    const rawNumber = Number(raw);\n    // Check if it is a number. If not (NaN), then drop it.\n    if (Number.isNaN(rawNumber)) {\n        node.warn(`Bad ${name}: ${JSON.stringify(raw)} is not a number`);\n        return null; \n    }\n    // Everything is fine, return the number. \n    return rawNumber;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 690,
+        "y": 320,
+        "wires": [
+            [
+                "6c7f7fa4f1efcdad"
+            ]
+        ]
+    },
+    {
+        "id": "6c7f7fa4f1efcdad",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Raw to Real Convertion",
+        "func": "// Scale raw 0–32767 values to real engineering units.\n// (raw / 32767) * MAX  →  rpm/amp/volt/trq in real-world units.\n\nmsg.real = {};\n\nconst RAW_MAX = 32767;\n\nmsg.real.rpm = Math.round((msg.raw.rpm / RAW_MAX) * 5500);\nmsg.real.amp = +((msg.raw.amp / RAW_MAX) * 212.1).toFixed(1);  // Bamocar peak current\nmsg.real.volt = +((msg.raw.volt / RAW_MAX) * 200).toFixed(1);\nmsg.real.trq = +((msg.raw.trq / RAW_MAX) * 125).toFixed(1);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 320,
+        "wires": [
+            [
+                "4becac2134c56c46"
+            ]
+        ]
+    },
+    {
+        "id": "4becac2134c56c46",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Temperature Conversion",
+        "func": "// Temperatures need bespoke formulas (the senior's exact ones).\n// IGBT  : 32-point lookup table + linear interpolation.\n// Motor : two-point linear fit (raw 11446 = 30°C, raw 16000 = 100°C).\n\nconst IGBT_TABLE = [\n    [16308, -30], [16387, -25], [16487, -20], [16609, -15], [16757, -10],\n    [16938, -5], [17151, 0], [17400, 5], [17688, 10], [18017, 15],\n    [18387, 20], [18797, 25], [19247, 30], [19733, 35], [20250, 40],\n    [20793, 45], [21357, 50], [21933, 55], [22515, 60], [23097, 65],\n    [23671, 70], [24232, 75], [24775, 80], [25296, 85], [25792, 90],\n    [26261, 95], [26702, 100], [27114, 105], [27497, 110], [27851, 115],\n    [28179, 120], [28480, 125]\n];\n\nfunction igbtTemp(x) {\n    if (x <= IGBT_TABLE[0][0]) return IGBT_TABLE[0][1];\n    if (x >= IGBT_TABLE[IGBT_TABLE.length - 1][0]) return IGBT_TABLE[IGBT_TABLE.length - 1][1];\n    for (let i = 0; i < IGBT_TABLE.length - 1; i++) {\n        const [x0, y0] = IGBT_TABLE[i], [x1, y1] = IGBT_TABLE[i + 1];\n        if (x >= x0 && x <= x1) return +(y0 + (x - x0) * (y1 - y0) / (x1 - x0)).toFixed(2);\n    }\n    return 0;\n}\n\nfunction motTemp(raw) {\n    const x1 = 11446, y1 = 30, x2 = 16000, y2 = 100;\n    return +(y1 + (raw - x1) * (y2 - y1) / (x2 - x1)).toFixed(2);\n}\n\nmsg.real.igbt_c = igbtTemp(msg.raw.igbtC);\nmsg.real.mot_c = motTemp(msg.raw.motC);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1190,
+        "y": 320,
+        "wires": [
+            [
+                "f5eb9aa29c573436"
+            ]
+        ]
+    },
+    {
+        "id": "f5eb9aa29c573436",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Map Mode & Flags",
+        "func": "// Drive mode arrives as a letter (\"D\"); store as a small numeric code.\nconst MODE_MAP = { D: 1, R: 2, N: 0 };\nmsg.real.mode = MODE_MAP[msg.raw.mode] ?? 0;\n\n// err / warn are integers — pass through.\nmsg.real.err = msg.raw.err;\nmsg.real.warn = msg.raw.warn;\n\n// Flags are BOOLEAN in our schema: any nonzero raw value -> true.\nmsg.real.l_regen = msg.raw.L_REGEN !== 0;\nmsg.real.l_err = msg.raw.L_ERR !== 0;\nmsg.real.l_warn = msg.raw.L_WARN !== 0;\nmsg.real.l_ok = msg.raw.L_OK !== 0;\nmsg.real.l_pump = msg.raw.L_PUMP !== 0;\nmsg.real.drive_ena = msg.raw.drive_ena !== 0;\n\n// Add the timestamp here, at the end of the conversion stage.\nmsg.real.time = new Date().toISOString();\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1450,
+        "y": 320,
+        "wires": [
+            [
+                "fd0b118cc2d5b290"
+            ]
+        ]
+    },
+    {
+        "id": "fd0b118cc2d5b290",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Validate and Build Parameters",
+        "func": "// Reject physically-impossible readings, then build the params for the INSERT.\nconst r = msg.real;\nconst ranges = {\n    rpm: [-6000, 6000], amp: [-250, 250], volt: [-250, 250], trq: [-150, 150],\n    igbt_c: [-40, 200], mot_c: [-40, 200]\n};\nfor (const k of Object.keys(ranges)) {\n    const [lo, hi] = ranges[k];\n    if (Number.isNaN(r[k]) || r[k] < lo || r[k] > hi) {\n        node.warn(`Dropped: ${k}=${r[k]} out of [${lo}, ${hi}]`);\n        return null;\n    }\n}\n\nmsg.params = [\n    r.time,\n    r.rpm, r.amp, r.volt, r.trq,\n    r.mode, r.err, r.warn,\n    r.igbt_c, r.mot_c,\n    r.l_regen, r.l_err, r.l_warn, r.l_ok, r.l_pump, r.drive_ena\n];\nmsg.payload = r;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1710,
+        "y": 320,
+        "wires": [
+            [
+                "30b6983ed19d0419",
+                "ab62583cbb880fb1"
+            ]
+        ]
+    },
+    {
+        "id": "ab62583cbb880fb1",
+        "type": "postgresql",
+        "z": "f6f2187d.f17ca8",
+        "name": "Car Telemetry Database",
+        "query": "INSERT INTO telemetry_records\n    (time, rpm, amp, volt, trq, mode, err, warn, igbt_c, mot_c,\n     l_regen, l_err, l_warn, l_ok, l_pump, drive_ena)\nVALUES\n    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);",
+        "postgreSQLConfig": "pg-config",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 2070,
+        "y": 420,
+        "wires": [
+            []
+        ]
+    }
+]
