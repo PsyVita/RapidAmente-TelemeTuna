@@ -14,8 +14,8 @@
         "hostFieldType": "str",
         "port": "5432",
         "portFieldType": "num",
-        "database": "telemetry",
-        "databaseFieldType": "str",
+        "database": "POSTGRES_DB",
+        "databaseFieldType": "env",
         "ssl": "false",
         "sslFieldType": "bool",
         "applicationName": "node-red-telemetry",
@@ -26,105 +26,16 @@
         "idleFieldType": "num",
         "connectionTimeout": "10000",
         "connectionTimeoutFieldType": "num",
-        "user": "yippaa",
-        "userFieldType": "str",
-        "password": "yippee",
-        "passwordFieldType": "str"
-    },
-    {
-        "id": "0df177c55f290a4a",
-        "type": "ui-base",
-        "name": "My Dashboard",
-        "path": "/dashboard",
-        "appIcon": "",
-        "includeClientData": true,
-        "acceptsClientConfig": [
-            "ui-notification",
-            "ui-control"
-        ],
-        "showPathInSidebar": false,
-        "headerContent": "page",
-        "navigationStyle": "default",
-        "titleBarStyle": "default",
-        "showReconnectNotification": true,
-        "notificationDisplayTime": 1,
-        "showDisconnectNotification": true,
-        "allowInstall": false
-    },
-    {
-        "id": "ad3caa33a44b36e6",
-        "type": "ui-page",
-        "name": "Page 1",
-        "ui": "0df177c55f290a4a",
-        "path": "/page1",
-        "icon": "home",
-        "layout": "grid",
-        "theme": "5657ad64c9fe65aa",
-        "breakpoints": [
-            {
-                "name": "Default",
-                "px": 0,
-                "cols": 3
-            },
-            {
-                "name": "Tablet",
-                "px": 576,
-                "cols": 6
-            },
-            {
-                "name": "Small Desktop",
-                "px": 768,
-                "cols": 9
-            },
-            {
-                "name": "Desktop",
-                "px": 1024,
-                "cols": 12
-            }
-        ],
-        "order": 1,
-        "className": "",
-        "visible": "true",
-        "disabled": "false"
-    },
-    {
-        "id": "c79e6457f22dda84",
-        "type": "ui-group",
-        "name": "Group 1",
-        "page": "ad3caa33a44b36e6",
-        "width": 6,
-        "height": 1,
-        "order": 1,
-        "showTitle": true,
-        "className": "",
-        "visible": true,
-        "disabled": false,
-        "groupType": "default"
-    },
-    {
-        "id": "5657ad64c9fe65aa",
-        "type": "ui-theme",
-        "name": "Default Theme",
-        "colors": {
-            "surface": "#ffffff",
-            "primary": "#0094CE",
-            "bgPage": "#eeeeee",
-            "groupBg": "#ffffff",
-            "groupOutline": "#cccccc"
-        },
-        "sizes": {
-            "density": "default",
-            "pagePadding": "12px",
-            "groupGap": "12px",
-            "groupBorderRadius": "4px",
-            "widgetGap": "12px"
-        }
+        "user": "POSTGRES_USER",
+        "userFieldType": "env",
+        "password": "POSTGRES_PASSWORD",
+        "passwordFieldType": "env"
     },
     {
         "id": "6dc119dca255f8c0",
         "type": "inject",
         "z": "f6f2187d.f17ca8",
-        "name": "Click this ONLY to Start Test Runs",
+        "name": "Test Injection Node",
         "props": [
             {
                 "p": "payload"
@@ -141,8 +52,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 160,
-        "y": 320,
+        "x": 190,
+        "y": 440,
         "wires": [
             [
                 "e46f4e14fa357fb2"
@@ -153,7 +64,7 @@
         "id": "e46f4e14fa357fb2",
         "type": "function",
         "z": "f6f2187d.f17ca8",
-        "name": "Fake Data Generator",
+        "name": "FAKE Data Generator",
         "func": "// ════════════════════════════════════════════════════════════\n// RANDOM CONTINUOUS DRIVING SIMULATOR\n// Click inject → one self-paced cycle → stop.\n// Status line is fixed-width — bar position and length never shift.\n// ════════════════════════════════════════════════════════════\n\nvar TICK_MS = 300;\nvar BAR_WIDTH = 12;\n\nfunction clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }\nfunction noise(amp) { return (Math.random() * 2 - 1) * amp; }\nfunction approach(cur, tgt, step) { return cur + clamp(tgt - cur, -step, step); }\n\n// Fixed-width bar using true block-element chars (same glyph width)\nfunction makeBar(pct) {\n    var filled = Math.round((pct / 100) * BAR_WIDTH);\n    if (filled < 0) filled = 0;\n    if (filled > BAR_WIDTH) filled = BAR_WIDTH;\n    return \"[\" + \"█\".repeat(filled) + \"░\".repeat(BAR_WIDTH - filled) + \"]\";\n}\n\n// Always 4 chars: \"  0%\" … \" 42%\" … \"100%\"\nfunction padPct(pct) {\n    var s = Math.round(pct) + \"%\";\n    while (s.length < 4) s = \" \" + s;\n    return s;\n}\n\n// Always 6 chars (longest phase name is \"CRUISE\")\nfunction padPhase(name) {\n    var s = name;\n    while (s.length < 6) s = s + \" \";\n    return s;\n}\n\nfunction buildPhaseList() {\n    return [\n        { name: \"IDLE\", dur: 1.5 + Math.random() * 1.5 },\n        { name: \"ACCEL\", dur: 5 + Math.random() * 4 },\n        { name: \"CRUISE\", dur: 4 + Math.random() * 5 },\n        { name: \"COAST\", dur: 2 + Math.random() * 2 },\n        { name: \"REGEN\", dur: 3 + Math.random() * 3 },\n        { name: \"STOP\", dur: 1.5 + Math.random() * 1.5 }\n    ];\n}\n\n// Kill previous run\nvar oldHandle = context.get(\"handle\");\nif (oldHandle) { clearInterval(oldHandle); context.set(\"handle\", null); }\n\n// Fresh state\nvar phaseList = buildPhaseList();\nvar totalDur = phaseList.reduce(function (a, p) { return a + p.dur; }, 0);\n\nvar s = {\n    startMs: Date.now(), lastMs: Date.now(), elapsed: 0,\n    phaseList: phaseList,\n    totalDur: totalDur,\n    phaseIdx: 0,\n    phase: phaseList[0].name,\n    phaseStartSec: 0,\n    phaseDurSec: phaseList[0].dur,\n    rpm: 0, targetRpm: 0,\n    amp: 0, trq: 0,\n    volt: 19660, igbtC: 19739, motC: 11644,\n    L_REGEN: 0, warn: 0, err: 0,\n    done: false\n};\ncontext.set(\"state\", s);\nnode.status({\n    fill: \"blue\", shape: \"dot\",\n    text: makeBar(0) + \" \" + padPct(0) + \" \" + padPhase(s.phase)\n});\n\nvar handle = setInterval(function () {\n    var s = context.get(\"state\");\n    if (!s || s.done) {\n        clearInterval(handle);\n        context.set(\"handle\", null);\n        if (s) node.status({\n            fill: \"grey\", shape: \"dot\",\n            text: makeBar(100) + \" \" + padPct(100) + \" \" + padPhase(\"DONE\")\n        });\n        return;\n    }\n\n    var now = Date.now();\n    var dt = (now - s.lastMs) / 1000;\n    if (dt <= 0) dt = 0.001;\n    if (dt > 1.0) dt = 1.0;\n    s.lastMs = now;\n    s.elapsed = (now - s.startMs) / 1000;\n\n    while (!s.done && s.elapsed >= s.phaseStartSec + s.phaseDurSec) {\n        s.phaseStartSec += s.phaseDurSec;\n        s.phaseIdx++;\n        if (s.phaseIdx >= s.phaseList.length) { s.done = true; break; }\n        s.phase = s.phaseList[s.phaseIdx].name;\n        s.phaseDurSec = s.phaseList[s.phaseIdx].dur;\n        switch (s.phase) {\n            case \"ACCEL\": s.targetRpm = 12000 + Math.floor(Math.random() * 20000); break;\n            case \"CRUISE\": s.targetRpm = s.rpm + Math.floor(noise(1500)); break;\n            case \"COAST\": s.targetRpm = Math.floor(s.rpm * 0.6); break;\n            case \"REGEN\": s.targetRpm = 0;\n                s.L_REGEN = 1 + Math.floor(Math.random() * 3); break;\n            case \"STOP\": s.targetRpm = 0; s.L_REGEN = 0; break;\n        }\n    }\n\n    if (s.done) {\n        context.set(\"state\", s);\n        clearInterval(handle);\n        context.set(\"handle\", null);\n        node.status({\n            fill: \"grey\", shape: \"dot\",\n            text: makeBar(100) + \" \" + padPct(100) + \" \" + padPhase(\"DONE\")\n        });\n        return;\n    }\n\n    // ── Physics ──\n    var rpmRate = (s.phase === \"REGEN\" || s.phase === \"COAST\") ? 6000 : 5000;\n    s.rpm = approach(s.rpm, s.targetRpm, rpmRate * dt) + noise(250 * Math.sqrt(dt));\n    s.rpm = clamp(Math.round(s.rpm), -32767, 32767);\n\n    switch (s.phase) {\n        case \"IDLE\": case \"STOP\":\n            s.amp = Math.round(noise(400)); s.trq = Math.round(noise(400)); s.L_REGEN = 0; break;\n        case \"ACCEL\":\n            s.amp = clamp(Math.round(18000 + noise(3500) - Math.abs(s.rpm) * 0.2), 0, 32767);\n            s.trq = clamp(Math.round(22000 + noise(3500) - Math.abs(s.rpm) * 0.3), 0, 32767);\n            s.L_REGEN = 0; break;\n        case \"CRUISE\":\n            s.amp = clamp(Math.round(5000 + noise(1800)), 0, 32767);\n            s.trq = clamp(Math.round(4000 + noise(1800)), 0, 32767);\n            s.L_REGEN = 0; break;\n        case \"COAST\":\n            s.amp = Math.round(noise(700)); s.trq = Math.round(noise(700));\n            s.L_REGEN = 0; break;\n        case \"REGEN\":\n            var rg = 4000 * s.L_REGEN;\n            s.amp = clamp(Math.round(-rg + noise(1200)), -32767, 0);\n            s.trq = clamp(Math.round(-rg * 1.7 + noise(1200)), -32767, 0);\n            break;\n    }\n\n    var voltTarget = 19660 - (s.amp / 32767) * 3000 + noise(120);\n    s.volt = clamp(Math.round(approach(s.volt, voltTarget, 1500 * dt)), 0, 32767);\n\n    var loadFactor = Math.abs(s.amp) / 32767;\n    var heatRate = loadFactor * 30;\n    var coolRate = 8;\n    s.igbtC += (heatRate - coolRate) * dt + noise(15 * Math.sqrt(dt));\n    s.motC += (heatRate * 0.6 - coolRate * 0.5) * dt + noise(10 * Math.sqrt(dt));\n    s.igbtC = clamp(Math.round(s.igbtC), 18387, 28000);\n    s.motC = clamp(Math.round(s.motC), 11446, 16500);\n\n    s.warn = 0; s.err = 0;\n    if (s.igbtC >= 24775) s.warn |= 1;\n    if (Math.abs(s.amp) > 28000) s.warn |= 2;\n    if (Math.random() < 0.005) s.warn |= 256;\n    if (s.igbtC >= 26702) { s.err = 8; s.rpm = 0; s.amp = 0; s.trq = 0; }\n\n    var L_OK = (s.err === 0) ? 1 : 0;\n    var L_ERR = (s.err !== 0) ? 1 : 0;\n    var L_WARN = (s.warn !== 0) ? 1 : 0;\n    var L_PUMP = (s.igbtC >= 21357 || s.motC >= 12747) ? 1 : 0;\n    var drive_ena = (s.err === 0) ? 1 : 0;\n\n    context.set(\"state\", s);\n\n    node.send({\n        payload: [\n            s.rpm, s.amp, s.volt, s.trq, \"D\",\n            s.igbtC, s.motC, s.err, s.warn,\n            s.L_REGEN, L_ERR, L_WARN, L_OK, L_PUMP, drive_ena\n        ].join(\",\")\n    });\n\n    var pct = clamp((s.elapsed / s.totalDur) * 100, 0, 100);\n\n    node.status({\n        fill: (s.err ? \"red\" : (s.warn ? \"yellow\" : \"green\")),\n        shape: \"dot\",\n        text: makeBar(pct) + \" \" + padPct(pct) + \" \" + padPhase(s.phase)\n    });\n}, TICK_MS);\n\ncontext.set(\"handle\", handle);\nreturn null;",
         "outputs": 1,
         "timeout": 0,
@@ -161,8 +72,8 @@
         "initialize": "",
         "finalize": "var h = context.get(\"handle\");\nif (h) clearInterval(h);",
         "libs": [],
-        "x": 440,
-        "y": 320,
+        "x": 460,
+        "y": 440,
         "wires": [
             [
                 "96914126869b24ea"
@@ -170,46 +81,12 @@
         ]
     },
     {
-        "id": "30b6983ed19d0419",
-        "type": "debug",
-        "z": "f6f2187d.f17ca8",
-        "name": "debug 1",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 2020,
-        "y": 320,
-        "wires": []
-    },
-    {
-        "id": "39e9bc35557318e6",
-        "type": "function",
-        "z": "f6f2187d.f17ca8",
-        "name": "Raw Data Conversion",
-        "func": "//\n\nconst RAW_MAX = 32767;\n\n// Simple scaling converters (rpm/amp/volt/trq all share the same shape).\nconst conv_rpm = raw => Math.round((raw / RAW_MAX) * 5500);\nconst conv_amp = raw => +((raw / RAW_MAX) * 212.1).toFixed(1);\nconst conv_volt = raw => +((raw / RAW_MAX) * 200).toFixed(1);\nconst conv_trq = raw => +((raw / RAW_MAX) * 125).toFixed(1);\n\n// IGBT temperature: lookup table + linear interpolation (the senior's exact table).\nconst IGBT_TABLE = [\n    [16308, -30], [16387, -25], [16487, -20], [16609, -15], [16757, -10],\n    [16938, -5], [17151, 0], [17400, 5], [17688, 10], [18017, 15],\n    [18387, 20], [18797, 25], [19247, 30], [19733, 35], [20250, 40],\n    [20793, 45], [21357, 50], [21933, 55], [22515, 60], [23097, 65],\n    [23671, 70], [24232, 75], [24775, 80], [25296, 85], [25792, 90],\n    [26261, 95], [26702, 100], [27114, 105], [27497, 110], [27851, 115],\n    [28179, 120], [28480, 125]\n];\nfunction conv_igbt(x) {\n    if (x <= IGBT_TABLE[0][0]) return IGBT_TABLE[0][1];\n    if (x >= IGBT_TABLE[IGBT_TABLE.length - 1][0]) return IGBT_TABLE[IGBT_TABLE.length - 1][1];\n    for (let i = 0; i < IGBT_TABLE.length - 1; i++) {\n        const [x0, y0] = IGBT_TABLE[i], [x1, y1] = IGBT_TABLE[i + 1];\n        if (x >= x0 && x <= x1) return +(y0 + (x - x0) * (y1 - y0) / (x1 - x0)).toFixed(2);\n    }\n    return 0;\n}\n\n// Motor temperature: two-point linear (also from the senior's function node).\nconst conv_mot = raw => {\n    const x1 = 11446, y1 = 30, x2 = 16000, y2 = 100;\n    return +(y1 + (raw - x1) * (y2 - y1) / (x2 - x1)).toFixed(2);\n};\n\n// Parse the CSV frame.\nconst parts = String(msg.payload).split(\",\");\nif (parts.length < 15) {\n    node.warn(\"Bad frame: expected 15 fields, got \" + parts.length);\n    return null;\n}\n\n// Drive mode arrives as a letter (\"D\"); store as a small numeric code.\nconst modeMap = { \"D\": 1, \"R\": 2, \"N\": 0 };\nconst mode = modeMap[parts[4]] ?? 0;\n\nconst reading = {\n    time: new Date().toISOString(),\n    rpm: conv_rpm(Number(parts[0])),\n    amp: conv_amp(Number(parts[1])),\n    volt: conv_volt(Number(parts[2])),\n    trq: conv_trq(Number(parts[3])),\n    mode: mode,\n    igbt_c: conv_igbt(Number(parts[5])),\n    mot_c: conv_mot(Number(parts[6])),\n    err: Number(parts[7]) | 0,\n    warn: Number(parts[8]) | 0,\n    l_regen: Number(parts[9]) !== 0,\n    l_err: Number(parts[10]) !== 0,\n    l_warn: Number(parts[11]) !== 0,\n    l_ok: Number(parts[12]) !== 0,\n    l_pump: Number(parts[13]) !== 0,\n    drive_ena: Number(parts[14]) !== 0\n};\n\n// Validation: drop physically-impossible frames (the original README claimed this,\n// but the senior's flow never actually did it).\nconst ranges = {\n    rpm: [0, 6000], amp: [-250, 250], volt: [0, 250], trq: [-150, 150],\n    igbt_c: [-40, 200], mot_c: [-40, 200]\n};\nfor (const k of Object.keys(ranges)) {\n    const [lo, hi] = ranges[k];\n    if (Number.isNaN(reading[k]) || reading[k] < lo || reading[k] > hi) {\n        node.warn(`Dropped: ${k}=${reading[k]} out of [${lo}, ${hi}]`);\n        return null;\n    }\n}\n\n// Build the params array, in the exact column order of the INSERT.\nmsg.params = [\n    reading.time,\n    reading.rpm, reading.amp, reading.volt, reading.trq,\n    reading.mode, reading.err, reading.warn,\n    reading.igbt_c, reading.mot_c,\n    reading.l_regen, reading.l_err, reading.l_warn,\n    reading.l_ok, reading.l_pump, reading.drive_ena\n];\nmsg.payload = reading;\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 460,
-        "y": 760,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "96914126869b24ea",
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Parse CSV",
-        "func": "// Parse the 15-field CSV frame. \nconst rawDataFrame = String(msg.payload).split(\",\");\n\n// If any required field is missing, drop the frame with a clear warning.\nif (rawDataFrame.length < 15) {\n    node.warn(`Bad frame: got ${rawDataFrame.length} fields, expected 15`);\n    return null; // dropping the flow entirely\n}\n\n// Mode (rawDataFrame[4]) is checked separately because it is expected as a string. \n// It defaults to an empty string in case there's no value.\n// It trims spaces just in case.\nconst mode = String(rawDataFrame[4] ?? \"\").trim();\nif (!mode) { node.warn(\"Missing mode\"); return null; }\n\n// Mark all the numeric fields. \nconst numericFields = [\n    [\"rpm\", 0], [\"amp\", 1], [\"volt\", 2], [\"trq\", 3],\n    [\"igbtC\", 5], [\"motC\", 6], [\"err\", 7], [\"warn\", 8],\n    [\"L_REGEN\", 9], [\"L_ERR\", 10], [\"L_WARN\", 11], [\"L_OK\", 12],\n    [\"L_PUMP\", 13], [\"drive_ena\", 14]\n];\n\n// Initialize the output object and put 'mode' in there.\nmsg.raw = { mode };\n// Process other telemetry fields sequentially using the mapping checklist\nfor (const [name, idx] of numericFields) {\n    const rawNumber = pick(idx, name);\n    if (rawNumber === null) return null; // dropping the frame entirely\n    // Put the verified values into the output object.\n    msg.raw[name] = rawNumber;\n}\n\nreturn msg;\n\n// -----------------------------------------\n// Defining Functions\n// -----------------------------------------\n\n// pick: Parsing a numeric field and returning null and warns if it's not a number.\nfunction pick(idx, name) {\n    const raw = rawDataFrame[idx];\n    // Check if it's undefined or if there is no value.\n    if (raw === undefined || raw === \"\") {\n        node.warn(`Missing field: ${name}`);\n        return null; \n    }\n    // Before this, all of them are strings. Try converting them into numbers. \n    const rawNumber = Number(raw);\n    // Check if it is a number. If not (NaN), then drop it.\n    if (Number.isNaN(rawNumber)) {\n        node.warn(`Bad ${name}: ${JSON.stringify(raw)} is not a number`);\n        return null; \n    }\n    // Everything is fine, return the number. \n    return rawNumber;\n}",
-        "outputs": 1,
+        "func": "try {\n\n    // Stamp the frame immediately so every warning shares the same timestamp.\n    msg.timestamp = new Date().toISOString();\n\n    // Parse the 15-field CSV frame. \n    const rawDataFrame = String(msg.payload).split(\",\");\n\n    // If any required field is missing, drop the frame with a clear warning.\n    if (rawDataFrame.length !== 15) {\n        const m = `Bad frame: got ${rawDataFrame.length} fields, expected 15. This frame is dropped.`;\n        node.warn(m);\n        sendLog(\"warn\", m);\n        return null;\n    }\n\n    // Mode (rawDataFrame[4]) is checked separately because it is expected as a string. \n    // It defaults to an empty string in case there's no value.\n    // It trims spaces just in case.\n    const mode = String(rawDataFrame[4] ?? \"\").trim();\n    if (!mode) {\n        const m = \"Missing mode. This frame is dropped.\";\n        node.warn(m);\n        sendLog(\"warn\", m);\n        return null;\n    }\n\n    // Mark all the numeric fields. \n    const numericFields = [\n        [\"rpm\", 0], [\"amp\", 1], [\"volt\", 2], [\"trq\", 3],\n        [\"igbtC\", 5], [\"motC\", 6], [\"err\", 7], [\"warn\", 8],\n        [\"L_REGEN\", 9], [\"L_ERR\", 10], [\"L_WARN\", 11], [\"L_OK\", 12],\n        [\"L_PUMP\", 13], [\"drive_ena\", 14]\n    ];\n\n    // Build into a local sandbox. Only commit to msg.raw if every field passes.\n    // 'Mode' is already checked, so it is immediately thrown in.\n    const raw = { mode };\n    // Process other telemetry fields sequentially using the mapping checklist.\n    for (const [name, idx] of numericFields) {\n        const value = pick(idx, name);\n        if (value === null) return null;\n        // Put the verified values into the output object.\n        raw[name] = value;\n    }\n\n    // Every field is valid. Commit the sandbox to the message.\n    msg.raw = raw;\n\n    return msg;\n\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    // pick: Parses a numeric field, warns and returns null if invalid.\n    function pick(idx, name) {\n        const raw = rawDataFrame[idx];\n        // Check if it's undefined or if there is no value.\n        if (raw === undefined || raw === \"\") {\n            const m = `Missing field: ${name}. This frame is dropped.`;\n            node.warn(m);\n            sendLog(\"warn\", m);\n            return null;\n        }\n        // Before this, all of them are strings. Try converting them into numbers. \n        const rawNumber = Number(raw);\n        // Check if it is a number. If not (NaN), then drop it.\n        if (Number.isNaN(rawNumber)) {\n            const m = `Bad ${name}: ${JSON.stringify(raw)} is not a number. This frame is dropped.`;\n            node.warn(m);\n            sendLog(\"warn\", m);\n            return null;\n        }\n        // Everything is fine, return the number. \n        return rawNumber;\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: msg.timestamp,\n                level: level,\n                node: \"Parse CSV\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n\n    // For this part, these are critical unknown errors, so it's best if we just drop the entire frame. No healing. Fix the bug.\n    node.error(`Critical Failure in 'Parse CSV' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -220,6 +97,9 @@
         "wires": [
             [
                 "6c7f7fa4f1efcdad"
+            ],
+            [
+                "f363f34901490c9c"
             ]
         ]
     },
@@ -227,19 +107,19 @@
         "id": "6c7f7fa4f1efcdad",
         "type": "function",
         "z": "f6f2187d.f17ca8",
-        "name": "Raw to Real Convertion",
-        "func": "// Scale raw 0–32767 values to real engineering units.\n// (raw / 32767) * MAX  →  rpm/amp/volt/trq in real-world units.\n\nmsg.real = {};\n\nconst RAW_MAX = 32767;\n\nmsg.real.rpm = Math.round((msg.raw.rpm / RAW_MAX) * 5500);\nmsg.real.amp = +((msg.raw.amp / RAW_MAX) * 212.1).toFixed(1);  // Bamocar peak current\nmsg.real.volt = +((msg.raw.volt / RAW_MAX) * 200).toFixed(1);\nmsg.real.trq = +((msg.raw.trq / RAW_MAX) * 125).toFixed(1);\nreturn msg;",
+        "name": "Raw to Real Convertion (rpm/amp/volt/trq)",
+        "func": "try {\n\n    // Creating a container.\n    msg.real = {};\n\n    // Throw in timestamp\n    msg.real.time = msg.timestamp;\n    \n    // Scale raw 0–32767 values for rpm/amp/volt/trq in real-world units.\n    const RAW_MAX = 32767;\n\n    // Divide the incoming raw number by the absolute maximum possible raw number to obtain the percentage.\n    // Then, multiply the percentage with the real-world limit to obtain the real-world reading. \n\n    // rpm is rounded to the nearest whole number to prevent fake precision.\n    msg.real.rpm = Math.round((msg.raw.rpm / RAW_MAX) * 5500);\n\n    // The rest are rounded to 1 decimal point. '+' returns value as 'number'.\n    msg.real.amp = +((msg.raw.amp / RAW_MAX) * 212.1).toFixed(1);\n    msg.real.volt = +((msg.raw.volt / RAW_MAX) * 200).toFixed(1);\n    msg.real.trq = +((msg.raw.trq / RAW_MAX) * 125).toFixed(1);\n\n    return msg;\n\n} catch (error) {\n\n    // For this part, these are critical unknown errors, so it's best if we just drop the entire frame. No healing. Fix the bug.\n    node.error(`Critical Failure in 'Raw to Real Conversion' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 930,
-        "y": 320,
+        "x": 1010,
+        "y": 100,
         "wires": [
             [
-                "4becac2134c56c46"
+                "0d1965e529e9c3f2"
             ]
         ]
     },
@@ -247,19 +127,22 @@
         "id": "4becac2134c56c46",
         "type": "function",
         "z": "f6f2187d.f17ca8",
-        "name": "Temperature Conversion",
-        "func": "// Temperatures need bespoke formulas (the senior's exact ones).\n// IGBT  : 32-point lookup table + linear interpolation.\n// Motor : two-point linear fit (raw 11446 = 30°C, raw 16000 = 100°C).\n\nconst IGBT_TABLE = [\n    [16308, -30], [16387, -25], [16487, -20], [16609, -15], [16757, -10],\n    [16938, -5], [17151, 0], [17400, 5], [17688, 10], [18017, 15],\n    [18387, 20], [18797, 25], [19247, 30], [19733, 35], [20250, 40],\n    [20793, 45], [21357, 50], [21933, 55], [22515, 60], [23097, 65],\n    [23671, 70], [24232, 75], [24775, 80], [25296, 85], [25792, 90],\n    [26261, 95], [26702, 100], [27114, 105], [27497, 110], [27851, 115],\n    [28179, 120], [28480, 125]\n];\n\nfunction igbtTemp(x) {\n    if (x <= IGBT_TABLE[0][0]) return IGBT_TABLE[0][1];\n    if (x >= IGBT_TABLE[IGBT_TABLE.length - 1][0]) return IGBT_TABLE[IGBT_TABLE.length - 1][1];\n    for (let i = 0; i < IGBT_TABLE.length - 1; i++) {\n        const [x0, y0] = IGBT_TABLE[i], [x1, y1] = IGBT_TABLE[i + 1];\n        if (x >= x0 && x <= x1) return +(y0 + (x - x0) * (y1 - y0) / (x1 - x0)).toFixed(2);\n    }\n    return 0;\n}\n\nfunction motTemp(raw) {\n    const x1 = 11446, y1 = 30, x2 = 16000, y2 = 100;\n    return +(y1 + (raw - x1) * (y2 - y1) / (x2 - x1)).toFixed(2);\n}\n\nmsg.real.igbt_c = igbtTemp(msg.raw.igbtC);\nmsg.real.mot_c = motTemp(msg.raw.motC);\nreturn msg;",
-        "outputs": 1,
+        "name": "Temperature Conversion (igbt_c/mot_c)",
+        "func": "try {\n\n    // IGBT table reference\n    const IGBT_TABLE = [\n        [16308, -30], [16387, -25], [16487, -20], [16609, -15], [16757, -10],\n        [16938, -5], [17151, 0], [17400, 5], [17688, 10], [18017, 15],\n        [18387, 20], [18797, 25], [19247, 30], [19733, 35], [20250, 40],\n        [20793, 45], [21357, 50], [21933, 55], [22515, 60], [23097, 65],\n        [23671, 70], [24232, 75], [24775, 80], [25296, 85], [25792, 90],\n        [26261, 95], [26702, 100], [27114, 105], [27497, 110], [27851, 115],\n        [28179, 120], [28480, 125]\n    ];\n\n    // IGBT temp: 32-point lookup table + linear interpolation\n    msg.real.igbt_c = calculateIgbtTemp(msg.raw.igbtC);\n    if (msg.real.igbt_c === null) {\n        const m = `Out of range: igbt_c raw value ${msg.raw.igbtC} is outside the lookup table. Passing null forward.`;\n        node.warn(m);\n        sendLog(\"warn\", m);\n    }\n\n    // Motor temp: two-point linear fit (raw 11446 = 30°C, raw 16000 = 100°C).\n    msg.real.mot_c = calculateMotorTemp(msg.raw.motC);\n    if (msg.real.mot_c === null) {\n        const m = `Out of range: mot_c raw value ${msg.raw.motC} is outside the expected range. Passing null forward.`;\n        node.warn(m);\n        sendLog(\"warn\", m);\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function calculateIgbtTemp(rawIgbtValue) {\n        if (rawIgbtValue < IGBT_TABLE[0][0] || rawIgbtValue > IGBT_TABLE[IGBT_TABLE.length - 1][0]) {\n            return null;\n        }\n        for (let i = 0; i < IGBT_TABLE.length - 1; i++) {\n            const [x0, y0] = IGBT_TABLE[i], [x1, y1] = IGBT_TABLE[i + 1];\n            if (rawIgbtValue >= x0 && rawIgbtValue <= x1) return +(y0 + (rawIgbtValue - x0) * (y1 - y0) / (x1 - x0)).toFixed(2);\n        }\n        return null;\n    }\n\n    function calculateMotorTemp(rawMotorValue) {\n        if (rawMotorValue < 10000 || rawMotorValue > 20000) {\n            return null;\n        }\n        const x1 = 11446, y1 = 30, x2 = 16000, y2 = 100;\n        return +(y1 + (rawMotorValue - x1) * (y2 - y1) / (x2 - x1)).toFixed(2);\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: msg.timestamp,\n                level: level,\n                node: \"Temperature Conversion\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n\n    // For this part, these are critical unknown errors, so it's best if we just drop the entire frame. No healing. Fix the bug.\n    node.error(`Critical Failure in 'Temperature Conversion' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1190,
-        "y": 320,
+        "x": 1000,
+        "y": 480,
         "wires": [
             [
                 "f5eb9aa29c573436"
+            ],
+            [
+                "f363f34901490c9c"
             ]
         ]
     },
@@ -267,19 +150,22 @@
         "id": "f5eb9aa29c573436",
         "type": "function",
         "z": "f6f2187d.f17ca8",
-        "name": "Map Mode & Flags",
-        "func": "// Drive mode arrives as a letter (\"D\"); store as a small numeric code.\nconst MODE_MAP = { D: 1, R: 2, N: 0 };\nmsg.real.mode = MODE_MAP[msg.raw.mode] ?? 0;\n\n// err / warn are integers — pass through.\nmsg.real.err = msg.raw.err;\nmsg.real.warn = msg.raw.warn;\n\n// Flags are BOOLEAN in our schema: any nonzero raw value -> true.\nmsg.real.l_regen = msg.raw.L_REGEN !== 0;\nmsg.real.l_err = msg.raw.L_ERR !== 0;\nmsg.real.l_warn = msg.raw.L_WARN !== 0;\nmsg.real.l_ok = msg.raw.L_OK !== 0;\nmsg.real.l_pump = msg.raw.L_PUMP !== 0;\nmsg.real.drive_ena = msg.raw.drive_ena !== 0;\n\n// Add the timestamp here, at the end of the conversion stage.\nmsg.real.time = new Date().toISOString();\nreturn msg;",
-        "outputs": 1,
+        "name": "Flags (regen/err/warn/ok/pump/drive_ena)",
+        "func": "try {\n\n    // Pass through the raw error and warning integers unchanged.\n    msg.real.err = msg.raw.err;\n    msg.real.warn = msg.raw.warn;\n\n    // Strict Binary Flag Type Conversion. Caps letters are according to naming convention.\n    const flagKeys = ['L_REGEN', 'L_ERR', 'L_WARN', 'L_OK', 'L_PUMP', 'drive_ena'];\n\n    // Start a loop that steps through the checklist one flag at a time\n    for (const key of flagKeys) {\n        const rawValue = msg.raw[key];\n        const outputKey = key.toLowerCase(); // maps 'L_REGEN' to 'l_regen'\n\n        if (rawValue === 0) {\n            msg.real[outputKey] = false;\n        } else if (rawValue === 1) {\n            msg.real[outputKey] = true;\n        } else {\n            const m = `Mapping Error: Corrupted binary signal on flag [${key}] = \"${rawValue}\". Passing null forward.`;\n            node.warn(m);\n            sendLog(\"warn\", m);\n            msg.real[outputKey] = null;\n        }\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: msg.timestamp,\n                level: level,\n                node: \"Flags\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n\n    // For this part, these are critical unknown errors, so it's best if we just drop the entire frame. No healing. Fix the bug.\n    node.error(`Critical Failure in 'Flags' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1450,
-        "y": 320,
+        "x": 1000,
+        "y": 660,
         "wires": [
             [
                 "fd0b118cc2d5b290"
+            ],
+            [
+                "f363f34901490c9c"
             ]
         ]
     },
@@ -288,19 +174,21 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Validate and Build Parameters",
-        "func": "// Reject physically-impossible readings, then build the params for the INSERT.\nconst r = msg.real;\nconst ranges = {\n    rpm: [-6000, 6000], amp: [-250, 250], volt: [-250, 250], trq: [-150, 150],\n    igbt_c: [-40, 200], mot_c: [-40, 200]\n};\nfor (const k of Object.keys(ranges)) {\n    const [lo, hi] = ranges[k];\n    if (Number.isNaN(r[k]) || r[k] < lo || r[k] > hi) {\n        node.warn(`Dropped: ${k}=${r[k]} out of [${lo}, ${hi}]`);\n        return null;\n    }\n}\n\nmsg.params = [\n    r.time,\n    r.rpm, r.amp, r.volt, r.trq,\n    r.mode, r.err, r.warn,\n    r.igbt_c, r.mot_c,\n    r.l_regen, r.l_err, r.l_warn, r.l_ok, r.l_pump, r.drive_ena\n];\nmsg.payload = r;\nreturn msg;",
-        "outputs": 1,
+        "func": "try {\n\n    // 1. Fetch the entire last known good snapshot of the car from memory.\n    let history = context.get(\"carHistorySnapshot\") ?? {\n        rpm: 0, amp: 0.0, volt: 0.0, trq: 0.0,\n        igbt_c: 0.00, mot_c: 0.00,\n        mode: 0, err: 0, warn: 0,\n        l_regen: false, l_err: false, l_warn: false, l_ok: true, l_pump: false, drive_ena: false\n    };\n\n    const r = msg.real;\n\n    // Object for containing names of corrupted fields\n    msg.corruptedFields = {};\n\n    // 2. Numerical Boundaries Checklist\n    const ranges = {\n        rpm: [-6000, 6000],\n        amp: [-250, 250],\n        volt: [-250, 250],\n        trq: [-150, 150],\n        igbt_c: [-40, 200],\n        mot_c: [-40, 200],\n        mode: [0, 2],       // 0 = Neutral, 1 = Drive, 2 = Reverse\n        err: [0, 1],\n        warn: [0, 1]\n    };\n\n    // 3. Scan and heal numerical metrics\n    for (const k of Object.keys(ranges)) {\n        const [lo, hi] = ranges[k];\n\n        if (Number.isNaN(r[k]) || r[k] === undefined || r[k] === null || r[k] < lo || r[k] > hi) {\n            const m = `Glitch caught: ${k} = ${r[k]} → healed from history (${history[k]}).`;\n            node.warn(m);\n\n            msg.corruptedFields[k] = true;\n            r[k] = history[k];   // Heal using history\n        } else {\n            history[k] = r[k];   // Update history pad\n        }\n    }\n\n    // 4. Boolean Flags Safety Checklist\n    const booleans = ['l_regen', 'l_err', 'l_warn', 'l_ok', 'l_pump', 'drive_ena'];\n\n    for (const flag of booleans) {\n        if (typeof r[flag] !== \"boolean\") {\n            const m = `Flag glitch caught: ${flag} = ${r[flag]} → healed from history (${history[flag]}).`;\n            node.warn(m);\n\n            msg.corruptedFields[flag] = true;\n            r[flag] = history[flag];\n        } else {\n            history[flag] = r[flag];\n        }\n    }\n\n    // 5. Save the complete vehicle snapshot back to node memory.\n    context.set(\"carHistorySnapshot\", history);\n\n    // 6. Serialize corrupted field names into a flat array for logging and DB storage.\n    const healedFields = Object.keys(msg.corruptedFields);\n\n    // 7. If any fields were healed, send ONE summary entry to the DB log table.\n    if (healedFields.length > 0) {\n        const m = `Healed ${healedFields.length} field(s): [${healedFields.join(\", \")}]`;\n        node.warn(m);\n        sendLog(\"warn\", m, healedFields);\n    }\n\n    // 8. Assemble the final query array for PostgreSQL.\n    msg.params = [\n        r.time,\n        r.rpm, r.amp, r.volt, r.trq,\n        r.mode, r.err, r.warn,\n        r.igbt_c, r.mot_c,\n        r.l_regen, r.l_err, r.l_warn, r.l_ok, r.l_pump, r.drive_ena,\n        healedFields.length > 0 ? healedFields : null  // $17\n    ];\n\n    // For debug-panel visibility only.\n    msg.payload = r;\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function sendLog(level, message, fields = null) {\n        node.send([null, {\n            payload: {\n                time: msg.timestamp,\n                level: level,\n                node: \"Validate and Build Parameters\",\n                message: message,\n                fields: fields\n            }\n        }]);\n    }\n\n} catch (error) {\n\n    // For this part, these are critical unknown errors, so it's best if we just drop the entire frame. No healing. Fix the bug.\n    node.error(`Critical Failure in 'Validate and Build Parameters' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1710,
+        "x": 1490,
         "y": 320,
         "wires": [
             [
-                "30b6983ed19d0419",
                 "ab62583cbb880fb1"
+            ],
+            [
+                "f363f34901490c9c"
             ]
         ]
     },
@@ -309,15 +197,225 @@
         "type": "postgresql",
         "z": "f6f2187d.f17ca8",
         "name": "Car Telemetry Database",
-        "query": "INSERT INTO telemetry_records\n    (time, rpm, amp, volt, trq, mode, err, warn, igbt_c, mot_c,\n     l_regen, l_err, l_warn, l_ok, l_pump, drive_ena)\nVALUES\n    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);",
+        "query": "INSERT INTO telemetry_records\n    (time, rpm, amp, volt, trq, mode, err, warn, igbt_c, mot_c,\n     l_regen, l_err, l_warn, l_ok, l_pump, drive_ena, healed_fields)\nVALUES\n    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);",
         "postgreSQLConfig": "pg-config",
         "split": false,
         "rowsPerMsg": 1,
         "outputs": 1,
-        "x": 2070,
+        "x": 1950,
         "y": 420,
         "wires": [
-            []
+            [
+                "fa32280dae23507a"
+            ]
         ]
+    },
+    {
+        "id": "7f3c0e669b55d59b",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "convert + return null of corrupted",
+        "info": "Corrupted data is handled now.\n\nThis is because we use table and graph conversions for temperature.\nA value must be interpolated. \n\nIf we replace the corrupted data with an actual in-range value, \nthe 'validation' node will not be able to detect data as corrupted. ",
+        "x": 970,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "2c76aa20ad7024e0",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "convert only",
+        "info": "Data will be detected in 'validation' node whether it is corrupted.\n\nThis is because the values must be first converted, \n'validation' node can handle the rest at once.",
+        "x": 910,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "4c1ed64f12bd3544",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "convert + return null if not boolean",
+        "info": "Data will be detected in 'validation' node whether it is corrupted.\n\nThis is because the values must be a boolean at this stage\nfor the 'validation' node to continue.",
+        "x": 980,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "f66ca6e3c74deafe",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "convert only",
+        "info": "Data will be detected in 'validation' node whether it is corrupted.\n\nThis is because the values must be first converted, \n'validation' node can handle the rest at once.",
+        "x": 930,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "0d1965e529e9c3f2",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Map Mode (mode)",
+        "func": "try {\n\n    const MODE_MAP = { D: 1, R: 2, N: 0 };\n\n    // If the gear character is valid, map it to its ID.\n    if (msg.raw.mode !== undefined && msg.raw.mode in MODE_MAP) {\n        msg.real.mode = MODE_MAP[msg.raw.mode];\n    } else {\n        // Alert the pit wall if garbage data slips into the gear register.\n        const m = `Mapping Error: Received invalid Drive Mode character [\"${msg.raw.mode}\"]. Passing null forward.`;\n        node.warn(m);\n        sendLog(\"warn\", m);\n        msg.real.mode = null;\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: msg.timestamp,\n                level: level,\n                node: \"Map Mode\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n\n    // For this part, these are critical unknown errors, so it's best if we just drop the entire frame. No healing. Fix the bug.\n    node.error(`Critical Failure in 'Map Mode' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 950,
+        "y": 260,
+        "wires": [
+            [
+                "4becac2134c56c46"
+            ],
+            [
+                "f363f34901490c9c"
+            ]
+        ]
+    },
+    {
+        "id": "b36e9e104c82ae77",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "Replace ANY nulled data with the last healthy data.",
+        "info": "These 'nulled data' are those that were flagged as corrupted earlier.\n\nHealed data is logged in telemetry_records.",
+        "x": 1550,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "d888589ab7779164",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "ONLY click for testing the program",
+        "info": "",
+        "x": 220,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "4f6c54bcaefcbdf9",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "Parse + Drop Entire Frame",
+        "info": "Drop the entire frame if:\n1. More than 15 fields are detected per frame.\n2. Any field contains wrong data type.",
+        "x": 730,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "f363f34901490c9c",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Normalize Log Event",
+        "func": "try {\n\n    // PATH A: If this message was intercepted by the global 'catch' node\n    if (msg.error) {\n        msg.params = [\n            msg.timestamp || new Date().toISOString(),  \n            // Probably code-related error, so the content in 'try' wouldn't execute for that node.\n            \"critical\",                                \n            msg.error.source?.name || \"Unknown Block\",   \n            `CRASH: ${msg.error.message}`,              \n            null                                        \n        ];\n    }\n    // PATH B: Standard manual log coming from Output Port 2 nodes \n    else if (msg.payload && msg.payload.level) {\n        msg.params = [\n            msg.payload.time,\n            msg.payload.level,\n            msg.payload.node,\n            msg.payload.message,\n            msg.payload.fields\n        ];\n    }\n    // PATH C: Safety valve for unexpected message formats \n    else {\n        node.error(\"'Normalize Log Event' node received an unrecognized message payload shape.\");\n        return null;\n    }\n\n    return msg;\n\n} catch (error) {\n\n    node.error(`Error inside 'Normalize Log Event' node: ${error.message}`, msg);\n    return null;\n\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1940,
+        "y": 620,
+        "wires": [
+            [
+                "3ae4f79c977a509d"
+            ]
+        ]
+    },
+    {
+        "id": "3ae4f79c977a509d",
+        "type": "postgresql",
+        "z": "f6f2187d.f17ca8",
+        "name": "Log Database",
+        "query": "INSERT INTO event_logs (time, level, node, message, fields)\nVALUES ($1, $2, $3, $4, $5);",
+        "postgreSQLConfig": "pg-config",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 2160,
+        "y": 620,
+        "wires": [
+            [
+                "7605a6c5d2623b81"
+            ]
+        ]
+    },
+    {
+        "id": "27d88c02059f8f7b",
+        "type": "catch",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "scope": [
+            "6dc119dca255f8c0",
+            "e46f4e14fa357fb2",
+            "96914126869b24ea",
+            "6c7f7fa4f1efcdad",
+            "4becac2134c56c46",
+            "f5eb9aa29c573436",
+            "fd0b118cc2d5b290",
+            "ab62583cbb880fb1",
+            "0d1965e529e9c3f2"
+        ],
+        "uncaught": false,
+        "x": 1550,
+        "y": 620,
+        "wires": [
+            [
+                "f363f34901490c9c"
+            ]
+        ]
+    },
+    {
+        "id": "fa32280dae23507a",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2180,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "7605a6c5d2623b81",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2360,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "de09f735150e715d",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "Validation for rpm/amp/volt/trq/mode",
+        "info": "These values are not yet validated from previous nodes, unlike mode and flags.\n\nReturn null if any are corrupted.",
+        "x": 1510,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "ecf194f8d3eb7152",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "Exceptions",
+        "info": "This node does not catch errors from 'Normalize Log Events' and 'Log Database' to prevent an infinity loop when the database is down.",
+        "x": 1560,
+        "y": 660,
+        "wires": []
     }
 ]

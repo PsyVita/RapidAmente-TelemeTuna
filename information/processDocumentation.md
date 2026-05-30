@@ -53,11 +53,20 @@ Stage 5 (Flyway)
     **telemetry_records = our table **flyway_schema_history = flyway's migration history
 
 Stage 6 (Node-RED)
-1. Added Node-RED section into docker-compose.yaml.
-2. Code on Node-RED. (parsing, converting raw to real data, and postgresql node.)
+1. Added Node-RED section into docker-compose.yaml. 
+2. Code on Node-RED. (parsing, converting raw to real data, and postgresql node.) !! Make sure username, password, and database fields are linked to .env so that they dont appear in flows.json.
 3. Change directory of Node-RED so the file is saved in the repo.
 
 Stage 7 (Connecting the Whole System Together)
 1. Run docker exec -it <your_container_name> psql -U <your_username> -d <your_database_name> to type SELECT count(*) FROM telemetry_records; and SELECT * FROM telemetry_records ORDER BY time DESC LIMIT 5; (check that it works)
 2. Open Grafana to start building dashboard.
 
+Stage 8 (Logging Error)
+1. Adjust the Node-RED flow so that it catches errors + use data of previous timestamp in presence of corrupted data. 
+2. Add new database table to log events. (Flyway version 2 + Node-RED modification)
+3. Add new column to telemetry_records (Flyway version 3 + Node-RED modification)
+
+Levels of event_log.
+*** If data is only out-of-bounds, that field will be discarded and healed. (warning)
+*** If data is totally corrupted (wrong length or type) -> whole frame dropped. (error)
+*** If unknown error occurred (try-catch), then it's probably something to do with the code. (critical)
