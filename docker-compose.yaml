@@ -73,7 +73,7 @@ services:
   # Node-RED
   node-red:
     container_name: telemetry-nodered
-    image: nodered/node-red:latest
+    build: ./nodered
     ports:
       - "1881:1880"
     environment:
