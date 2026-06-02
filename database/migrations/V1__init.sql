@@ -20,7 +20,8 @@ CREATE TABLE telemetry_records (
     l_warn     BOOLEAN          NOT NULL,
     l_ok       BOOLEAN          NOT NULL,
     l_pump     BOOLEAN          NOT NULL,
-    drive_ena  BOOLEAN          NOT NULL
+    drive_ena  BOOLEAN          NOT NULL, 
+    healed_fields TEXT[]                    
 );
 
 -- Create an index on the 'time' column to optimize queries that filter or sort by time. -- Grafana queries telemetry by time range (WHERE time BETWEEN ... ORDER BY time), so this keeps those fast as the data grows. 

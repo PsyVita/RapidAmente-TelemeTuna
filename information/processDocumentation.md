@@ -68,5 +68,11 @@ Stage 8 (Logging Error)
 
 Levels of event_log.
 *** If data is only out-of-bounds, that field will be discarded and healed. (warning)
+*** If data is incorrect and we don't use the healing system for that point of data, the value is dropped. (error)
 *** If data is totally corrupted (wrong length or type) -> whole frame dropped. (error)
 *** If unknown error occurred (try-catch), then it's probably something to do with the code. (critical)
+
+Stage 9 (Bitmasks)
+1. I went back to merge v3 into v1.
+2. Created a new V3 to store bitmask definitions in order to process err and warns.
+3. Flow in Node-RED was heavily edited. The continuous values are self-validating, then passed onto the heal node. Other values are behind the heal node and contains its own progress. Err and warn data are passed through Node-RED as integers and will be processed in Grafana using the newly created V3 migration bitmask definition. 
