@@ -79,3 +79,4 @@ Stage 9 (Bitmasks)
 
 Stage 10 (Other adjustments)
 1. Healthcheck system in docker services.
+2. Add Dockerfile under nodered folder.
