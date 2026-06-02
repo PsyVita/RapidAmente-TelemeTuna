@@ -76,3 +76,6 @@ Stage 9 (Bitmasks)
 1. I went back to merge v3 into v1.
 2. Created a new V3 to store bitmask definitions in order to process err and warns.
 3. Flow in Node-RED was heavily edited. The continuous values are self-validating, then passed onto the heal node. Other values are behind the heal node and contains its own progress. Err and warn data are passed through Node-RED as integers and will be processed in Grafana using the newly created V3 migration bitmask definition. 
+
+Stage 10 (Other adjustments)
+1. Healthcheck system in docker services.

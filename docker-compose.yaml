@@ -14,6 +14,12 @@ services:
       # store data in a named volume that survives container restarts
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # Grafana
   grafana:
@@ -35,8 +41,15 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
     # ensure Grafana starts after PostgreSQL is ready to accept connections
     depends_on:
-      - postgresdb
+      postgresdb:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Flyway
   flyway:
@@ -54,7 +67,8 @@ services:
       # Mount the local directory containing the SQL migration scripts to the Flyway container. 
       - ./database/migrations:/flyway/sql
     depends_on:
-      - postgresdb
+      postgresdb:
+        condition: service_healthy
 
   # Node-RED
   node-red:
@@ -70,8 +84,15 @@ services:
     volumes:
       - ./nodered:/data
     depends_on:
-      - postgresdb
+      postgresdb:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:1880/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   postgres_data:
