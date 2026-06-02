@@ -20,6 +20,9 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
+    env_file:
+      - .env
+
 
   # Grafana
   grafana:
@@ -38,7 +41,7 @@ services:
       # store data in a named volume that survives container restarts
       - grafana_data:/var/lib/grafana
       # provision Grafana with pre-configured datasources and dashboards
-      - ../grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning:/etc/grafana/provisioning
     # ensure Grafana starts after PostgreSQL is ready to accept connections
     depends_on:
       postgresdb:
@@ -50,6 +53,8 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
+    env_file:
+      - .env
 
   # Flyway
   flyway:
@@ -65,15 +70,17 @@ services:
       FLYWAY_CONNECT_RETRIES: "10"
     volumes:
       # Mount the local directory containing the SQL migration scripts to the Flyway container. 
-      - ../database/migrations:/flyway/sql
+      - ./database/migrations:/flyway/sql
     depends_on:
       postgresdb:
         condition: service_healthy
+    env_file:
+      - .env
 
   # Node-RED
   node-red:
     container_name: telemetry-nodered
-    build: ../nodered
+    build: ./nodered
     ports:
       - "1881:1880"
     environment:
@@ -82,7 +89,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-db}
     volumes:
-      - ../nodered:/data
+      - ./nodered:/data
     depends_on:
       postgresdb:
         condition: service_healthy
@@ -93,14 +100,17 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
+    env_file:
+      - .env
 
+# Mosquitto MQTT Broker
   mosquitto:
     container_name: telemetry-mosquitto
     image: eclipse-mosquitto:latest
     ports:
       - "1883:1883"
     volumes:
-      - ../mosquitto/config:/mosquitto/config
+      - ./mosquitto/config:/mosquitto/config
       - mosquitto_data:/mosquitto/data
     healthcheck:
       test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
@@ -109,7 +119,9 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
-
+    env_file:
+      - .env
+      
 volumes:
   postgres_data:
   grafana_data:
