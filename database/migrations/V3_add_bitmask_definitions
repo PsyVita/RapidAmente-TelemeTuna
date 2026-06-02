@@ -1,17 +1,10 @@
 -- Migration V3: Add bitmask definitions for error and warning bits
 
 CREATE TABLE err_bit_definitions (
-    bit   SMALLINT  PRIMARY KEY CHECK (bit >= 0 AND bit <= 15),
-    name  TEXT      NOT NULL,
-    desc  TEXT      NOT NULL DEFAULT ''
-);  
-
-CREATE TABLE warn_bit_definitions (
-    bit   SMALLINT  PRIMARY KEY CHECK (bit >= 0 AND bit <= 15),
-    name  TEXT      NOT NULL,
-    desc  TEXT      NOT NULL DEFAULT ''
+    bit   SMALLINT PRIMARY KEY CHECK (bit >= 0 AND bit <= 15),
+    name  TEXT     NOT NULL,
+    desc  TEXT     NOT NULL DEFAULT ''
 );
-
 
 INSERT INTO err_bit_definitions (bit, name, desc) VALUES
 (0,  'Eprom Read Error',            'Reading from Eprom defective'),
@@ -30,6 +23,12 @@ INSERT INTO err_bit_definitions (bit, name, desc) VALUES
 (13, 'IGBT Problem',                'AC Current Offset detection fault'),
 (14, 'Internal HW Voltage Problem', 'Error because of internal Voltage problem'),
 (15, 'Resistor Overload',           'Only certain motor controllers');
+
+CREATE TABLE warn_bit_definitions (
+    bit   SMALLINT PRIMARY KEY CHECK (bit >= 0 AND bit <= 15),
+    name  TEXT     NOT NULL,
+    desc  TEXT     NOT NULL DEFAULT ''
+);
 
 INSERT INTO warn_bit_definitions (bit, name, desc) VALUES
 (0,  'Parameter Conflict Detected',  'Parameters are from different device type'),
