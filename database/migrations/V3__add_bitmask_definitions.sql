@@ -1,12 +1,12 @@
 -- Migration V3: Add bitmask definitions for error and warning bits
 
 CREATE TABLE err_bit_definitions (
-    bit   SMALLINT PRIMARY KEY CHECK (bit >= 0 AND bit <= 15),
-    name  TEXT     NOT NULL,
-    desc  TEXT     NOT NULL DEFAULT ''
+    bit          SMALLINT PRIMARY KEY CHECK (bit >= 0 AND bit <= 15),
+    name         TEXT     NOT NULL,
+    description  TEXT     NOT NULL DEFAULT ''
 );
 
-INSERT INTO err_bit_definitions (bit, name, desc) VALUES
+INSERT INTO err_bit_definitions (bit, name, description) VALUES
 (0,  'Eprom Read Error',            'Reading from Eprom defective'),
 (1,  'HW Fault',                    'Critical hardware error detected'),
 (2,  'RFE Input Not Present',       'Safety circuit not present (with RUN input active)'),
@@ -25,12 +25,12 @@ INSERT INTO err_bit_definitions (bit, name, desc) VALUES
 (15, 'Resistor Overload',           'Only certain motor controllers');
 
 CREATE TABLE warn_bit_definitions (
-    bit   SMALLINT PRIMARY KEY CHECK (bit >= 0 AND bit <= 15),
-    name  TEXT     NOT NULL,
-    desc  TEXT     NOT NULL DEFAULT ''
+    bit          SMALLINT PRIMARY KEY CHECK (bit >= 0 AND bit <= 15),
+    name         TEXT     NOT NULL,
+    description  TEXT     NOT NULL DEFAULT ''
 );
 
-INSERT INTO warn_bit_definitions (bit, name, desc) VALUES
+INSERT INTO warn_bit_definitions (bit, name, description) VALUES
 (0,  'Parameter Conflict Detected',  'Parameters are from different device type'),
 (1,  'Special CPU Fault',            'RUN input with jitter or EMI problems'),
 (2,  'RFE Input Not Present',        'Safety circuit not present (without RUN input active)'),
