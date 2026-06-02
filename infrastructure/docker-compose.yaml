@@ -13,13 +13,13 @@ services:
     volumes:
       # store data in a named volume that survives container restarts
       - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-db}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
 
   # Grafana
   grafana:
@@ -38,18 +38,18 @@ services:
       # store data in a named volume that survives container restarts
       - grafana_data:/var/lib/grafana
       # provision Grafana with pre-configured datasources and dashboards
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ../grafana/provisioning:/etc/grafana/provisioning
     # ensure Grafana starts after PostgreSQL is ready to accept connections
     depends_on:
       postgresdb:
         condition: service_healthy
-    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
+    restart: unless-stopped
 
   # Flyway
   flyway:
@@ -65,7 +65,7 @@ services:
       FLYWAY_CONNECT_RETRIES: "10"
     volumes:
       # Mount the local directory containing the SQL migration scripts to the Flyway container. 
-      - ./database/migrations:/flyway/sql
+      - ../database/migrations:/flyway/sql
     depends_on:
       postgresdb:
         condition: service_healthy
@@ -73,7 +73,7 @@ services:
   # Node-RED
   node-red:
     container_name: telemetry-nodered
-    build: ./nodered
+    build: ../nodered
     ports:
       - "1881:1880"
     environment:
@@ -82,18 +82,35 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-db}
     volumes:
-      - ./nodered:/data
+      - ../nodered:/data
     depends_on:
       postgresdb:
         condition: service_healthy
-    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:1880/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
+    restart: unless-stopped
+
+  mosquitto:
+    container_name: telemetry-mosquitto
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+    volumes:
+      - ../mosquitto/config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   grafana_data:
+  mosquitto_data:

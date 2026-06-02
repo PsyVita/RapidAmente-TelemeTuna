@@ -80,3 +80,8 @@ Stage 9 (Bitmasks)
 Stage 10 (Other adjustments)
 1. Healthcheck system in docker services.
 2. Add Dockerfile under nodered folder.
+3. Add test datas under the node-red data folder for CSV input path.
+4. Move docker_compose.yaml to infrastructure folder. 
+
+Stage 11 (MQTT)
+1. Add Mosquitto folder and its config.

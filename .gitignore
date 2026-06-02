@@ -20,6 +20,9 @@ nodered/package-lock.json
 nodered/.flows.json.backup
 nodered/.npm/
 
+#Test data
+test_*.csv
+
 # Editor / OS junk
 .vscode/
 .DS_Store

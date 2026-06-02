@@ -1,8 +1,24 @@
 [
     {
+        "id": "4a85ca0db70e0d85",
+        "type": "tab",
+        "label": "Real-Time Imports",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "fe649a070c585a18",
+        "type": "tab",
+        "label": "CSV Imports",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
         "id": "f6f2187d.f17ca8",
         "type": "tab",
-        "label": "Flow 1",
+        "label": "Background Flow",
         "disabled": false,
         "info": ""
     },
@@ -52,6 +68,555 @@
         "responsetimeout": 10000
     },
     {
+        "id": "cbe634675d38b8f6",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "mosquitto",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "f815c77fc870dd9c",
+        "type": "serial in",
+        "z": "4a85ca0db70e0d85",
+        "name": "fishPort",
+        "serial": "5bfed78819477e13",
+        "x": 210,
+        "y": 140,
+        "wires": [
+            [
+                "af0a28c0e371b550"
+            ]
+        ]
+    },
+    {
+        "id": "af0a28c0e371b550",
+        "type": "link out",
+        "z": "4a85ca0db70e0d85",
+        "name": "link out 2",
+        "mode": "link",
+        "links": [
+            "595351ac2dd69914"
+        ],
+        "x": 315,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "b9947f6851e495f5",
+        "type": "mqtt in",
+        "z": "4a85ca0db70e0d85",
+        "name": "",
+        "topic": "car_telemetry",
+        "qos": "2",
+        "datatype": "utf8",
+        "broker": "cbe634675d38b8f6",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 230,
+        "y": 260,
+        "wires": [
+            [
+                "bf9e58810d8e6472"
+            ]
+        ]
+    },
+    {
+        "id": "bf9e58810d8e6472",
+        "type": "link out",
+        "z": "4a85ca0db70e0d85",
+        "name": "link out 3",
+        "mode": "link",
+        "links": [
+            "595351ac2dd69914"
+        ],
+        "x": 355,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "bd5fce99d42b852a",
+        "type": "function",
+        "z": "4a85ca0db70e0d85",
+        "name": "Normalize Log Event",
+        "func": "try {\n\n    // PATH A: If this message was intercepted by the global 'catch' node\n    if (msg.error) {\n        msg.params = [\n            msg.timestamp || new Date().toISOString(),  \n            // Probably code-related error, so the content in 'try' wouldn't execute for that node.\n            \"critical\",                                \n            msg.error.source?.name || \"Unknown Block\",   \n            `CRASH: ${msg.error.message}`,              \n            null                                        \n        ];\n    }\n    // PATH B: Standard manual log coming from Output Port 2 nodes \n    else if (msg.payload && msg.payload.level) {\n        msg.params = [\n            msg.payload.time,\n            msg.payload.level,\n            msg.payload.node,\n            msg.payload.message,\n            msg.payload.fields\n        ];\n    }\n    // PATH C: Safety valve for unexpected message formats \n    else {\n        node.error(\"'Normalize Log Event' node received an unrecognized message payload shape.\");\n        return null;\n    }\n\n    return msg;\n\n} catch (error) {\n\n    node.error(`Error inside 'Normalize Log Event' node: ${error.message}`, msg);\n    return null;\n\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 420,
+        "wires": [
+            [
+                "ea16570786413121",
+                "82c88ec1c1e8f8bf"
+            ]
+        ]
+    },
+    {
+        "id": "ea16570786413121",
+        "type": "postgresql",
+        "z": "4a85ca0db70e0d85",
+        "name": "Log Database",
+        "query": "INSERT INTO event_logs (time, level, node, message, fields)\nVALUES ($1, $2, $3, $4, $5);",
+        "postgreSQLConfig": "pg-config",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 820,
+        "y": 420,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "700aaceef3cf20f0",
+        "type": "catch",
+        "z": "4a85ca0db70e0d85",
+        "name": "",
+        "scope": [
+            "f815c77fc870dd9c",
+            "af0a28c0e371b550",
+            "b9947f6851e495f5",
+            "bf9e58810d8e6472"
+        ],
+        "uncaught": false,
+        "x": 210,
+        "y": 420,
+        "wires": [
+            [
+                "bd5fce99d42b852a"
+            ]
+        ]
+    },
+    {
+        "id": "82c88ec1c1e8f8bf",
+        "type": "debug",
+        "z": "4a85ca0db70e0d85",
+        "name": "debug 4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "a40d02fdfdbb1916",
+        "type": "comment",
+        "z": "4a85ca0db70e0d85",
+        "name": "Exceptions",
+        "info": "This node does not catch errors from 'Normalize Log Events' and 'Log Database' to prevent an infinity loop when the database is down.",
+        "x": 220,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "fcbe826f2d8669af",
+        "type": "inject",
+        "z": "fe649a070c585a18",
+        "name": "Load Raw CSV",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 420,
+        "y": 300,
+        "wires": [
+            [
+                "250c678a8a748ac7"
+            ]
+        ]
+    },
+    {
+        "id": "250c678a8a748ac7",
+        "type": "file in",
+        "z": "fe649a070c585a18",
+        "name": "",
+        "filename": "/data/data/test_raw.csv",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 670,
+        "y": 300,
+        "wires": [
+            [
+                "57fa988876a4d07f"
+            ]
+        ]
+    },
+    {
+        "id": "b9b22a1b2cca10af",
+        "type": "comment",
+        "z": "fe649a070c585a18",
+        "name": "Edit Path to Insert Your File",
+        "info": "",
+        "x": 670,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "57fa988876a4d07f",
+        "type": "split",
+        "z": "fe649a070c585a18",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 970,
+        "y": 300,
+        "wires": [
+            [
+                "70f2b8a1bbd2ba7a"
+            ]
+        ]
+    },
+    {
+        "id": "70f2b8a1bbd2ba7a",
+        "type": "function",
+        "z": "fe649a070c585a18",
+        "name": "Ignore Blank Frames",
+        "func": "// In case CSV has blank lines.\nif (!msg.payload || !msg.payload.trim()) return null;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1180,
+        "y": 300,
+        "wires": [
+            [
+                "ba0281515b0dd58a"
+            ]
+        ]
+    },
+    {
+        "id": "ba0281515b0dd58a",
+        "type": "link out",
+        "z": "fe649a070c585a18",
+        "name": "link out 1",
+        "mode": "link",
+        "links": [
+            "595351ac2dd69914"
+        ],
+        "x": 1345,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "1459cd38c928d2fa",
+        "type": "inject",
+        "z": "fe649a070c585a18",
+        "name": "Load Processed CSV",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 240,
+        "y": 500,
+        "wires": [
+            [
+                "e3bb315336d0689d"
+            ]
+        ]
+    },
+    {
+        "id": "e3bb315336d0689d",
+        "type": "file in",
+        "z": "fe649a070c585a18",
+        "name": "",
+        "filename": "/data/data/test_processed.csv",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 530,
+        "y": 500,
+        "wires": [
+            [
+                "dac8e0203f47a37d"
+            ]
+        ]
+    },
+    {
+        "id": "b84d805519024d9f",
+        "type": "comment",
+        "z": "fe649a070c585a18",
+        "name": "Edit Path to Insert Your File",
+        "info": "",
+        "x": 510,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "dac8e0203f47a37d",
+        "type": "split",
+        "z": "fe649a070c585a18",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "property": "payload",
+        "x": 750,
+        "y": 500,
+        "wires": [
+            [
+                "cc8360773dede9bc"
+            ]
+        ]
+    },
+    {
+        "id": "cc8360773dede9bc",
+        "type": "function",
+        "z": "fe649a070c585a18",
+        "name": "Ignore Blank Frames",
+        "func": "// In case CSV has blank lines.\nif (!msg.payload || !msg.payload.trim()) return null;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 500,
+        "wires": [
+            [
+                "ba182e96d5778aeb"
+            ]
+        ]
+    },
+    {
+        "id": "ba182e96d5778aeb",
+        "type": "function",
+        "z": "fe649a070c585a18",
+        "name": "Strip Timestamp",
+        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    // Check if this is the first row. (When csv file is split, it's separated into msg.parts)\n    const isFirstRow = msg.parts && msg.parts.index === 0;\n\n    // Reset the \"no-timestamp warning sent\" flag at the start of each new file.\n    if (isFirstRow) {\n        context.set(\"noTsLogSent\", false);\n    }\n\n    if (fields.length >= 16) {\n        const ts = fields[0].trim();\n        const parsed = ts ? new Date(ts) : null;\n        const isValid = parsed && !isNaN(parsed.getTime());\n\n        if (isValid) {\n            // Good timestamp — use it and update tracker.\n            msg.timestamp = parsed.toISOString();\n            context.set(\"synthTime\", parsed.getTime());\n        } else {\n            // Corrupted or blank — fill synthetically, log every occurrence.\n            msg.timestamp = getSyntheticTime(isFirstRow);\n            const m = ts\n                ? `Corrupted timestamp: \"${ts}\" — synthetic time used.`\n                : \"Blank timestamp field — synthetic time used.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n        }\n\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else if (fields.length === 15) {\n        // Serial/MQTT (no msg.parts): 15 fields is normal — generate synthetic, no log.\n        // CSV (has msg.parts from Split): log once per file on first occurrence.\n        msg.timestamp = getSyntheticTime(isFirstRow);\n\n        if (msg.parts && !context.get(\"noTsLogSent\")) {\n            const m = \"No timestamp column in CSV — generating synthetic timestamps at 300ms intervals.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n            context.set(\"noTsLogSent\", true);\n        }\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    // reset = true or false from isFirstRow\n    function getSyntheticTime(reset) {\n        if (reset) {\n            const now = Date.now();\n            context.set(\"synthTime\", now);\n            return new Date(now).toISOString();\n        }\n        const last = context.get(\"synthTime\") || Date.now();\n        const next = last + 300;\n        context.set(\"synthTime\", next);\n        return new Date(next).toISOString();\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1180,
+        "y": 500,
+        "wires": [
+            [
+                "5b0e12c348a602a4"
+            ],
+            [
+                "70d78daf4231c3c7"
+            ]
+        ]
+    },
+    {
+        "id": "7318decc3690c376",
+        "type": "comment",
+        "z": "fe649a070c585a18",
+        "name": "Strip Timestamp + Format into 15 Fields",
+        "info": "Possible cases:\n\nAll 15 fields, serial/MQTT — normal, never log (serial expects no timestamp)\nAll 15 fields, CSV — log once on first occurrence\nAll 16 fields, valid timestamps — no log\n16 fields, corrupted/blank timestamp — log every occurrence\nRow 0 = 16 valid, later row = 15 — log when it first drops (flag not set yet)\nRow 0 = 15, rows 1+ = 16 valid — log on row 0, rows 1+ use real timestamps\nRow 0 = 16 corrupted, row 1 = 16 valid — log on row 0, row 1 recovers correctly",
+        "x": 1260,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "5b0e12c348a602a4",
+        "type": "function",
+        "z": "fe649a070c585a18",
+        "name": "Parse Processed CSV",
+        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    if (fields.length < 15) {\n        const m = `Processed CSV: bad field count (got ${fields.length}, expected 15). Row dropped.`;\n        node.warn(m);\n        sendLog(\"warn\", m);\n        return null;\n    }\n\n    // Column order (timestamp already stripped by Strip Timestamp):\n    // [0]=rpm [1]=amp [2]=volt [3]=trq [4]=mode\n    // [5]=err [6]=warn [7]=igbt_c [8]=mot_c\n    // [9]=l_regen [10]=l_err [11]=l_warn [12]=l_ok [13]=l_pump [14]=drive_ena\n\n    msg.params = [\n        msg.timestamp,\n        parseNum(fields[0]),   // rpm\n        parseNum(fields[1]),   // amp\n        parseNum(fields[2]),   // volt\n        parseNum(fields[3]),   // trq\n        parseInt_(fields[4]),  // mode\n        parseInt_(fields[5]),  // err\n        parseInt_(fields[6]),  // warn\n        parseNum(fields[7]),   // igbt_c\n        parseNum(fields[8]),   // mot_c\n        parseBool(fields[9]),  // l_regen\n        parseBool(fields[10]), // l_err\n        parseBool(fields[11]), // l_warn\n        parseBool(fields[12]), // l_ok\n        parseBool(fields[13]), // l_pump\n        parseBool(fields[14]), // drive_ena\n        null                   // healed_fields (not applicable for import)\n    ];\n\n    msg.payload = msg.params;\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function parseNum(v) {\n        const n = parseFloat(v);\n        return isNaN(n) ? null : n;\n    }\n\n    function parseInt_(v) {\n        const n = parseInt(v, 10);\n        return isNaN(n) ? null : n;\n    }\n\n    function parseBool(v) {\n        const s = String(v).trim().toLowerCase();\n        if (s === \"true\"  || s === \"t\" || s === \"1\") return true;\n        if (s === \"false\" || s === \"f\" || s === \"0\") return false;\n        return null;\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time:    msg.timestamp,\n                level:   level,\n                node:    \"Parse Processed CSV\",\n                message: message,\n                fields:  null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Parse Processed CSV': ${error.message}`, msg);\n    return null;\n}",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1520,
+        "y": 500,
+        "wires": [
+            [
+                "613a4ac7f9d76fe1"
+            ],
+            [
+                "70d78daf4231c3c7"
+            ]
+        ]
+    },
+    {
+        "id": "613a4ac7f9d76fe1",
+        "type": "postgresql",
+        "z": "fe649a070c585a18",
+        "name": "Car Telemetry Database",
+        "query": "INSERT INTO telemetry_records\n    (time, rpm, amp, volt, trq, mode, err, warn, igbt_c, mot_c,\n     l_regen, l_err, l_warn, l_ok, l_pump, drive_ena, healed_fields)\nVALUES\n    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);",
+        "postgreSQLConfig": "pg-config",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1850,
+        "y": 500,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "70d78daf4231c3c7",
+        "type": "function",
+        "z": "fe649a070c585a18",
+        "name": "Normalize Log Event",
+        "func": "try {\n\n    // PATH A: If this message was intercepted by the global 'catch' node\n    if (msg.error) {\n        msg.params = [\n            msg.timestamp || new Date().toISOString(),  \n            // Probably code-related error, so the content in 'try' wouldn't execute for that node.\n            \"critical\",                                \n            msg.error.source?.name || \"Unknown Block\",   \n            `CRASH: ${msg.error.message}`,              \n            null                                        \n        ];\n    }\n    // PATH B: Standard manual log coming from Output Port 2 nodes \n    else if (msg.payload && msg.payload.level) {\n        msg.params = [\n            msg.payload.time,\n            msg.payload.level,\n            msg.payload.node,\n            msg.payload.message,\n            msg.payload.fields\n        ];\n    }\n    // PATH C: Safety valve for unexpected message formats \n    else {\n        node.error(\"'Normalize Log Event' node received an unrecognized message payload shape.\");\n        return null;\n    }\n\n    return msg;\n\n} catch (error) {\n\n    node.error(`Error inside 'Normalize Log Event' node: ${error.message}`, msg);\n    return null;\n\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1220,
+        "y": 760,
+        "wires": [
+            [
+                "2bf0e2c7bb8d79c0",
+                "3155d576462f3db5"
+            ]
+        ]
+    },
+    {
+        "id": "2bf0e2c7bb8d79c0",
+        "type": "postgresql",
+        "z": "fe649a070c585a18",
+        "name": "Log Database",
+        "query": "INSERT INTO event_logs (time, level, node, message, fields)\nVALUES ($1, $2, $3, $4, $5);",
+        "postgreSQLConfig": "pg-config",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1440,
+        "y": 760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "271232750824bfd1",
+        "type": "catch",
+        "z": "fe649a070c585a18",
+        "name": "",
+        "scope": [
+            "613a4ac7f9d76fe1",
+            "5b0e12c348a602a4",
+            "ba182e96d5778aeb",
+            "cc8360773dede9bc",
+            "dac8e0203f47a37d",
+            "e3bb315336d0689d",
+            "1459cd38c928d2fa",
+            "ba0281515b0dd58a",
+            "70f2b8a1bbd2ba7a",
+            "57fa988876a4d07f",
+            "250c678a8a748ac7",
+            "fcbe826f2d8669af"
+        ],
+        "uncaught": false,
+        "x": 840,
+        "y": 760,
+        "wires": [
+            [
+                "70d78daf4231c3c7"
+            ]
+        ]
+    },
+    {
+        "id": "3155d576462f3db5",
+        "type": "debug",
+        "z": "fe649a070c585a18",
+        "name": "debug 3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1440,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "cb576f911d0f1671",
+        "type": "comment",
+        "z": "fe649a070c585a18",
+        "name": "Exceptions",
+        "info": "This node does not catch errors from 'Normalize Log Events' and 'Log Database' to prevent an infinity loop when the database is down.",
+        "x": 840,
+        "y": 800,
+        "wires": []
+    },
+    {
         "id": "6dc119dca255f8c0",
         "type": "inject",
         "z": "f6f2187d.f17ca8",
@@ -72,8 +637,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 190,
-        "y": 440,
+        "x": 250,
+        "y": 560,
         "wires": [
             [
                 "e46f4e14fa357fb2"
@@ -92,11 +657,11 @@
         "initialize": "",
         "finalize": "var h = context.get(\"handle\");\nif (h) clearInterval(h);",
         "libs": [],
-        "x": 460,
-        "y": 440,
+        "x": 540,
+        "y": 560,
         "wires": [
             [
-                "96914126869b24ea"
+                "e49b91faaf764bc0"
             ]
         ]
     },
@@ -105,15 +670,15 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Parse CSV",
-        "func": "try {\n\n    // Stamp the frame immediately so every warning shares the same timestamp.\n    msg.timestamp = new Date().toISOString();\n\n    // Parse the 15-field CSV frame. \n    const rawDataFrame = String(msg.payload).split(\",\");\n\n    // If any required field is missing, drop the frame with a clear warning.\n    if (rawDataFrame.length !== 15) {\n        const m = `Bad frame: got ${rawDataFrame.length} fields, expected 15. This frame is dropped.`;\n        node.warn(m);\n        sendLog(\"warn\", m);\n        return null;\n    }\n\n    // Mode (rawDataFrame[4]) is checked separately because it is expected as a string. \n    // It defaults to an empty string in case there's no value.\n    // It trims spaces just in case.\n    const mode = String(rawDataFrame[4] ?? \"\").trim();\n    if (!mode) {\n        const m = \"Missing mode. This frame is dropped.\";\n        node.warn(m);\n        sendLog(\"warn\", m);\n        return null;\n    }\n\n    // Mark all the numeric fields. \n    const numericFields = [\n        [\"rpm\", 0], [\"amp\", 1], [\"volt\", 2], [\"trq\", 3],\n        [\"igbtC\", 5], [\"motC\", 6], [\"err\", 7], [\"warn\", 8],\n        [\"L_REGEN\", 9], [\"L_ERR\", 10], [\"L_WARN\", 11], [\"L_OK\", 12],\n        [\"L_PUMP\", 13], [\"drive_ena\", 14]\n    ];\n\n    // Build into a local sandbox. Only commit to msg.raw if every field passes.\n    // 'Mode' is already checked, so it is immediately thrown in.\n    const raw = { mode };\n    // Process other telemetry fields sequentially using the mapping checklist.\n    for (const [name, idx] of numericFields) {\n        const value = pick(idx, name);\n        if (value === null) return null;\n        // Put the verified values into the output object.\n        raw[name] = value;\n    }\n\n    // Every field is valid. Commit the sandbox to the message.\n    msg.raw = raw;\n\n    return msg;\n\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    // pick: Parses a numeric field, warns and returns null if invalid.\n    function pick(idx, name) {\n        const raw = rawDataFrame[idx];\n        // Check if it's undefined or if there is no value.\n        if (raw === undefined || raw === \"\") {\n            const m = `Missing field: ${name}. This frame is dropped.`;\n            node.warn(m);\n            sendLog(\"warn\", m);\n            return null;\n        }\n        // Before this, all of them are strings. Try converting them into numbers. If it's not a number, it will be NaN.\n        const rawNumber = Number(raw);\n        \n        // Check if it is a number. If not (NaN), then drop it.\n        if (Number.isNaN(rawNumber)) {\n            const m = `Bad ${name}: ${JSON.stringify(raw)} is not a number. This frame is dropped.`;\n            node.warn(m);\n            sendLog(\"warn\", m);\n            return null;\n        }\n        // Everything is fine, return the number. \n        return rawNumber;\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: msg.timestamp,\n                level: level,\n                node: \"Parse CSV\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n\n    // For this part, these are critical unknown errors, so it's best if we just drop the entire frame. No healing. Fix the bug.\n    node.error(`Critical Failure in 'Parse CSV' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
+        "func": "try {\n\n    // Stamp the frame immediately so every warning shares the same timestamp.\n    msg.timestamp = msg.timestamp || new Date().toISOString();\n\n    // Parse the 15-field CSV frame. \n    const rawDataFrame = String(msg.payload).split(\",\");\n\n    // If any required field is missing, drop the frame with a clear warning.\n    if (rawDataFrame.length !== 15) {\n        const m = `Bad frame: got ${rawDataFrame.length} fields, expected 15. This frame is dropped.`;\n        node.warn(m);\n        sendLog(\"warn\", m);\n        return null;\n    }\n\n    // Mode (rawDataFrame[4]) is checked separately because it is expected as a string. \n    // It defaults to an empty string in case there's no value.\n    // It trims spaces just in case.\n    const mode = String(rawDataFrame[4] ?? \"\").trim();\n    if (!mode) {\n        const m = \"Missing mode. This frame is dropped.\";\n        node.warn(m);\n        sendLog(\"warn\", m);\n        return null;\n    }\n\n    // Mark all the numeric fields. \n    const numericFields = [\n        [\"rpm\", 0], [\"amp\", 1], [\"volt\", 2], [\"trq\", 3],\n        [\"igbtC\", 5], [\"motC\", 6], [\"err\", 7], [\"warn\", 8],\n        [\"L_REGEN\", 9], [\"L_ERR\", 10], [\"L_WARN\", 11], [\"L_OK\", 12],\n        [\"L_PUMP\", 13], [\"drive_ena\", 14]\n    ];\n\n    // Build into a local sandbox. Only commit to msg.raw if every field passes.\n    // 'Mode' is already checked, so it is immediately thrown in.\n    const raw = { mode };\n    // Process other telemetry fields sequentially using the mapping checklist.\n    for (const [name, idx] of numericFields) {\n        const value = pick(idx, name);\n        if (value === null) return null;\n        // Put the verified values into the output object.\n        raw[name] = value;\n    }\n\n    // Every field is valid. Commit the sandbox to the message.\n    msg.raw = raw;\n\n    return msg;\n\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    // pick: Parses a numeric field, warns and returns null if invalid.\n    function pick(idx, name) {\n        const raw = rawDataFrame[idx];\n        // Check if it's undefined or if there is no value.\n        if (raw === undefined || raw === \"\") {\n            const m = `Missing field: ${name}. This frame is dropped.`;\n            node.warn(m);\n            sendLog(\"warn\", m);\n            return null;\n        }\n        // Before this, all of them are strings. Try converting them into numbers. If it's not a number, it will be NaN.\n        const rawNumber = Number(raw);\n        \n        // Check if it is a number. If not (NaN), then drop it.\n        if (Number.isNaN(rawNumber)) {\n            const m = `Bad ${name}: ${JSON.stringify(raw)} is not a number. This frame is dropped.`;\n            node.warn(m);\n            sendLog(\"warn\", m);\n            return null;\n        }\n        // Everything is fine, return the number. \n        return rawNumber;\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: msg.timestamp,\n                level: level,\n                node: \"Parse CSV\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n\n    // For this part, these are critical unknown errors, so it's best if we just drop the entire frame. No healing. Fix the bug.\n    node.error(`Critical Failure in 'Parse CSV' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 690,
-        "y": 320,
+        "x": 1210,
+        "y": 420,
         "wires": [
             [
                 "6c7f7fa4f1efcdad"
@@ -135,8 +700,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1110,
-        "y": 320,
+        "x": 1630,
+        "y": 420,
         "wires": [
             [
                 "0d1965e529e9c3f2"
@@ -158,8 +723,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1860,
-        "y": 320,
+        "x": 2380,
+        "y": 420,
         "wires": [
             [
                 "fd0b118cc2d5b290"
@@ -181,8 +746,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2860,
-        "y": 320,
+        "x": 3380,
+        "y": 420,
         "wires": [
             [
                 "6484947809e67f98"
@@ -204,8 +769,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2390,
-        "y": 320,
+        "x": 2910,
+        "y": 420,
         "wires": [
             [
                 "f5eb9aa29c573436"
@@ -225,8 +790,8 @@
         "split": false,
         "rowsPerMsg": 1,
         "outputs": 1,
-        "x": 3990,
-        "y": 320,
+        "x": 4510,
+        "y": 420,
         "wires": [
             []
         ]
@@ -237,8 +802,8 @@
         "z": "f6f2187d.f17ca8",
         "name": "convert + return null of corrupted",
         "info": "",
-        "x": 1830,
-        "y": 280,
+        "x": 2350,
+        "y": 380,
         "wires": []
     },
     {
@@ -247,8 +812,8 @@
         "z": "f6f2187d.f17ca8",
         "name": "convert + return null if corrupted",
         "info": "",
-        "x": 1070,
-        "y": 280,
+        "x": 1590,
+        "y": 380,
         "wires": []
     },
     {
@@ -257,8 +822,8 @@
         "z": "f6f2187d.f17ca8",
         "name": "Convert + return null if not boolean",
         "info": "",
-        "x": 2780,
-        "y": 280,
+        "x": 3300,
+        "y": 380,
         "wires": []
     },
     {
@@ -267,8 +832,8 @@
         "z": "f6f2187d.f17ca8",
         "name": "convert + return null if corrupted",
         "info": "",
-        "x": 1490,
-        "y": 280,
+        "x": 2010,
+        "y": 380,
         "wires": []
     },
     {
@@ -283,8 +848,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1450,
-        "y": 320,
+        "x": 1970,
+        "y": 420,
         "wires": [
             [
                 "4becac2134c56c46"
@@ -300,8 +865,8 @@
         "z": "f6f2187d.f17ca8",
         "name": "ONLY click for testing the program",
         "info": "",
-        "x": 220,
-        "y": 400,
+        "x": 300,
+        "y": 520,
         "wires": []
     },
     {
@@ -310,8 +875,8 @@
         "z": "f6f2187d.f17ca8",
         "name": "Parse + Drop Entire Frame",
         "info": "Drop the entire frame if:\n1. More than 15 fields are detected per frame.\n2. Any field contains wrong data type.",
-        "x": 730,
-        "y": 280,
+        "x": 1250,
+        "y": 380,
         "wires": []
     },
     {
@@ -326,8 +891,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2400,
-        "y": 660,
+        "x": 2920,
+        "y": 760,
         "wires": [
             [
                 "3ae4f79c977a509d",
@@ -345,8 +910,8 @@
         "split": false,
         "rowsPerMsg": 1,
         "outputs": 1,
-        "x": 2620,
-        "y": 660,
+        "x": 3140,
+        "y": 760,
         "wires": [
             []
         ]
@@ -366,13 +931,14 @@
             "fd0b118cc2d5b290",
             "ab62583cbb880fb1",
             "0d1965e529e9c3f2",
-            "f815c77fc870dd9c",
             "cbf78967934887d1",
-            "6484947809e67f98"
+            "6484947809e67f98",
+            "e49b91faaf764bc0",
+            "595351ac2dd69914"
         ],
         "uncaught": false,
-        "x": 2020,
-        "y": 660,
+        "x": 2540,
+        "y": 760,
         "wires": [
             [
                 "f363f34901490c9c"
@@ -391,8 +957,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 3940,
-        "y": 380,
+        "x": 4460,
+        "y": 480,
         "wires": []
     },
     {
@@ -407,8 +973,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 2620,
-        "y": 760,
+        "x": 3140,
+        "y": 860,
         "wires": []
     },
     {
@@ -417,8 +983,8 @@
         "z": "f6f2187d.f17ca8",
         "name": "Validation for rpm/amp/volt/trq/mode",
         "info": "These values are not yet validated from previous nodes, unlike mode and flags.",
-        "x": 2370,
-        "y": 240,
+        "x": 2890,
+        "y": 340,
         "wires": []
     },
     {
@@ -427,23 +993,9 @@
         "z": "f6f2187d.f17ca8",
         "name": "Exceptions",
         "info": "This node does not catch errors from 'Normalize Log Events' and 'Log Database' to prevent an infinity loop when the database is down.",
-        "x": 2020,
-        "y": 700,
+        "x": 2540,
+        "y": 800,
         "wires": []
-    },
-    {
-        "id": "f815c77fc870dd9c",
-        "type": "serial in",
-        "z": "f6f2187d.f17ca8",
-        "name": "fishPort",
-        "serial": "5bfed78819477e13",
-        "x": 470,
-        "y": 320,
-        "wires": [
-            [
-                "96914126869b24ea"
-            ]
-        ]
     },
     {
         "id": "cbf78967934887d1",
@@ -457,8 +1009,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 3670,
-        "y": 320,
+        "x": 4190,
+        "y": 420,
         "wires": [
             [
                 "ab62583cbb880fb1"
@@ -480,8 +1032,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 3360,
-        "y": 320,
+        "x": 3880,
+        "y": 420,
         "wires": [
             [
                 "cbf78967934887d1"
@@ -497,8 +1049,8 @@
         "z": "f6f2187d.f17ca8",
         "name": "Return Last Healthy Value if Corrupted",
         "info": "Healed data is logged in telemetry_records.",
-        "x": 2370,
-        "y": 280,
+        "x": 2890,
+        "y": 380,
         "wires": []
     },
     {
@@ -507,8 +1059,59 @@
         "z": "f6f2187d.f17ca8",
         "name": "Convert + return null if not boolean",
         "info": "",
-        "x": 3380,
-        "y": 280,
+        "x": 3900,
+        "y": 380,
         "wires": []
+    },
+    {
+        "id": "e49b91faaf764bc0",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Strip Timestamp",
+        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n    const isFirstRow = msg.parts && msg.parts.index === 0;\n\n    // Reset the \"no-timestamp warning sent\" flag at the start of each new file.\n    if (isFirstRow) {\n        context.set(\"noTsLogSent\", false);\n    }\n\n    if (fields.length >= 16) {\n        const ts = fields[0].trim();\n        const parsed = ts ? new Date(ts) : null;\n        const isValid = parsed && !isNaN(parsed.getTime());\n\n        if (isValid) {\n            // Good timestamp — use it and update tracker.\n            msg.timestamp = parsed.toISOString();\n            context.set(\"synthTime\", parsed.getTime());\n        } else {\n            // Corrupted or blank — fill synthetically, log every occurrence.\n            msg.timestamp = getSyntheticTime(isFirstRow);\n            const m = ts\n                ? `Corrupted timestamp: \"${ts}\" — synthetic time used.`\n                : \"Blank timestamp field — synthetic time used.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n        }\n\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else if (fields.length === 15) {\n        // Serial/MQTT (no msg.parts): 15 fields is normal — generate synthetic, no log.\n        // CSV (has msg.parts from Split): log once per file on first occurrence.\n        msg.timestamp = getSyntheticTime(isFirstRow);\n\n        if (msg.parts && !context.get(\"noTsLogSent\")) {\n            const m = \"No timestamp column in CSV — generating synthetic timestamps at 300ms intervals.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n            context.set(\"noTsLogSent\", true);\n        }\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function getSyntheticTime(reset) {\n        if (reset) {\n            const now = Date.now();\n            context.set(\"synthTime\", now);\n            return new Date(now).toISOString();\n        }\n        const last = context.get(\"synthTime\") || Date.now();\n        const next = last + 300;\n        context.set(\"synthTime\", next);\n        return new Date(next).toISOString();\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 420,
+        "wires": [
+            [
+                "96914126869b24ea"
+            ],
+            [
+                "f363f34901490c9c"
+            ]
+        ]
+    },
+    {
+        "id": "4185383bf9c49659",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "Strip Timestamp + Format into 15 Fields",
+        "info": "Possible cases:\n\nAll 15 fields, serial/MQTT — normal, never log (serial expects no timestamp)\nAll 15 fields, CSV — log once on first occurrence\nAll 16 fields, valid timestamps — no log\n16 fields, corrupted/blank timestamp — log every occurrence\nRow 0 = 16 valid, later row = 15 — log when it first drops (flag not set yet)\nRow 0 = 15, rows 1+ = 16 valid — log on row 0, rows 1+ use real timestamps\nRow 0 = 16 corrupted, row 1 = 16 valid — log on row 0, row 1 recovers correctly",
+        "x": 880,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "595351ac2dd69914",
+        "type": "link in",
+        "z": "f6f2187d.f17ca8",
+        "name": "link in 1",
+        "links": [
+            "ba0281515b0dd58a",
+            "af0a28c0e371b550",
+            "bf9e58810d8e6472"
+        ],
+        "x": 645,
+        "y": 420,
+        "wires": [
+            [
+                "e49b91faaf764bc0"
+            ]
+        ]
     }
 ]
