@@ -73,13 +73,13 @@
         "name": "",
         "broker": "mosquitto",
         "port": 1883,
-        "clientid": "",
+        "clientid": "nodered-telemetry-mqtt",
         "autoConnect": true,
         "usetls": false,
         "protocolVersion": 4,
         "keepalive": 60,
-        "cleansession": true,
-        "autoUnsubscribe": true,
+        "cleansession": false,
+        "autoUnsubscribe": false,
         "birthTopic": "",
         "birthQos": "0",
         "birthRetain": "false",
@@ -243,6 +243,16 @@
         "wires": []
     },
     {
+        "id": "b08de873a8827b16",
+        "type": "comment",
+        "z": "4a85ca0db70e0d85",
+        "name": "Edit port details to match your computer's port.",
+        "info": "",
+        "x": 340,
+        "y": 100,
+        "wires": []
+    },
+    {
         "id": "fcbe826f2d8669af",
         "type": "inject",
         "z": "fe649a070c585a18",
@@ -263,7 +273,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 420,
+        "x": 520,
         "y": 300,
         "wires": [
             [
@@ -283,7 +293,7 @@
         "sendError": false,
         "encoding": "none",
         "allProps": false,
-        "x": 670,
+        "x": 770,
         "y": 300,
         "wires": [
             [
@@ -297,7 +307,7 @@
         "z": "fe649a070c585a18",
         "name": "Edit Path to Insert Your File",
         "info": "",
-        "x": 670,
+        "x": 770,
         "y": 260,
         "wires": []
     },
@@ -313,7 +323,7 @@
         "stream": false,
         "addname": "",
         "property": "payload",
-        "x": 970,
+        "x": 1070,
         "y": 300,
         "wires": [
             [
@@ -333,7 +343,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1180,
+        "x": 1280,
         "y": 300,
         "wires": [
             [
@@ -348,9 +358,10 @@
         "name": "link out 1",
         "mode": "link",
         "links": [
+            "5a6c2c12c02ef4b5",
             "595351ac2dd69914"
         ],
-        "x": 1345,
+        "x": 1445,
         "y": 300,
         "wires": []
     },
@@ -375,7 +386,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 240,
+        "x": 540,
         "y": 500,
         "wires": [
             [
@@ -395,7 +406,7 @@
         "sendError": false,
         "encoding": "none",
         "allProps": false,
-        "x": 530,
+        "x": 830,
         "y": 500,
         "wires": [
             [
@@ -409,7 +420,7 @@
         "z": "fe649a070c585a18",
         "name": "Edit Path to Insert Your File",
         "info": "",
-        "x": 510,
+        "x": 810,
         "y": 460,
         "wires": []
     },
@@ -425,7 +436,7 @@
         "stream": false,
         "addname": "",
         "property": "payload",
-        "x": 750,
+        "x": 1050,
         "y": 500,
         "wires": [
             [
@@ -445,7 +456,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 940,
+        "x": 1240,
         "y": 500,
         "wires": [
             [
@@ -458,14 +469,14 @@
         "type": "function",
         "z": "fe649a070c585a18",
         "name": "Strip Timestamp",
-        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    // Check if this is the first row. (When csv file is split, it's separated into msg.parts)\n    const isFirstRow = msg.parts && msg.parts.index === 0;\n\n    // Reset the \"no-timestamp warning sent\" flag at the start of each new file.\n    if (isFirstRow) {\n        context.set(\"noTsLogSent\", false);\n    }\n\n    if (fields.length >= 16) {\n        const ts = fields[0].trim();\n        const parsed = ts ? new Date(ts) : null;\n        const isValid = parsed && !isNaN(parsed.getTime());\n\n        if (isValid) {\n            // Good timestamp — use it and update tracker.\n            msg.timestamp = parsed.toISOString();\n            context.set(\"synthTime\", parsed.getTime());\n        } else {\n            // Corrupted or blank — fill synthetically, log every occurrence.\n            msg.timestamp = getSyntheticTime(isFirstRow);\n            const m = ts\n                ? `Corrupted timestamp: \"${ts}\" — synthetic time used.`\n                : \"Blank timestamp field — synthetic time used.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n        }\n\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else if (fields.length === 15) {\n        // Serial/MQTT (no msg.parts): 15 fields is normal — generate synthetic, no log.\n        // CSV (has msg.parts from Split): log once per file on first occurrence.\n        msg.timestamp = getSyntheticTime(isFirstRow);\n\n        if (msg.parts && !context.get(\"noTsLogSent\")) {\n            const m = \"No timestamp column in CSV — generating synthetic timestamps at 300ms intervals.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n            context.set(\"noTsLogSent\", true);\n        }\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    // reset = true or false from isFirstRow\n    function getSyntheticTime(reset) {\n        if (reset) {\n            const now = Date.now();\n            context.set(\"synthTime\", now);\n            return new Date(now).toISOString();\n        }\n        const last = context.get(\"synthTime\") || Date.now();\n        const next = last + 300;\n        context.set(\"synthTime\", next);\n        return new Date(next).toISOString();\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
+        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    if (fields.length >= 16) {\n        const ts = fields[0].trim();\n        const parsed = new Date(ts);\n\n        if (!ts || isNaN(parsed.getTime())) {\n            const m = `Invalid timestamp: \"${ts}\" — row dropped.`;\n            node.warn(m);\n            sendLog(\"warn\", m);\n            return null;\n        }\n\n        msg.timestamp = parsed.toISOString();\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else {\n        const m = `Bad field count: got ${fields.length}, expected 16+. Row dropped. Are you sure this data has been processed? `;\n        node.warn(m);\n        sendLog(\"warn\", m);\n        return null;\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1180,
+        "x": 1480,
         "y": 500,
         "wires": [
             [
@@ -475,16 +486,6 @@
                 "70d78daf4231c3c7"
             ]
         ]
-    },
-    {
-        "id": "7318decc3690c376",
-        "type": "comment",
-        "z": "fe649a070c585a18",
-        "name": "Strip Timestamp + Format into 15 Fields",
-        "info": "Possible cases:\n\nAll 15 fields, serial/MQTT — normal, never log (serial expects no timestamp)\nAll 15 fields, CSV — log once on first occurrence\nAll 16 fields, valid timestamps — no log\n16 fields, corrupted/blank timestamp — log every occurrence\nRow 0 = 16 valid, later row = 15 — log when it first drops (flag not set yet)\nRow 0 = 15, rows 1+ = 16 valid — log on row 0, rows 1+ use real timestamps\nRow 0 = 16 corrupted, row 1 = 16 valid — log on row 0, row 1 recovers correctly",
-        "x": 1260,
-        "y": 460,
-        "wires": []
     },
     {
         "id": "5b0e12c348a602a4",
@@ -498,7 +499,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1520,
+        "x": 1820,
         "y": 500,
         "wires": [
             [
@@ -519,7 +520,7 @@
         "split": false,
         "rowsPerMsg": 1,
         "outputs": 1,
-        "x": 1850,
+        "x": 2150,
         "y": 500,
         "wires": [
             []
@@ -537,7 +538,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1220,
+        "x": 1520,
         "y": 760,
         "wires": [
             [
@@ -556,7 +557,7 @@
         "split": false,
         "rowsPerMsg": 1,
         "outputs": 1,
-        "x": 1440,
+        "x": 1740,
         "y": 760,
         "wires": [
             []
@@ -582,7 +583,7 @@
             "fcbe826f2d8669af"
         ],
         "uncaught": false,
-        "x": 840,
+        "x": 1140,
         "y": 760,
         "wires": [
             [
@@ -602,7 +603,7 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1440,
+        "x": 1740,
         "y": 860,
         "wires": []
     },
@@ -612,8 +613,38 @@
         "z": "fe649a070c585a18",
         "name": "Exceptions",
         "info": "This node does not catch errors from 'Normalize Log Events' and 'Log Database' to prevent an infinity loop when the database is down.",
-        "x": 840,
+        "x": 1140,
         "y": 800,
+        "wires": []
+    },
+    {
+        "id": "017f90c69de76e45",
+        "type": "comment",
+        "z": "fe649a070c585a18",
+        "name": "CSV with Raw Values",
+        "info": "",
+        "x": 300,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "667dc6de3b7691ee",
+        "type": "comment",
+        "z": "fe649a070c585a18",
+        "name": "CSV That Already Went Through Our Program",
+        "info": "",
+        "x": 230,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "2c49a56cd0123cac",
+        "type": "comment",
+        "z": "fe649a070c585a18",
+        "name": "Parse Out Timestamp (No Healing)",
+        "info": "",
+        "x": 1540,
+        "y": 460,
         "wires": []
     },
     {
@@ -762,7 +793,7 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Heal (rpm/amp/volt/trq/igbt_c/mot_c/mode)",
-        "func": "try {\n\n    // 1. Fetch the entire last known good snapshot of the car from memory.\n    let history = context.get(\"carHistorySnapshot\") ?? {\n        rpm: 0, amp: 0.0, volt: 0.0, trq: 0.0,\n        igbt_c: 0.00, mot_c: 0.00,\n        mode: 0\n    };\n\n    const r = msg.real;\n\n    // 2. Initialize as an ARRAY so it passes down the wire cleanly\n    msg.healedFields = [];\n\n    // 3. Numerical Boundaries Checklist\n    const ranges = {\n        rpm: [-6000, 6000],\n        amp: [-250, 250],\n        volt: [-250, 250],\n        trq: [-150, 150],\n        igbt_c: [-40, 200],\n        mot_c: [-40, 200],\n        mode: [0, 2],       // 0 = Neutral, 1 = Drive, 2 = Reverse\n    };\n\n    // 4. Scan and heal numerical metrics\n    for (const k of Object.keys(ranges)) {\n        const [lo, hi] = ranges[k];\n\n        if (Number.isNaN(r[k]) || r[k] === undefined || r[k] === null || r[k] < lo || r[k] > hi) {\n            const m = `Glitch caught: ${k} = ${r[k]} → healed from history (${history[k]}).`;\n            node.warn(m);\n\n            // Push the healed field name into the array\n            msg.healedFields.push(k);\n            r[k] = history[k];   // Heal using history\n        } else {\n            history[k] = r[k];   // Update history pad\n        }\n    }\n\n    // 5. Save the complete vehicle snapshot back to node memory.\n    context.set(\"carHistorySnapshot\", history);\n\n    // 6. If any fields were healed, send ONE summary entry to the DB log table.\n    if (msg.healedFields.length > 0) {\n        const m = `Healed ${msg.healedFields.length} field(s): [${msg.healedFields.join(\", \")}]`;\n        node.warn(m);\n        sendLog(\"warn\", m, msg.healedFields);\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function sendLog(level, message, fields = null) {\n        node.send([null, {\n            payload: {\n                time: msg.timestamp,\n                level: level,\n                // Updated node name to reflect the split\n                node: \"Heal\",\n                message: message,\n                fields: fields\n            }\n        }]);\n    }\n\n} catch (error) {\n\n    // Updated node name to reflect the split\n    node.error(`Critical Failure in 'Heal' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
+        "func": "try {\n\n    // 1. Fetch the entire last known good snapshot of the car from memory.\n    const defaults = { rpm: 0, amp: 0.0, volt: 0.0, trq: 0.0, igbt_c: 0.00, mot_c: 0.00, mode: 0 };\n    // Put in defaults first, then replace the ones exist in snapshot to prevent error from later fields being null.\n    let history = { ...defaults, ...(context.get(\"carHistorySnapshot\") ?? {}) };\n\n    const r = msg.real;\n\n    // 2. Initialize as an ARRAY so it passes down the wire cleanly\n    msg.healedFields = [];\n\n    // 3. Numerical Boundaries Checklist\n    const ranges = {\n        rpm: [-6000, 6000],\n        amp: [-250, 250],\n        volt: [-250, 250],\n        trq: [-150, 150],\n        igbt_c: [-40, 200],\n        mot_c: [-40, 200],\n        mode: [0, 2],       // 0 = Neutral, 1 = Drive, 2 = Reverse\n    };\n\n    // 4. Scan and heal numerical metrics\n    for (const k of Object.keys(ranges)) {\n        const [lo, hi] = ranges[k];\n\n        if (Number.isNaN(r[k]) || r[k] === undefined || r[k] === null || r[k] < lo || r[k] > hi) {\n            const m = `Glitch caught: ${k} = ${r[k]} → healed from history (${history[k]}).`;\n            node.warn(m);\n\n            // Push the healed field name into the array\n            msg.healedFields.push(k);\n            r[k] = history[k];   // Heal using history\n        } else {\n            history[k] = r[k];   // Update history pad\n        }\n    }\n\n    // 5. Save the complete vehicle snapshot back to node memory.\n    context.set(\"carHistorySnapshot\", history);\n\n    // 6. If any fields were healed, send ONE summary entry to the DB log table.\n    if (msg.healedFields.length > 0) {\n        const m = `Healed ${msg.healedFields.length} field(s): [${msg.healedFields.join(\", \")}]`;\n        node.warn(m);\n        sendLog(\"warn\", m, msg.healedFields);\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function sendLog(level, message, fields = null) {\n        node.send([null, {\n            payload: {\n                time: msg.timestamp,\n                level: level,\n                // Updated node name to reflect the split\n                node: \"Heal\",\n                message: message,\n                fields: fields\n            }\n        }]);\n    }\n\n} catch (error) {\n\n    // Updated node name to reflect the split\n    node.error(`Critical Failure in 'Heal' Node: ${error.message}. This frame is dropped.`, msg);\n    return null;\n\n}",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
@@ -1068,7 +1099,7 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Strip Timestamp",
-        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n    const isFirstRow = msg.parts && msg.parts.index === 0;\n\n    // Reset the \"no-timestamp warning sent\" flag at the start of each new file.\n    if (isFirstRow) {\n        context.set(\"noTsLogSent\", false);\n    }\n\n    if (fields.length >= 16) {\n        const ts = fields[0].trim();\n        const parsed = ts ? new Date(ts) : null;\n        const isValid = parsed && !isNaN(parsed.getTime());\n\n        if (isValid) {\n            // Good timestamp — use it and update tracker.\n            msg.timestamp = parsed.toISOString();\n            context.set(\"synthTime\", parsed.getTime());\n        } else {\n            // Corrupted or blank — fill synthetically, log every occurrence.\n            msg.timestamp = getSyntheticTime(isFirstRow);\n            const m = ts\n                ? `Corrupted timestamp: \"${ts}\" — synthetic time used.`\n                : \"Blank timestamp field — synthetic time used.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n        }\n\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else if (fields.length === 15) {\n        // Serial/MQTT (no msg.parts): 15 fields is normal — generate synthetic, no log.\n        // CSV (has msg.parts from Split): log once per file on first occurrence.\n        msg.timestamp = getSyntheticTime(isFirstRow);\n\n        if (msg.parts && !context.get(\"noTsLogSent\")) {\n            const m = \"No timestamp column in CSV — generating synthetic timestamps at 300ms intervals.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n            context.set(\"noTsLogSent\", true);\n        }\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function getSyntheticTime(reset) {\n        if (reset) {\n            const now = Date.now();\n            context.set(\"synthTime\", now);\n            return new Date(now).toISOString();\n        }\n        const last = context.get(\"synthTime\") || Date.now();\n        const next = last + 300;\n        context.set(\"synthTime\", next);\n        return new Date(next).toISOString();\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
+        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n    const isFirstRow = msg.parts && msg.parts.index === 0;\n\n    // Reset the flag at the start of each new CSV file.\n    if (isFirstRow) {\n        context.set(\"noTsLogSent\", false);\n    }\n\n    if (fields.length >= 16) {\n        // ── Raw CSV path ──\n        // Timestamp is field 0. Strip it and pass fields 1–15 forward.\n        const ts = fields[0].trim();\n        const parsed = ts ? new Date(ts) : null;\n        const isValid = parsed && !isNaN(parsed.getTime());\n\n        if (isValid) {\n            // Good timestamp — use it and update tracker.\n            msg.timestamp = parsed.toISOString();\n            context.set(\"synthTime\", parsed.getTime());\n        } else {\n            const m = ts\n                ? `Corrupted timestamp: \"${ts}\" — Dropped the frame.`\n                : \"Blank timestamp field — Dropped the frame.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n            return null;\n        }\n\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else if (fields.length === 15) {\n        // ── Real-time path (serial / MQTT) ──\n        // No timestamp in data. First message gets system time,\n        // every subsequent message gets last assigned + 300ms.\n        const lastAssigned = context.get(\"lastAssignedTime\");\n\n        if (!lastAssigned) {\n            // First message — seed with actual system time.\n            const now = Date.now();\n            msg.timestamp = new Date(now).toISOString();\n            context.set(\"lastAssignedTime\", now);\n        } else {\n            // All subsequent messages — always +300ms.\n            const next = lastAssigned + 300;\n            msg.timestamp = new Date(next).toISOString();\n            context.set(\"lastAssignedTime\", next);\n        }\n\n        // If this came from a CSV file with no timestamp column, log once.\n        if (msg.parts && !context.get(\"noTsLogSent\")) {\n            const m = \"No timestamp column in CSV — stamping rows with system arrival time.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n            context.set(\"noTsLogSent\", true);\n        }\n\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function healCsvTimestamp() {\n        const last = context.get(\"synthTime\");\n        if (last) {\n            const healed = last + 300;\n            context.set(\"synthTime\", healed);\n            return new Date(healed).toISOString();\n        }\n        // No previous valid timestamp — fall back to system time.\n        return new Date().toISOString();\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
@@ -1102,11 +1133,11 @@
         "z": "f6f2187d.f17ca8",
         "name": "link in 1",
         "links": [
-            "ba0281515b0dd58a",
             "af0a28c0e371b550",
+            "ba0281515b0dd58a",
             "bf9e58810d8e6472"
         ],
-        "x": 645,
+        "x": 625,
         "y": 420,
         "wires": [
             [
