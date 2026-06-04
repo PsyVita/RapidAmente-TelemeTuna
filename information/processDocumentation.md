@@ -85,3 +85,6 @@ Stage 10 (Other adjustments)
 
 Stage 11 (MQTT)
 1. Add Mosquitto folder and its config.
+
+Stage 12 (Grafana Customization)
+1. Export Grafana to the project. 
