@@ -50,6 +50,7 @@
     {
         "id": "5bfed78819477e13",
         "type": "serial-port",
+        "d": true,
         "name": "fish",
         "serialport": "/dev/cu.usbmodemRFCW3022A3L2",
         "serialbaud": "38400",
@@ -99,31 +100,46 @@
         "sessionExpiry": ""
     },
     {
-        "id": "f815c77fc870dd9c",
-        "type": "serial in",
-        "z": "4a85ca0db70e0d85",
-        "name": "fishPort",
-        "serial": "5bfed78819477e13",
-        "x": 210,
-        "y": 140,
-        "wires": [
-            [
-                "af0a28c0e371b550"
-            ]
-        ]
+        "id": "e3a6b0fd8a4c0da5",
+        "type": "serial-port",
+        "d": true,
+        "name": "SLAB_USBtoUART",
+        "serialport": "/dev/tty.SLAB_USBtoUART",
+        "serialbaud": "38400",
+        "databits": 8,
+        "parity": "none",
+        "stopbits": 1,
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": 10000
     },
     {
-        "id": "af0a28c0e371b550",
-        "type": "link out",
-        "z": "4a85ca0db70e0d85",
-        "name": "link out 2",
-        "mode": "link",
-        "links": [
-            "595351ac2dd69914"
-        ],
-        "x": 315,
-        "y": 140,
-        "wires": []
+        "id": "8a9b67ace872ba6f",
+        "type": "serial-port",
+        "d": true,
+        "name": "usbserial-0001",
+        "serialport": "/dev/tty.usbserial-0001",
+        "serialbaud": "38400",
+        "databits": 8,
+        "parity": "none",
+        "stopbits": 1,
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": 10000
     },
     {
         "id": "b9947f6851e495f5",
@@ -139,7 +155,7 @@
         "rh": 0,
         "inputs": 0,
         "x": 230,
-        "y": 260,
+        "y": 220,
         "wires": [
             [
                 "bf9e58810d8e6472"
@@ -156,7 +172,7 @@
             "595351ac2dd69914"
         ],
         "x": 355,
-        "y": 260,
+        "y": 220,
         "wires": []
     },
     {
@@ -246,10 +262,20 @@
         "id": "b08de873a8827b16",
         "type": "comment",
         "z": "4a85ca0db70e0d85",
-        "name": "Edit port details to match your computer's port.",
+        "name": "Option 1. Connect via Serial Port + Python Bridge + MQTT",
         "info": "",
-        "x": 340,
-        "y": 100,
+        "x": 370,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "f3b357b0bacf32c8",
+        "type": "comment",
+        "z": "4a85ca0db70e0d85",
+        "name": "Option 2. Connect via MQTT",
+        "info": "",
+        "x": 280,
+        "y": 180,
         "wires": []
     },
     {
@@ -358,7 +384,6 @@
         "name": "link out 1",
         "mode": "link",
         "links": [
-            "5a6c2c12c02ef4b5",
             "595351ac2dd69914"
         ],
         "x": 1445,

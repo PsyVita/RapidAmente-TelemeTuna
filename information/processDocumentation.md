@@ -88,3 +88,6 @@ Stage 11 (MQTT)
 
 Stage 12 (Grafana Customization)
 1. Export Grafana to the project. 
+
+Stage 13 (Bridge)
+1. Add serial-bridge folder. Keep in mind, Docker cannot read the actual ports on your computer. We need a bridge for Python read and write to serial ports and let it connect to a Mosquitto broker and publish the info gained from the port. 
