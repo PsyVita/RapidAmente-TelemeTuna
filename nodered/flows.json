@@ -123,7 +123,6 @@
     {
         "id": "8a9b67ace872ba6f",
         "type": "serial-port",
-        "d": true,
         "name": "usbserial-0001",
         "serialport": "/dev/tty.usbserial-0001",
         "serialbaud": "38400",
@@ -155,7 +154,7 @@
         "rh": 0,
         "inputs": 0,
         "x": 230,
-        "y": 220,
+        "y": 260,
         "wires": [
             [
                 "bf9e58810d8e6472"
@@ -172,7 +171,7 @@
             "595351ac2dd69914"
         ],
         "x": 355,
-        "y": 220,
+        "y": 260,
         "wires": []
     },
     {
@@ -259,23 +258,48 @@
         "wires": []
     },
     {
-        "id": "b08de873a8827b16",
-        "type": "comment",
+        "id": "4393d8d4338f624a",
+        "type": "link out",
         "z": "4a85ca0db70e0d85",
-        "name": "Option 1. Connect via Serial Port + Python Bridge + MQTT",
-        "info": "",
-        "x": 370,
+        "name": "link out 2",
+        "mode": "link",
+        "links": [],
+        "x": 355,
         "y": 140,
         "wires": []
     },
     {
-        "id": "f3b357b0bacf32c8",
+        "id": "f459fcd2b1ac244c",
+        "type": "serial in",
+        "z": "4a85ca0db70e0d85",
+        "name": "fishPort",
+        "serial": "8a9b67ace872ba6f",
+        "x": 210,
+        "y": 140,
+        "wires": [
+            [
+                "4393d8d4338f624a"
+            ]
+        ]
+    },
+    {
+        "id": "5b135847ab90efea",
+        "type": "comment",
+        "z": "4a85ca0db70e0d85",
+        "name": "Option 1. Connect via Serial Port. Use Local Node-RED",
+        "info": "",
+        "x": 360,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "9d41ffd6844728bf",
         "type": "comment",
         "z": "4a85ca0db70e0d85",
         "name": "Option 2. Connect via MQTT",
         "info": "",
         "x": 280,
-        "y": 180,
+        "y": 220,
         "wires": []
     },
     {
@@ -1158,7 +1182,6 @@
         "z": "f6f2187d.f17ca8",
         "name": "link in 1",
         "links": [
-            "af0a28c0e371b550",
             "ba0281515b0dd58a",
             "bf9e58810d8e6472"
         ],
