@@ -272,6 +272,7 @@
         "id": "f459fcd2b1ac244c",
         "type": "serial in",
         "z": "4a85ca0db70e0d85",
+        "d": true,
         "name": "fishPort",
         "serial": "8a9b67ace872ba6f",
         "x": 210,
