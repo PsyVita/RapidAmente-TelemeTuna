@@ -22,108 +22,350 @@
   },
   "spec": {
     "annotations": [
-      {
+        {
         "kind": "AnnotationQuery",
         "spec": {
-          "query": {
-            "kind": "DataQuery",
-            "group": "grafana",
-            "version": "v0",
+            "builtIn": true,
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "query": {
             "datasource": {
-              "name": "-- Grafana --"
+                "name": "-- Grafana --"
             },
-            "spec": {}
-          },
-          "enable": true,
-          "hide": true,
-          "iconColor": "rgba(0, 211, 255, 1)",
-          "name": "Annotations & Alerts",
-          "builtIn": true
+            "group": "grafana",
+            "kind": "DataQuery",
+            "spec": {},
+            "version": "v0"
+            }
         }
-      }
+        },
+        {
+        "kind": "AnnotationQuery",
+        "spec": {
+            "enable": false,
+            "hide": false,
+            "iconColor": "red",
+            "name": "Car Errors",
+            "query": {
+            "datasource": {
+                "name": "postgresUID"
+            },
+            "group": "grafana-postgresql-datasource",
+            "kind": "DataQuery",
+            "spec": {
+                "dataset": "telemetry",
+                "editorMode": "code",
+                "format": "table",
+                "rawQuery": true,
+                "rawSql": "SELECT time AS time, err::text AS text\nFROM telemetry_records\nWHERE err > 0 AND $__timeFilter(time)\nORDER BY time;",
+                "refId": "Anno",
+                "sql": {
+                "columns": [
+                    {
+                    "parameters": [],
+                    "type": "function"
+                    }
+                ],
+                "groupBy": [
+                    {
+                    "property": {
+                        "type": "string"
+                    },
+                    "type": "groupBy"
+                    }
+                ],
+                "limit": 50
+                },
+                "table": "telemetry_records"
+            },
+            "version": "v0"
+            }
+        }
+        },
+        {
+        "kind": "AnnotationQuery",
+        "spec": {
+            "enable": false,
+            "hide": false,
+            "iconColor": "yellow",
+            "name": "Car Warnings",
+            "query": {
+            "datasource": {
+                "name": "postgresUID"
+            },
+            "group": "grafana-postgresql-datasource",
+            "kind": "DataQuery",
+            "spec": {
+                "dataset": "telemetry",
+                "editorMode": "code",
+                "format": "table",
+                "rawQuery": true,
+                "rawSql": "SELECT time AS time, warn::text AS text\nFROM telemetry_records\nWHERE warn > 0 AND $__timeFilter(time)\nORDER BY time;",
+                "refId": "Anno",
+                "sql": {
+                "columns": [
+                    {
+                    "parameters": [],
+                    "type": "function"
+                    }
+                ],
+                "groupBy": [
+                    {
+                    "property": {
+                        "type": "string"
+                    },
+                    "type": "groupBy"
+                    }
+                ],
+                "limit": 50
+                },
+                "table": "telemetry_records"
+            },
+            "version": "v0"
+            }
+        }
+        },
+        {
+        "kind": "AnnotationQuery",
+        "spec": {
+            "enable": false,
+            "hide": false,
+            "iconColor": "purple",
+            "name": "Healed Frames",
+            "query": {
+            "datasource": {
+                "name": "postgresUID"
+            },
+            "group": "grafana-postgresql-datasource",
+            "kind": "DataQuery",
+            "spec": {
+                "dataset": "telemetry",
+                "editorMode": "code",
+                "format": "table",
+                "rawQuery": true,
+                "rawSql": "SELECT time AS time, array_to_string(healed_fields, ', ') AS text\nFROM telemetry_records\nWHERE cardinality(healed_fields) > 0 AND $__timeFilter(time)\nORDER BY time;",
+                "refId": "Anno",
+                "sql": {
+                "columns": [
+                    {
+                    "parameters": [],
+                    "type": "function"
+                    }
+                ],
+                "groupBy": [
+                    {
+                    "property": {
+                        "type": "string"
+                    },
+                    "type": "groupBy"
+                    }
+                ],
+                "limit": 50
+                },
+                "table": "telemetry_records"
+            },
+            "version": "v0"
+            }
+        }
+        },
+        {
+        "kind": "AnnotationQuery",
+        "spec": {
+            "enable": false,
+            "hide": false,
+            "iconColor": "#ccccccfa",
+            "name": "Frame Drops",
+            "query": {
+            "datasource": {
+                "name": "postgresUID"
+            },
+            "group": "grafana-postgresql-datasource",
+            "kind": "DataQuery",
+            "spec": {
+                "dataset": "telemetry",
+                "editorMode": "code",
+                "format": "table",
+                "rawQuery": true,
+                "rawSql": "SELECT time AS time, message AS text\nFROM event_logs\nWHERE level IN ('FD', 'critical') AND $__timeFilter(time)\nORDER BY time;",
+                "refId": "Anno",
+                "sql": {
+                "columns": [
+                    {
+                    "parameters": [],
+                    "type": "function"
+                    }
+                ],
+                "groupBy": [
+                    {
+                    "property": {
+                        "type": "string"
+                    },
+                    "type": "groupBy"
+                    }
+                ],
+                "limit": 50
+                },
+                "table": "event_logs"
+            },
+            "version": "v0"
+            }
+        }
+        },
+        {
+        "kind": "AnnotationQuery",
+        "spec": {
+            "enable": false,
+            "hide": false,
+            "iconColor": "dark-blue",
+            "name": "Program Criticals",
+            "query": {
+            "datasource": {
+                "name": "postgresUID"
+            },
+            "group": "grafana-postgresql-datasource",
+            "kind": "DataQuery",
+            "spec": {
+                "dataset": "telemetry",
+                "editorMode": "code",
+                "format": "table",
+                "rawQuery": true,
+                "rawSql": "SELECT time AS time, message AS text\nFROM event_logs\nWHERE level IN ('critical') AND $__timeFilter(time)\nORDER BY time;",
+                "refId": "Anno",
+                "sql": {
+                "columns": [
+                    {
+                    "parameters": [],
+                    "type": "function"
+                    }
+                ],
+                "groupBy": [
+                    {
+                    "property": {
+                        "type": "string"
+                    },
+                    "type": "groupBy"
+                    }
+                ],
+                "limit": 50
+                },
+                "table": "event_logs"
+            },
+            "version": "v0"
+            }
+        }
+        }
     ],
     "cursorSync": "Off",
     "editable": true,
     "elements": {
-      "panel-1": {
+        "panel-1": {
         "kind": "Panel",
         "spec": {
-          "id": 1,
-          "title": "Revolutions Per Minute",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, ABS(rpm) AS rpm\nFROM telemetry_records\nORDER BY time DESC\nLIMIT 1;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 1,
+            "links": [],
+            "title": "Revolutions Per Minute",
+            "transparent": true,
+            "vizConfig": {
             "group": "gauge",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
+                "fieldConfig": {
+                "defaults": {
+                    "color": {
+                    "mode": "thresholds"
+                    },
+                    "max": 5500,
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "yellow",
+                        "value": 4000
+                        },
+                        {
+                        "color": "red",
+                        "value": 5000
+                        }
+                    ]
+                    },
+                    "unit": "rotrpm"
+                },
+                "overrides": []
+                },
+                "options": {
                 "barShape": "flat",
                 "barWidthFactor": 0.5,
                 "effects": {
-                  "barGlow": false,
-                  "centerGlow": false,
-                  "gradient": true
+                    "barGlow": false,
+                    "centerGlow": false,
+                    "gradient": true
                 },
                 "endpointMarker": "point",
                 "minVizHeight": 75,
                 "minVizWidth": 75,
                 "orientation": "auto",
                 "reduceOptions": {
-                  "calcs": [
+                    "calcs": [
                     "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
+                    ],
+                    "fields": "",
+                    "values": false
                 },
                 "segmentCount": 1,
                 "segmentSpacing": 0.3,
@@ -133,142 +375,78 @@
                 "sizing": "auto",
                 "sparkline": true,
                 "textMode": "auto"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "rotrpm",
-                  "max": 5500,
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 4000,
-                        "color": "yellow"
-                      },
-                      {
-                        "value": 5000,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "thresholds"
-                  }
-                },
-                "overrides": []
-              }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-10": {
+        },
+        "panel-10": {
         "kind": "Panel",
         "spec": {
-          "id": 10,
-          "title": "Temperature Over Time",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT\n  time,\n  mot_c  AS \"Motor (°C)\",\n  igbt_c AS \"IGBT (°C)\"\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 10,
+            "links": [],
+            "title": "Temperature Over Time",
+            "vizConfig": {
             "group": "timeseries",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
-                "annotations": {
-                  "clustering": -1,
-                  "multiLane": false
-                },
-                "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "tooltip": {
-                  "hideZeros": false,
-                  "mode": "single",
-                  "sort": "none"
-                }
-              },
-              "fieldConfig": {
+                "fieldConfig": {
                 "defaults": {
-                  "unit": "celsius",
-                  "min": -30,
-                  "max": 125,
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 70,
-                        "color": "yellow"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
+                    "color": {
                     "mode": "palette-classic"
-                  },
-                  "custom": {
+                    },
+                    "custom": {
                     "axisBorderShow": false,
                     "axisCenteredZero": false,
                     "axisColorMode": "text",
@@ -280,387 +458,1177 @@
                     "fillOpacity": 0,
                     "gradientMode": "none",
                     "hideFrom": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": false
+                        "legend": false,
+                        "tooltip": false,
+                        "viz": false
                     },
                     "insertNulls": false,
                     "lineInterpolation": "linear",
                     "lineWidth": 1,
                     "pointSize": 5,
                     "scaleDistribution": {
-                      "type": "linear"
+                        "type": "linear"
                     },
                     "showPoints": "auto",
                     "showValues": false,
                     "spanNulls": false,
                     "stacking": {
-                      "group": "A",
-                      "mode": "none"
+                        "group": "A",
+                        "mode": "none"
                     },
                     "thresholdsStyle": {
-                      "mode": "dashed"
+                        "mode": "dashed"
                     }
-                  }
+                    },
+                    "max": 80,
+                    "min": 20,
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "yellow",
+                        "value": 70
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    },
+                    "unit": "celsius"
                 },
                 "overrides": [
-                  {
+                    {
                     "matcher": {
-                      "id": "byName",
-                      "scope": "series",
-                      "options": "Motor (°C)"
+                        "id": "byName",
+                        "options": "Motor (°C)",
+                        "scope": "series"
                     },
                     "properties": [
-                      {
+                        {
                         "id": "color",
                         "value": {
-                          "fixedColor": "purple",
-                          "mode": "fixed"
+                            "fixedColor": "purple",
+                            "mode": "fixed"
                         }
-                      }
+                        }
                     ]
-                  },
-                  {
+                    },
+                    {
                     "matcher": {
-                      "id": "byName",
-                      "scope": "series",
-                      "options": "IGBT (°C)"
+                        "id": "byName",
+                        "options": "IGBT (°C)",
+                        "scope": "series"
                     },
                     "properties": [
-                      {
+                        {
                         "id": "color",
                         "value": {
-                          "fixedColor": "blue",
-                          "mode": "shades"
+                            "fixedColor": "blue",
+                            "mode": "shades"
                         }
-                      }
+                        }
                     ]
-                  }
+                    }
                 ]
-              }
+                },
+                "options": {
+                "annotations": {
+                    "clustering": -1,
+                    "multiLane": false
+                },
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "hideZeros": false,
+                    "mode": "single",
+                    "sort": "none"
+                }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-11": {
+        },
+        "panel-11": {
         "kind": "Panel",
         "spec": {
-          "id": 11,
-          "title": "Drive Mode",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, mode\nFROM telemetry_records\nORDER BY time DESC\nLIMIT 1;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 11,
+            "links": [],
+            "title": "Drive Mode",
+            "vizConfig": {
             "group": "stat",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
+                "fieldConfig": {
+                "defaults": {
+                    "color": {
+                    "mode": "thresholds"
+                    },
+                    "mappings": [
+                    {
+                        "options": {
+                        "0": {
+                            "color": "text",
+                            "index": 0,
+                            "text": "N"
+                        },
+                        "1": {
+                            "index": 1,
+                            "text": "D"
+                        },
+                        "2": {
+                            "index": 2,
+                            "text": "R"
+                        }
+                        },
+                        "type": "value"
+                    },
+                    {
+                        "options": {
+                        "match": "null",
+                        "result": {
+                            "index": 3,
+                            "text": "-"
+                        }
+                        },
+                        "type": "special"
+                    }
+                    ],
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "text",
+                        "value": 0
+                        }
+                    ]
+                    }
+                },
+                "overrides": []
+                },
+                "options": {
                 "colorMode": "value",
                 "graphMode": "none",
                 "justifyMode": "auto",
                 "orientation": "auto",
                 "percentChangeColorMode": "standard",
                 "reduceOptions": {
-                  "calcs": [
+                    "calcs": [
                     "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
+                    ],
+                    "fields": "",
+                    "values": false
                 },
                 "showPercentChange": false,
                 "textMode": "auto",
                 "wideLayout": true
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "mappings": [
-                    {
-                      "type": "value",
-                      "options": {
-                        "0": {
-                          "text": "N",
-                          "color": "text",
-                          "index": 0
-                        },
-                        "1": {
-                          "text": "R",
-                          "index": 2
-                        }
-                      }
-                    }
-                  ],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "text"
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "thresholds"
-                  }
-                },
-                "overrides": []
-              }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-12": {
+        },
+        "panel-12": {
         "kind": "Panel",
         "spec": {
-          "id": 12,
-          "title": "Event Logs",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, level, node, message, fields\nFROM event_logs\nWHERE $__timeFilter(time)\nORDER BY time DESC;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "event_logs"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 12,
+            "links": [],
+            "title": "Event Logs",
+            "vizConfig": {
             "group": "table",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
-                "cellHeight": "sm",
-                "showHeader": true
-              },
-              "fieldConfig": {
+                "fieldConfig": {
                 "defaults": {
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
+                    "color": {
                     "mode": "thresholds"
-                  },
-                  "custom": {
+                    },
+                    "custom": {
                     "align": "auto",
                     "cellOptions": {
-                      "type": "auto"
+                        "type": "auto"
                     },
                     "footer": {
-                      "reducers": []
+                        "reducers": []
                     },
                     "inspect": false
-                  }
+                    },
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        }
+                    ]
+                    }
                 },
-                "overrides": []
-              }
+                "overrides": [
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "time"
+                    },
+                    "properties": [
+                        {
+                        "id": "custom.width",
+                        "value": 238
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "level"
+                    },
+                    "properties": [
+                        {
+                        "id": "custom.width",
+                        "value": 114
+                        },
+                        {
+                        "id": "mappings",
+                        "value": [
+                            {
+                            "options": {
+                                "FD": {
+                                "color": "#bababa",
+                                "index": 3
+                                },
+                                "critical": {
+                                "color": "dark-red",
+                                "index": 2
+                                },
+                                "error": {
+                                "color": "red",
+                                "index": 0
+                                },
+                                "warning": {
+                                "color": "yellow",
+                                "index": 1
+                                }
+                            },
+                            "type": "value"
+                            }
+                        ]
+                        },
+                        {
+                        "id": "custom.cellOptions",
+                        "value": {
+                            "mode": "basic",
+                            "type": "color-background"
+                        }
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "node"
+                    },
+                    "properties": [
+                        {
+                        "id": "custom.width",
+                        "value": 172
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "message"
+                    },
+                    "properties": [
+                        {
+                        "id": "custom.width",
+                        "value": 684
+                        }
+                    ]
+                    }
+                ]
+                },
+                "options": {
+                "cellHeight": "sm",
+                "showHeader": true,
+                "sortBy": [
+                    {
+                    "desc": true,
+                    "displayName": "time"
+                    }
+                ]
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-2": {
+        },
+        "panel-13": {
         "kind": "Panel",
         "spec": {
-          "id": 2,
-          "title": "RPM Over Time",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
+                        "dataset": "telemetry",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT \n  'error' AS type,\n  d.bit AS bit_number,\n  d.name,\n  d.description\nFROM err_bit_definitions d\nWHERE (SELECT err FROM telemetry_records ORDER BY time DESC LIMIT 1) & (1 << d.bit) > 0\n\nUNION ALL\n\nSELECT \n  'warning' AS type,\n  d.bit AS bit_number,\n  d.name,\n  d.description\nFROM warn_bit_definitions d\nWHERE (SELECT warn FROM telemetry_records ORDER BY time DESC LIMIT 1) & (1 << d.bit) > 0;",
+                        "sql": {
+                            "columns": [
+                            {
+                                "parameters": [],
+                                "type": "function"
+                            }
+                            ],
+                            "groupBy": [
+                            {
+                                "property": {
+                                "type": "string"
+                                },
+                                "type": "groupBy"
+                            }
+                            ],
+                            "limit": 50
+                        },
+                        "table": "telemetry_records"
+                        },
+                        "version": "v0"
+                    },
+                    "refId": "A"
+                    }
+                }
+                ],
+                "queryOptions": {},
+                "transformations": []
+            }
+            },
+            "description": "",
+            "id": 13,
+            "links": [],
+            "title": "Active Errors & Warnings",
+            "vizConfig": {
+            "group": "table",
+            "kind": "VizConfig",
+            "spec": {
+                "fieldConfig": {
+                "defaults": {
+                    "color": {
+                    "mode": "thresholds"
+                    },
+                    "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                        "type": "auto"
+                    },
+                    "footer": {
+                        "reducers": []
+                    },
+                    "inspect": false
+                    },
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    }
+                },
+                "overrides": [
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "type"
+                    },
+                    "properties": [
+                        {
+                        "id": "custom.width",
+                        "value": 142
+                        },
+                        {
+                        "id": "custom.cellOptions",
+                        "value": {
+                            "mode": "basic",
+                            "type": "color-background"
+                        }
+                        },
+                        {
+                        "id": "mappings",
+                        "value": [
+                            {
+                            "options": {
+                                "critical": {
+                                "color": "dark-red",
+                                "index": 2
+                                },
+                                "error": {
+                                "color": "red",
+                                "index": 1
+                                },
+                                "warning": {
+                                "color": "yellow",
+                                "index": 0
+                                }
+                            },
+                            "type": "value"
+                            }
+                        ]
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byType",
+                        "options": "number"
+                    },
+                    "properties": []
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "name"
+                    },
+                    "properties": [
+                        {
+                        "id": "custom.width",
+                        "value": 308
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "description"
+                    },
+                    "properties": [
+                        {
+                        "id": "custom.width",
+                        "value": 423
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "raw_value"
+                    },
+                    "properties": [
+                        {
+                        "id": "custom.width",
+                        "value": 90
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "bit_number"
+                    },
+                    "properties": [
+                        {
+                        "id": "custom.width",
+                        "value": 93
+                        }
+                    ]
+                    }
+                ]
+                },
+                "options": {
+                "cellHeight": "sm",
+                "showHeader": true
+                }
+            },
+            "version": "13.0.1+security-01"
+            }
+        }
+        },
+        "panel-14": {
+        "kind": "Panel",
+        "spec": {
+            "data": {
+            "kind": "QueryGroup",
+            "spec": {
+                "queries": [
+                {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
+                    "query": {
+                        "datasource": {
+                        "name": "postgresUID"
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
+                        "dataset": "telemetry",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT l_regen, l_err, l_warn, l_ok, l_pump, drive_ena\nFROM telemetry_records\nORDER BY time DESC\nLIMIT 1;",
+                        "sql": {
+                            "columns": [
+                            {
+                                "parameters": [],
+                                "type": "function"
+                            }
+                            ],
+                            "groupBy": [
+                            {
+                                "property": {
+                                "type": "string"
+                                },
+                                "type": "groupBy"
+                            }
+                            ],
+                            "limit": 50
+                        },
+                        "table": "telemetry_records"
+                        },
+                        "version": "v0"
+                    },
+                    "refId": "A"
+                    }
+                }
+                ],
+                "queryOptions": {},
+                "transformations": []
+            }
+            },
+            "description": "",
+            "id": 14,
+            "links": [],
+            "title": "Live Status",
+            "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+                "fieldConfig": {
+                "defaults": {
+                    "color": {
+                    "mode": "thresholds"
+                    },
+                    "mappings": [
+                    {
+                        "options": {
+                        "false": {
+                            "index": 1
+                        },
+                        "true": {
+                            "index": 0
+                        }
+                        },
+                        "type": "value"
+                    },
+                    {
+                        "options": {
+                        "match": "null",
+                        "result": {
+                            "color": "transparent",
+                            "index": 2
+                        }
+                        },
+                        "type": "special"
+                    }
+                    ],
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    }
+                },
+                "overrides": [
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "l_regen",
+                        "scope": "series"
+                    },
+                    "properties": [
+                        {
+                        "id": "mappings",
+                        "value": [
+                            {
+                            "options": {
+                                "false": {
+                                "color": "#949494",
+                                "index": 0
+                                },
+                                "true": {
+                                "color": "blue",
+                                "index": 1
+                                }
+                            },
+                            "type": "value"
+                            }
+                        ]
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "l_err",
+                        "scope": "series"
+                    },
+                    "properties": [
+                        {
+                        "id": "mappings",
+                        "value": [
+                            {
+                            "options": {
+                                "false": {
+                                "color": "green",
+                                "index": 0
+                                },
+                                "true": {
+                                "color": "red",
+                                "index": 1
+                                }
+                            },
+                            "type": "value"
+                            }
+                        ]
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "l_warn",
+                        "scope": "series"
+                    },
+                    "properties": [
+                        {
+                        "id": "mappings",
+                        "value": [
+                            {
+                            "options": {
+                                "false": {
+                                "color": "green",
+                                "index": 0
+                                },
+                                "true": {
+                                "color": "yellow",
+                                "index": 1
+                                }
+                            },
+                            "type": "value"
+                            }
+                        ]
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "l_ok",
+                        "scope": "series"
+                    },
+                    "properties": [
+                        {
+                        "id": "mappings",
+                        "value": [
+                            {
+                            "options": {
+                                "false": {
+                                "color": "red",
+                                "index": 0
+                                },
+                                "true": {
+                                "color": "green",
+                                "index": 1
+                                }
+                            },
+                            "type": "value"
+                            }
+                        ]
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "l_pump",
+                        "scope": "series"
+                    },
+                    "properties": [
+                        {
+                        "id": "mappings",
+                        "value": [
+                            {
+                            "options": {
+                                "false": {
+                                "color": "green",
+                                "index": 0
+                                },
+                                "true": {
+                                "color": "yellow",
+                                "index": 1
+                                }
+                            },
+                            "type": "value"
+                            }
+                        ]
+                        }
+                    ]
+                    },
+                    {
+                    "matcher": {
+                        "id": "byName",
+                        "options": "drive_ena",
+                        "scope": "series"
+                    },
+                    "properties": [
+                        {
+                        "id": "mappings",
+                        "value": [
+                            {
+                            "options": {
+                                "false": {
+                                "color": "red",
+                                "index": 0
+                                },
+                                "true": {
+                                "color": "green",
+                                "index": 1
+                                }
+                            },
+                            "type": "value"
+                            }
+                        ]
+                        }
+                    ]
+                    }
+                ]
+                },
+                "options": {
+                "colorMode": "background_solid",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                    "calcs": [
+                    "lastNotNull"
+                    ],
+                    "fields": "/.*/",
+                    "values": true
+                },
+                "showPercentChange": false,
+                "textMode": "name",
+                "wideLayout": true
+                }
+            },
+            "version": "13.0.1+security-01"
+            }
+        }
+        },
+        "panel-15": {
+        "kind": "Panel",
+        "spec": {
+            "data": {
+            "kind": "QueryGroup",
+            "spec": {
+                "queries": [
+                {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
+                    "query": {
+                        "datasource": {
+                        "name": "postgresUID"
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
+                        "dataset": "telemetry",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT time, healed_fields\nFROM telemetry_records\nWHERE cardinality(healed_fields) > 0\nAND $__timeFilter(time)\nORDER BY time DESC;",
+                        "sql": {
+                            "columns": [
+                            {
+                                "parameters": [],
+                                "type": "function"
+                            }
+                            ],
+                            "groupBy": [
+                            {
+                                "property": {
+                                "type": "string"
+                                },
+                                "type": "groupBy"
+                            }
+                            ],
+                            "limit": 50
+                        },
+                        "table": "telemetry_records"
+                        },
+                        "version": "v0"
+                    },
+                    "refId": "A"
+                    }
+                }
+                ],
+                "queryOptions": {},
+                "transformations": []
+            }
+            },
+            "description": "",
+            "id": 15,
+            "links": [],
+            "title": "Healed Fields",
+            "vizConfig": {
+            "group": "table",
+            "kind": "VizConfig",
+            "spec": {
+                "fieldConfig": {
+                "defaults": {
+                    "color": {
+                    "mode": "thresholds"
+                    },
+                    "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                        "type": "auto"
+                    },
+                    "footer": {
+                        "reducers": []
+                    },
+                    "inspect": false
+                    },
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    }
+                },
+                "overrides": []
+                },
+                "options": {
+                "cellHeight": "sm",
+                "showHeader": true,
+                "sortBy": [
+                    {
+                    "desc": true,
+                    "displayName": "time"
+                    }
+                ]
+                }
+            },
+            "version": "13.0.1+security-01"
+            }
+        }
+        },
+        "panel-16": {
+        "kind": "Panel",
+        "spec": {
+            "data": {
+            "kind": "QueryGroup",
+            "spec": {
+                "queries": [
+                {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
+                    "query": {
+                        "datasource": {
+                        "name": "postgresUID"
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
+                        "dataset": "telemetry",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT count(*) AS total_healed_frames\nFROM telemetry_records\nWHERE cardinality(healed_fields) > 0\nAND $__timeFilter(time);",
+                        "sql": {
+                            "columns": [
+                            {
+                                "parameters": [],
+                                "type": "function"
+                            }
+                            ],
+                            "groupBy": [
+                            {
+                                "property": {
+                                "type": "string"
+                                },
+                                "type": "groupBy"
+                            }
+                            ],
+                            "limit": 50
+                        },
+                        "table": "telemetry_records"
+                        },
+                        "version": "v0"
+                    },
+                    "refId": "A"
+                    }
+                }
+                ],
+                "queryOptions": {},
+                "transformations": []
+            }
+            },
+            "description": "",
+            "id": 16,
+            "links": [],
+            "title": "Heal Count",
+            "vizConfig": {
+            "group": "stat",
+            "kind": "VizConfig",
+            "spec": {
+                "fieldConfig": {
+                "defaults": {
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "purple",
+                        "value": 0
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    }
+                },
+                "overrides": []
+                },
+                "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                    "calcs": [
+                    "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+                }
+            },
+            "version": "13.0.1+security-01"
+            }
+        }
+        },
+        "panel-2": {
+        "kind": "Panel",
+        "spec": {
+            "data": {
+            "kind": "QueryGroup",
+            "spec": {
+                "queries": [
+                {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
+                    "query": {
+                        "datasource": {
+                        "name": "postgresUID"
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, rpm\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 2,
+            "links": [],
+            "title": "RPM Over Time",
+            "vizConfig": {
             "group": "timeseries",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
-                "annotations": {
-                  "clustering": -1,
-                  "multiLane": false
-                },
-                "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "tooltip": {
-                  "hideZeros": false,
-                  "mode": "single",
-                  "sort": "none"
-                }
-              },
-              "fieldConfig": {
+                "fieldConfig": {
                 "defaults": {
-                  "unit": "rotrpm",
-                  "min": 0,
-                  "max": 5500,
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 4000,
-                        "color": "yellow"
-                      },
-                      {
-                        "value": 5000,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
+                    "color": {
                     "mode": "palette-classic"
-                  },
-                  "custom": {
+                    },
+                    "custom": {
                     "axisBorderShow": false,
                     "axisCenteredZero": false,
                     "axisColorMode": "text",
@@ -672,233 +1640,241 @@
                     "fillOpacity": 0,
                     "gradientMode": "none",
                     "hideFrom": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": false
+                        "legend": false,
+                        "tooltip": false,
+                        "viz": false
                     },
                     "insertNulls": false,
                     "lineInterpolation": "linear",
                     "lineWidth": 1,
                     "pointSize": 5,
                     "scaleDistribution": {
-                      "type": "linear"
+                        "type": "linear"
                     },
                     "showPoints": "auto",
                     "showValues": false,
                     "spanNulls": false,
                     "stacking": {
-                      "group": "A",
-                      "mode": "none"
+                        "group": "A",
+                        "mode": "none"
                     },
                     "thresholdsStyle": {
-                      "mode": "off"
+                        "mode": "off"
                     }
-                  }
+                    },
+                    "max": 5500,
+                    "min": -5500,
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "yellow",
+                        "value": 4000
+                        },
+                        {
+                        "color": "red",
+                        "value": 5000
+                        }
+                    ]
+                    },
+                    "unit": "rotrpm"
                 },
                 "overrides": []
-              }
+                },
+                "options": {
+                "annotations": {
+                    "clustering": -1,
+                    "multiLane": false
+                },
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "hideZeros": false,
+                    "mode": "single",
+                    "sort": "none"
+                }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-3": {
+        },
+        "panel-3": {
         "kind": "Panel",
         "spec": {
-          "id": 3,
-          "title": "Voltage",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, volt\nFROM telemetry_records\nORDER BY time DESC\nLIMIT 1;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 3,
+            "links": [],
+            "title": "Voltage",
+            "transparent": true,
+            "vizConfig": {
             "group": "stat",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
+                "fieldConfig": {
+                "defaults": {
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    },
+                    "unit": "volt"
+                },
+                "overrides": []
+                },
+                "options": {
                 "colorMode": "value",
                 "graphMode": "area",
                 "justifyMode": "auto",
                 "orientation": "auto",
                 "percentChangeColorMode": "standard",
                 "reduceOptions": {
-                  "calcs": [
+                    "calcs": [
                     "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
+                    ],
+                    "fields": "",
+                    "values": false
                 },
                 "showPercentChange": false,
                 "textMode": "auto",
                 "wideLayout": true
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "volt",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-4": {
+        },
+        "panel-4": {
         "kind": "Panel",
         "spec": {
-          "id": 4,
-          "title": "Voltage and Current",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT\n  time,\n  volt AS \"Voltage (V)\",\n  amp  AS \"Current (A)\"\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 4,
+            "links": [],
+            "title": "Voltage and Current",
+            "vizConfig": {
             "group": "timeseries",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
-                "annotations": {
-                  "clustering": -1,
-                  "multiLane": false
-                },
-                "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "tooltip": {
-                  "hideZeros": false,
-                  "mode": "single",
-                  "sort": "none"
-                }
-              },
-              "fieldConfig": {
+                "fieldConfig": {
                 "defaults": {
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
+                    "color": {
                     "mode": "palette-classic"
-                  },
-                  "custom": {
+                    },
+                    "custom": {
                     "axisBorderShow": false,
                     "axisCenteredZero": false,
                     "axisColorMode": "text",
@@ -910,382 +1886,383 @@
                     "fillOpacity": 0,
                     "gradientMode": "none",
                     "hideFrom": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": false
+                        "legend": false,
+                        "tooltip": false,
+                        "viz": false
                     },
                     "insertNulls": false,
                     "lineInterpolation": "linear",
                     "lineWidth": 1,
                     "pointSize": 5,
                     "scaleDistribution": {
-                      "type": "linear"
+                        "type": "linear"
                     },
                     "showPoints": "auto",
                     "showValues": false,
                     "spanNulls": false,
                     "stacking": {
-                      "group": "A",
-                      "mode": "none"
+                        "group": "A",
+                        "mode": "none"
                     },
                     "thresholdsStyle": {
-                      "mode": "off"
+                        "mode": "off"
                     }
-                  }
+                    },
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    }
                 },
                 "overrides": [
-                  {
+                    {
                     "matcher": {
-                      "id": "byName",
-                      "scope": "series",
-                      "options": "Voltage (V)"
+                        "id": "byName",
+                        "options": "Voltage (V)",
+                        "scope": "series"
                     },
                     "properties": [
-                      {
+                        {
                         "id": "unit",
                         "value": "volt"
-                      },
-                      {
+                        },
+                        {
                         "id": "min",
                         "value": -212.1
-                      },
-                      {
+                        },
+                        {
                         "id": "max",
                         "value": 212.1
-                      }
+                        }
                     ]
-                  },
-                  {
+                    },
+                    {
                     "matcher": {
-                      "id": "byName",
-                      "scope": "series",
-                      "options": "Current (A)"
+                        "id": "byName",
+                        "options": "Current (A)",
+                        "scope": "series"
                     },
                     "properties": [
-                      {
+                        {
                         "id": "unit",
                         "value": "amp"
-                      },
-                      {
+                        },
+                        {
                         "id": "min",
                         "value": -212.1
-                      },
-                      {
+                        },
+                        {
                         "id": "max",
                         "value": 212.1
-                      }
+                        }
                     ]
-                  }
+                    }
                 ]
-              }
+                },
+                "options": {
+                "annotations": {
+                    "clustering": -1,
+                    "multiLane": false
+                },
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "hideZeros": false,
+                    "mode": "single",
+                    "sort": "none"
+                }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-5": {
+        },
+        "panel-5": {
         "kind": "Panel",
         "spec": {
-          "id": 5,
-          "title": "Current",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, amp\nFROM telemetry_records\nORDER BY time DESC\nLIMIT 1;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 5,
+            "links": [],
+            "title": "Current",
+            "transparent": true,
+            "vizConfig": {
             "group": "stat",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
+                "fieldConfig": {
+                "defaults": {
+                    "max": 212.1,
+                    "min": -212.1,
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    },
+                    "unit": "amp"
+                },
+                "overrides": []
+                },
+                "options": {
                 "colorMode": "value",
                 "graphMode": "area",
                 "justifyMode": "auto",
                 "orientation": "auto",
                 "percentChangeColorMode": "standard",
                 "reduceOptions": {
-                  "calcs": [
+                    "calcs": [
                     "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
+                    ],
+                    "fields": "",
+                    "values": false
                 },
                 "showPercentChange": false,
                 "textMode": "auto",
                 "wideLayout": true
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "amp",
-                  "min": -212.1,
-                  "max": 212.1,
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-6": {
+        },
+        "panel-6": {
         "kind": "Panel",
         "spec": {
-          "id": 6,
-          "title": "Torque",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, trq\nFROM telemetry_records\nORDER BY time DESC\nLIMIT 1;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 6,
+            "links": [],
+            "title": "Torque",
+            "transparent": true,
+            "vizConfig": {
             "group": "stat",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
+                "fieldConfig": {
+                "defaults": {
+                    "max": 125,
+                    "min": -125,
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    },
+                    "unit": "forceNm"
+                },
+                "overrides": []
+                },
+                "options": {
                 "colorMode": "value",
                 "graphMode": "area",
                 "justifyMode": "auto",
                 "orientation": "auto",
                 "percentChangeColorMode": "standard",
                 "reduceOptions": {
-                  "calcs": [
+                    "calcs": [
                     "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
+                    ],
+                    "fields": "",
+                    "values": false
                 },
                 "showPercentChange": false,
                 "textMode": "auto",
                 "wideLayout": true
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "forceNm",
-                  "min": -125,
-                  "max": 125,
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-7": {
+        },
+        "panel-7": {
         "kind": "Panel",
         "spec": {
-          "id": 7,
-          "title": "Torque Over Time",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, trq AS \"Torque (N·m)\"\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 7,
+            "links": [],
+            "title": "Torque Over Time",
+            "vizConfig": {
             "group": "timeseries",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
-                "annotations": {
-                  "clustering": -1,
-                  "multiLane": false
-                },
-                "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "tooltip": {
-                  "hideZeros": false,
-                  "mode": "single",
-                  "sort": "none"
-                }
-              },
-              "fieldConfig": {
+                "fieldConfig": {
                 "defaults": {
-                  "unit": "forceNm",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
+                    "color": {
                     "mode": "palette-classic"
-                  },
-                  "custom": {
+                    },
+                    "custom": {
                     "axisBorderShow": false,
                     "axisCenteredZero": false,
                     "axisColorMode": "text",
@@ -1297,114 +2274,171 @@
                     "fillOpacity": 0,
                     "gradientMode": "none",
                     "hideFrom": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": false
+                        "legend": false,
+                        "tooltip": false,
+                        "viz": false
                     },
                     "insertNulls": false,
                     "lineInterpolation": "linear",
                     "lineWidth": 1,
                     "pointSize": 5,
                     "scaleDistribution": {
-                      "type": "linear"
+                        "type": "linear"
                     },
                     "showPoints": "auto",
                     "showValues": false,
                     "spanNulls": false,
                     "stacking": {
-                      "group": "A",
-                      "mode": "none"
+                        "group": "A",
+                        "mode": "none"
                     },
                     "thresholdsStyle": {
-                      "mode": "off"
+                        "mode": "off"
                     }
-                  }
+                    },
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    },
+                    "unit": "forceNm"
                 },
                 "overrides": []
-              }
+                },
+                "options": {
+                "annotations": {
+                    "clustering": -1,
+                    "multiLane": false
+                },
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "hideZeros": false,
+                    "mode": "single",
+                    "sort": "none"
+                }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-8": {
+        },
+        "panel-8": {
         "kind": "Panel",
         "spec": {
-          "id": 8,
-          "title": "Motor Temperature",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, mot_c\nFROM telemetry_records\nORDER BY time DESC\nLIMIT 1;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 8,
+            "links": [],
+            "title": "Motor Temperature",
+            "vizConfig": {
             "group": "gauge",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
+                "fieldConfig": {
+                "defaults": {
+                    "color": {
+                    "mode": "thresholds"
+                    },
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "yellow",
+                        "value": 70
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    },
+                    "unit": "celsius"
+                },
+                "overrides": []
+                },
+                "options": {
                 "barShape": "flat",
                 "barWidthFactor": 0.5,
                 "effects": {
-                  "barGlow": false,
-                  "centerGlow": false,
-                  "gradient": true
+                    "barGlow": false,
+                    "centerGlow": false,
+                    "gradient": true
                 },
                 "endpointMarker": "point",
                 "minVizHeight": 75,
                 "minVizWidth": 75,
                 "orientation": "auto",
                 "reduceOptions": {
-                  "calcs": [
+                    "calcs": [
                     "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
+                    ],
+                    "fields": "",
+                    "values": false
                 },
                 "segmentCount": 1,
                 "segmentSpacing": 0.3,
@@ -1414,116 +2448,116 @@
                 "sizing": "auto",
                 "sparkline": true,
                 "textMode": "auto"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "celsius",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 70,
-                        "color": "yellow"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "thresholds"
-                  }
-                },
-                "overrides": []
-              }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      },
-      "panel-9": {
+        },
+        "panel-9": {
         "kind": "Panel",
         "spec": {
-          "id": 9,
-          "title": "IGBT Temperature",
-          "description": "",
-          "links": [],
-          "data": {
+            "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
+                "queries": [
                 {
-                  "kind": "PanelQuery",
-                  "spec": {
+                    "kind": "PanelQuery",
+                    "spec": {
+                    "hidden": false,
                     "query": {
-                      "kind": "DataQuery",
-                      "group": "grafana-postgresql-datasource",
-                      "version": "v0",
-                      "datasource": {
+                        "datasource": {
                         "name": "postgresUID"
-                      },
-                      "spec": {
+                        },
+                        "group": "grafana-postgresql-datasource",
+                        "kind": "DataQuery",
+                        "spec": {
                         "dataset": "telemetry",
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
                         "rawSql": "SELECT time, igbt_c\nFROM telemetry_records\nORDER BY time DESC\nLIMIT 1;",
                         "sql": {
-                          "columns": [
+                            "columns": [
                             {
-                              "parameters": [],
-                              "type": "function"
+                                "parameters": [],
+                                "type": "function"
                             }
-                          ],
-                          "groupBy": [
+                            ],
+                            "groupBy": [
                             {
-                              "property": {
+                                "property": {
                                 "type": "string"
-                              },
-                              "type": "groupBy"
+                                },
+                                "type": "groupBy"
                             }
-                          ],
-                          "limit": 50
+                            ],
+                            "limit": 50
                         },
                         "table": "telemetry_records"
-                      }
+                        },
+                        "version": "v0"
                     },
-                    "refId": "A",
-                    "hidden": false
-                  }
+                    "refId": "A"
+                    }
                 }
-              ],
-              "transformations": [],
-              "queryOptions": {}
+                ],
+                "queryOptions": {},
+                "transformations": []
             }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
+            },
+            "description": "",
+            "id": 9,
+            "links": [],
+            "title": "IGBT Temperature",
+            "vizConfig": {
             "group": "gauge",
-            "version": "13.0.1+security-01",
+            "kind": "VizConfig",
             "spec": {
-              "options": {
+                "fieldConfig": {
+                "defaults": {
+                    "color": {
+                    "mode": "thresholds"
+                    },
+                    "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                        {
+                        "color": "green",
+                        "value": 0
+                        },
+                        {
+                        "color": "yellow",
+                        "value": 70
+                        },
+                        {
+                        "color": "red",
+                        "value": 80
+                        }
+                    ]
+                    },
+                    "unit": "celsius"
+                },
+                "overrides": []
+                },
+                "options": {
                 "barShape": "flat",
                 "barWidthFactor": 0.5,
                 "effects": {
-                  "barGlow": false,
-                  "centerGlow": false,
-                  "gradient": true
+                    "barGlow": false,
+                    "centerGlow": false,
+                    "gradient": true
                 },
                 "endpointMarker": "point",
                 "minVizHeight": 75,
                 "minVizWidth": 75,
                 "orientation": "auto",
                 "reduceOptions": {
-                  "calcs": [
+                    "calcs": [
                     "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
+                    ],
+                    "fields": "",
+                    "values": false
                 },
                 "segmentCount": 1,
                 "segmentSpacing": 0.3,
@@ -1533,211 +2567,256 @@
                 "sizing": "auto",
                 "sparkline": true,
                 "textMode": "auto"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "celsius",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 70,
-                        "color": "yellow"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "thresholds"
-                  }
-                },
-                "overrides": []
-              }
+                }
+            },
+            "version": "13.0.1+security-01"
             }
-          }
         }
-      }
+        }
     },
     "layout": {
-      "kind": "GridLayout",
-      "spec": {
+        "kind": "GridLayout",
+        "spec": {
         "items": [
-          {
+            {
             "kind": "GridLayoutItem",
             "spec": {
-              "x": 0,
-              "y": 0,
-              "width": 3,
-              "height": 6,
-              "element": {
+                "element": {
                 "kind": "ElementReference",
                 "name": "panel-1"
-              }
+                },
+                "height": 12,
+                "width": 3,
+                "x": 0,
+                "y": 0
             }
-          },
-          {
+            },
+            {
             "kind": "GridLayoutItem",
             "spec": {
-              "x": 3,
-              "y": 0,
-              "width": 10,
-              "height": 8,
-              "element": {
+                "element": {
                 "kind": "ElementReference",
                 "name": "panel-2"
-              }
+                },
+                "height": 12,
+                "width": 8,
+                "x": 3,
+                "y": 0
             }
-          },
-          {
+            },
+            {
             "kind": "GridLayoutItem",
             "spec": {
-              "x": 13,
-              "y": 0,
-              "width": 3,
-              "height": 5,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-6"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 21,
-              "y": 0,
-              "width": 3,
-              "height": 5,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-11"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 13,
-              "y": 5,
-              "width": 11,
-              "height": 7,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-7"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 0,
-              "y": 6,
-              "width": 3,
-              "height": 5,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-8"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 3,
-              "y": 8,
-              "width": 10,
-              "height": 7,
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-10"
-              }
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "x": 0,
-              "y": 11,
-              "width": 3,
-              "height": 4,
-              "element": {
+                "element": {
                 "kind": "ElementReference",
                 "name": "panel-9"
-              }
+                },
+                "height": 6,
+                "width": 3,
+                "x": 11,
+                "y": 0
             }
-          },
-          {
+            },
+            {
             "kind": "GridLayoutItem",
             "spec": {
-              "x": 13,
-              "y": 12,
-              "width": 11,
-              "height": 9,
-              "element": {
+                "element": {
                 "kind": "ElementReference",
-                "name": "panel-12"
-              }
+                "name": "panel-10"
+                },
+                "height": 12,
+                "width": 10,
+                "x": 14,
+                "y": 0
             }
-          },
-          {
+            },
+            {
             "kind": "GridLayoutItem",
             "spec": {
-              "x": 0,
-              "y": 15,
-              "width": 8,
-              "height": 6,
-              "element": {
+                "element": {
                 "kind": "ElementReference",
-                "name": "panel-4"
-              }
+                "name": "panel-8"
+                },
+                "height": 6,
+                "width": 3,
+                "x": 11,
+                "y": 6
             }
-          },
-          {
+            },
+            {
             "kind": "GridLayoutItem",
             "spec": {
-              "x": 8,
-              "y": 15,
-              "width": 3,
-              "height": 3,
-              "element": {
+                "element": {
+                "kind": "ElementReference",
+                "name": "panel-6"
+                },
+                "height": 7,
+                "width": 3,
+                "x": 0,
+                "y": 12
+            }
+            },
+            {
+            "kind": "GridLayoutItem",
+            "spec": {
+                "element": {
+                "kind": "ElementReference",
+                "name": "panel-7"
+                },
+                "height": 7,
+                "width": 11,
+                "x": 3,
+                "y": 12
+            }
+            },
+            {
+            "kind": "GridLayoutItem",
+            "spec": {
+                "element": {
+                "kind": "ElementReference",
+                "name": "panel-13"
+                },
+                "height": 7,
+                "width": 10,
+                "x": 14,
+                "y": 12
+            }
+            },
+            {
+            "kind": "GridLayoutItem",
+            "spec": {
+                "element": {
                 "kind": "ElementReference",
                 "name": "panel-3"
-              }
+                },
+                "height": 5,
+                "width": 3,
+                "x": 0,
+                "y": 19
             }
-          },
-          {
+            },
+            {
             "kind": "GridLayoutItem",
             "spec": {
-              "x": 8,
-              "y": 18,
-              "width": 3,
-              "height": 3,
-              "element": {
+                "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+                },
+                "height": 10,
+                "width": 11,
+                "x": 3,
+                "y": 19
+            }
+            },
+            {
+            "kind": "GridLayoutItem",
+            "spec": {
+                "element": {
+                "kind": "ElementReference",
+                "name": "panel-14"
+                },
+                "height": 10,
+                "width": 10,
+                "x": 14,
+                "y": 19
+            }
+            },
+            {
+            "kind": "GridLayoutItem",
+            "spec": {
+                "element": {
                 "kind": "ElementReference",
                 "name": "panel-5"
-              }
+                },
+                "height": 5,
+                "width": 3,
+                "x": 0,
+                "y": 24
             }
-          }
+            },
+            {
+            "kind": "GridLayoutItem",
+            "spec": {
+                "element": {
+                "kind": "ElementReference",
+                "name": "panel-12"
+                },
+                "height": 6,
+                "width": 14,
+                "x": 0,
+                "y": 29
+            }
+            },
+            {
+            "kind": "GridLayoutItem",
+            "spec": {
+                "element": {
+                "kind": "ElementReference",
+                "name": "panel-16"
+                },
+                "height": 6,
+                "width": 2,
+                "x": 14,
+                "y": 29
+            }
+            },
+            {
+            "kind": "GridLayoutItem",
+            "spec": {
+                "element": {
+                "kind": "ElementReference",
+                "name": "panel-15"
+                },
+                "height": 6,
+                "width": 6,
+                "x": 16,
+                "y": 29
+            }
+            },
+            {
+            "kind": "GridLayoutItem",
+            "spec": {
+                "element": {
+                "kind": "ElementReference",
+                "name": "panel-11"
+                },
+                "height": 6,
+                "width": 2,
+                "x": 22,
+                "y": 29
+            }
+            }
         ]
-      }
+        }
     },
-    "links": [],
+    "links": [
+        {
+        "asDropdown": true,
+        "icon": "external link",
+        "includeVars": false,
+        "keepTime": false,
+        "tags": [],
+        "targetBlank": false,
+        "title": "New link",
+        "tooltip": "",
+        "type": "dashboards",
+        "url": ""
+        }
+    ],
     "liveNow": false,
+    "preferences": {
+        "layout": {
+        "kind": "GridLayout",
+        "spec": {
+            "items": []
+        }
+        }
+    },
     "preload": false,
     "tags": [],
     "timeSettings": {
-      "timezone": "browser",
-      "from": "now-6h",
-      "to": "now",
-      "autoRefresh": "",
-      "autoRefreshIntervals": [
+        "autoRefresh": "5s",
+        "autoRefreshIntervals": [
         "5s",
         "10s",
         "30s",
@@ -1748,19 +2827,15 @@
         "1h",
         "2h",
         "1d"
-      ],
-      "hideTimepicker": false,
-      "fiscalYearStartMonth": 0
+        ],
+        "fiscalYearStartMonth": 0,
+        "from": "now-15m",
+        "hideTimepicker": false,
+        "timezone": "browser",
+        "to": "now"
     },
-    "title": "New dashboard",
-    "variables": [],
-    "preferences": {
-      "layout": {
-        "kind": "GridLayout",
-        "spec": {
-          "items": []
-        }
-      }
+    "title": "Rapidamente Telemetry Dashboard",
+    "variables": []
     }
-  }
+
 }
