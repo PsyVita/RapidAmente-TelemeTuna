@@ -34,6 +34,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-db} 
+      GF_DASHBOARDS_MIN_REFRESH_INTERVAL: "300ms"
     volumes:
       # store data in a named volume that survives container restarts
       - grafana_data:/var/lib/grafana
