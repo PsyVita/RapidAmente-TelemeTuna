@@ -1,6 +1,6 @@
 # 🐟 TelemeTuna v1.0
 
-**TelemeTuna** is a self-contained telemetry platform for an electric race car. It catches live sensor data streamed from the car, cleans it up, stores it safely in a database, and draws it on live dashboards.
+**TelemeTuna** is a self-contained telemetry platform for the **RapidAmente** electric race car. It catches live sensor data streamed from the car, cleans it up, stores it safely in a database, and draws it on live dashboards.
 
 It is built almost entirely out of ready-made building blocks that run inside **Docker**. If you can copy a file and run a couple of commands in a terminal, you can run this project.
 
@@ -21,9 +21,10 @@ It is built almost entirely out of ready-made building blocks that run inside **
 9. [Optional: running Node-RED locally for a direct serial connection](#-optional-running-node-red-locally-for-a-direct-serial-connection)
 10. [The database tables](#-the-database-tables)
 11. [The Grafana dashboard](#-the-grafana-dashboard)
-12. [Project folder layout](#-project-folder-layout)
-13. [Troubleshooting](#-troubleshooting)
-14. [Glossary (plain-English definitions)](#-glossary-plain-english-definitions)
+12. [Team access: watching together (LAN or cloud)](#-team-access-watching-together-lan-or-cloud)
+13. [Project folder layout](#-project-folder-layout)
+14. [Troubleshooting](#-troubleshooting)
+15. [Glossary (plain-English definitions)](#-glossary-plain-english-definitions)
 
 ---
 
@@ -79,13 +80,13 @@ Everything is logged, so you can always trace *why* a value looks the way it doe
                                                      └──────────────────────────────────────────┘
 ```
 
-**In words:** The sender ESP32 on the car radios each reading to the receiver ESP32, which timestamps it and publishes it to **Mosquitto** (the MQTT "post office"). **Node-RED** is the "brain" that picks the message up, cleans and converts it, and writes the result into **PostgreSQL**. **Grafana** reads from PostgreSQL to draw the charts. **Flyway** is a one-shot helper that builds the database tables the first time you start up. CSV files can be fed straight into Node-RED to replay old data through the very same pipeline.
+**In words:** The sender ESP32 on the car radios each reading to the receiver ESP32, which timestamps it and publishes it to **Mosquitto** (the MQTT "post office"). **Node-RED** is the "brain" that picks the message up, cleans and converts it, and writes the result into **PostgreSQL**. **Grafana** reads from PostgreSQL to draw the charts. **Flyway** is a one-shot helper that builds the database tables the first time you start up. *(In the race setup, the Mosquitto broker will be hosted in the cloud on the PC side; the one bundled in Docker is there for local testing — the rest of the pipeline works the same either way.)* CSV files can be fed straight into Node-RED to replay old data through the very same pipeline.
 
 ---
 
 ## 📦 What's inside the box (the services)
 
-When you start the project with Docker, five things run together. You don't install them one by one — Docker does it for you.
+When you start the project with Docker, six things run together. You don't install them one by one — Docker does it for you.
 
 | Service | What it is | Where you reach it | Why it's here |
 |---|---|---|---|
@@ -94,8 +95,9 @@ When you start the project with Docker, five things run together. You don't inst
 | **Grafana** | Dashboard tool | http://localhost:3001 | Live charts and gauges |
 | **Mosquitto** | MQTT message broker | `localhost:1883` | Carries live data messages |
 | **Flyway** | Database migration tool | *(runs once, then exits)* | Creates the tables automatically on first start |
+| **pgAdmin** | Database admin UI | http://localhost:5051 | Browse and query the stored data by hand |
 
-> 💡 **Why these ports?** They are deliberately shifted (5433 instead of the usual 5432, 1881 instead of 1880, 3001 instead of 3000) so they don't collide with other software you might already have running.
+> 💡 **Why these ports?** They are deliberately shifted (5433 instead of the usual 5432, 1881 instead of 1880, 3001 instead of 3000, 5051 instead of the usual 5050) so they don't collide with other software you might already have running.
 
 ---
 
@@ -213,8 +215,8 @@ That's it. You do **not** need to install PostgreSQL, Node-RED, Grafana, or Node
 ### Step 1 — Download the project
 
 ```bash
-git clone https://github.com/PsyVita/car-telemetry-attempt.git
-cd car-telemetry-attempt
+git clone https://github.com/PsyVita/RapidAmente-TelemeTuna.git
+cd RapidAmente-TelemeTuna
 ```
 
 ### Step 2 — Create your environment (`.env`) file
@@ -237,11 +239,16 @@ POSTGRES_DB=telemetry
 # Grafana
 GRAFANA_ADMIN_USER=user
 GRAFANA_ADMIN_PASSWORD=password
+
+# pgAdmin
+PGADMIN_EMAIL=admin@admin.com
+PGADMIN_PASSWORD=password
 ```
 
 Change the values to whatever you like (especially the passwords). **Remember what you set** — you'll use:
 - `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` to connect to the database.
 - `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` to log in to Grafana.
+- `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` to log in to pgAdmin (the email just needs to *look* like an email).
 
 > ⚠️ The `.env` file is intentionally **not** uploaded to GitHub (it's listed in `.gitignore`) because it holds your passwords. Only `.env.example` is shared. This is why you have to create your own `.env` the first time.
 
@@ -266,8 +273,11 @@ Open these in your browser:
 
 - **Node-RED (the brain/editor):** http://localhost:1881
 - **Grafana (dashboards):** http://localhost:3001 — log in with the Grafana user/password from your `.env`.
+- **pgAdmin (database browser):** http://localhost:5051 — log in with the `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` from your `.env`.
 
-To peek directly at the database:
+> 🐘 **First time in pgAdmin:** register the database once. Right-click *Servers* → *Register* → *Server*, give it any name, and under *Connection* set **Host** = `postgresdb`, **Port** = `5432`, plus the `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` from your `.env`. Tick **Save password** so you never type it again. (It must be `postgresdb:5432`, *not* `localhost:5433` — pgAdmin lives *inside* the Docker network with the database.)
+
+To peek directly at the database from the terminal:
 
 ```bash
 docker exec -it telemetry-postgresdb psql -U <YOUR_POSTGRES_USER> -d <YOUR_POSTGRES_DB> -c "SELECT count(*) FROM telemetry_records;"
@@ -301,6 +311,8 @@ docker compose down -v     # stop AND erase all stored data (start fresh)
 ### Option 1 — MQTT from the receiver ESP32 (the live path)
 
 Node-RED is always listening on the MQTT topic **`car_telemetry`** (broker: Mosquitto, port `1883`).
+
+> ☁️ **Cloud broker:** for the real race setup, the Mosquitto broker will be hosted in the cloud (on the PC side) instead of the local Docker one — the receiver ESP32 publishes there and Node-RED subscribes to it. Same topic, same frame format; only the broker address changes.
 
 The receiver ESP32 should publish each frame as plain text in the standard 16-field format — **timestamp first, then the 15 data fields**:
 
@@ -423,7 +435,7 @@ Inside Docker, Node-RED reaches the database using the name `postgresdb` on port
 The Docker paths like `/data/data/yourfile.csv` only exist *inside* the container. On your local machine, change the **"file in"** nodes on the **CSV Imports** tab to a real path on your computer, for example:
 
 ```
-/Users/you/githubProjects/car-telemetry-attempt/nodered/data/yourfile.csv
+/Users/you/githubProjects/RapidAmente-TelemeTuna/nodered/data/yourfile.csv
 ```
 
 ### Step 8 — Configure the serial-port node
@@ -503,10 +515,45 @@ A pre-built dashboard is provisioned automatically — open Grafana at http://lo
 
 ---
 
+## 👥 Team access: watching together (LAN or cloud)
+
+Everything you open in a browser — the **Grafana dashboards**, the **Node-RED editor**, and **pgAdmin** — can be watched by the whole team at the same time, not just on the computer running Docker. There are two ways to share it:
+
+### Option A — One PC hosts, the team joins over the local network
+
+The stack runs on one computer (e.g. the pit laptop). Anyone whose device is **on the same network (same subnet)** can reach every service by replacing `localhost` with the host computer's IP address on that network:
+
+| Service | Teammates open |
+|---|---|
+| Grafana | `http://<host-ip>:3001` |
+| Node-RED | `http://<host-ip>:1881` |
+| pgAdmin | `http://<host-ip>:5051` |
+
+To find the host IP: `ipconfig` (Windows) or `ifconfig` / `ipconfig getifaddr en0` (macOS/Linux) on the hosting machine.
+
+Things that trip people up: everyone must be on the **same subnet** (same Wi-Fi/hotspot — a phone on 5G can't see a laptop on Wi-Fi), and the host's firewall must allow incoming connections on those ports. Each service still asks for its own login.
+
+### Option B — Host the whole platform in the cloud *(planned)*
+
+The same Docker setup runs unchanged on a cloud server. The team then uses the **cloud server's public IP** instead, from anywhere — no shared network needed:
+
+```
+http://<cloud-public-ip>:3001   ← Grafana
+http://<cloud-public-ip>:1881   ← Node-RED
+http://<cloud-public-ip>:5051   ← pgAdmin
+```
+
+This pairs naturally with the cloud-hosted Mosquitto broker: the receiver ESP32 publishes to the cloud broker, the cloud Node-RED processes it, and everyone watches the same dashboards live.
+
+> ⚠️ **Before exposing anything to the internet:** change every default password in `.env` (Grafana, pgAdmin, PostgreSQL) — a public IP is visible to the whole world, not just the team.
+
+---
+
 ## 📁 Project folder layout
 
 ```
-car-telemetry-attempt/
+RapidAmente-TelemeTuna/
+├── README.md                 ← you are here
 ├── infrastructure/
 │   ├── docker-compose.yaml   ← defines all the services
 │   ├── .env.example          ← template for your secrets (copy to .env)
@@ -525,7 +572,7 @@ car-telemetry-attempt/
 │   └── config/mosquitto.conf ← MQTT broker settings
 ├── grafana/
 │   └── provisioning/         ← pre-built dashboard & database connection
-└── information/              ← this README & the author's process log
+└── information/              ← the author's process log
 ```
 
 ---
@@ -553,6 +600,9 @@ Rows whose timestamps already exist in `telemetry_records` are skipped on purpos
 **Node-RED can't connect to the database (local setup).**
 You almost certainly still have the host/port set to `postgresdb:5432`. Locally it must be `localhost:5433`, with the user/password/database matching your `.env`. See [Step 6](#step-6--fix-the-database-connection-the-important-change).
 
+**Teammates can't open the dashboards from their device.**
+Check they're using the host computer's IP (not `localhost`), that both devices are on the **same subnet** (same Wi-Fi network/hotspot), and that the host's firewall allows incoming connections on ports 3001 / 1881 / 5051. For the cloud setup, use the cloud server's public IP and make sure those ports are open in the cloud firewall/security group.
+
 **Port already in use.**
 Something else on your machine is using 5433, 1881, 1883, or 3001. Stop that program, or change the published port in `infrastructure/docker-compose.yaml`.
 
@@ -574,6 +624,7 @@ Double-check the exact device name (`ls /dev/cu.*` on macOS, Device Manager on W
 - **MQTT / Mosquitto** — a lightweight messaging system for sending small messages (like sensor readings) around. Mosquitto is the specific "post office" (broker) used.
 - **PostgreSQL (Postgres)** — the database that stores all the readings permanently.
 - **Flyway** — a tool that builds/updates the database tables automatically and remembers which changes it already applied.
+- **pgAdmin** — a web interface for browsing and querying the PostgreSQL database by hand.
 - **Grafana** — the tool that draws live charts and gauges from the database.
 - **Serial port** — a USB connection your computer uses to talk to hardware like a radio receiver.
 - **Baud rate** — the speed of a serial connection (e.g. 38400). Both sides must agree on it.
@@ -584,4 +635,4 @@ Double-check the exact device name (`ls /dev/cu.*` on macOS, Device Manager on W
 
 ---
 
-*TelemeTuna v1.0 — built with Node-RED, PostgreSQL, Mosquitto, Grafana, and Flyway, all orchestrated by Docker.* 🐟
+*Thanks for reading — feel free to try it out. If anything's wrong with the tuna, or should you have any inquiries, please feel free to contact me on Instagram: [praery.in.april](https://www.instagram.com/praery.in.april)* 🐟
