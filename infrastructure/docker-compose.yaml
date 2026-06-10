@@ -111,7 +111,32 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+
+# pgAdmin
+  pgadmin:
+    container_name: telemetry-pgadmin
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5051:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-password}
+    volumes:
+      # remembers your saved server connections between restarts
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/misc/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   grafana_data:
   mosquitto_data:
+  pgadmin_data:
