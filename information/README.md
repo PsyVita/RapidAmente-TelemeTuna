@@ -151,9 +151,9 @@ Inside Node-RED there are three "tabs" (think of them as three pages of wiring):
 - **CSV Imports** — the entry points for loading raw or processed files.
 - **Background Flow** — the actual cleaning/conversion pipeline that live data and raw CSVs funnel into.
 
-Whatever the source, every raw frame travels through the **Background Flow** in this order:
+Live MQTT frames travel through the **Background Flow** starting at step 1. Raw CSV rows have their timestamp separated on the CSV Imports tab first, then join the pipeline directly at step 2 — keeping the original timestamps from the file:
 
-1. **Strip Timestamp** — Separates the timestamp from the data. A 16-field frame keeps its own timestamp; a 15-field frame is stamped with its arrival time and a warning is logged (see fallback above). Any other field count drops the frame.
+1. **Strip Timestamp** *(live data)* — Separates the timestamp from the data. A 16-field frame keeps its own timestamp; a 15-field frame is stamped with its arrival time and a warning is logged (see fallback above). Any other field count drops the frame. (Raw CSV rows get the same treatment from the **Strip Timestamp** node on the CSV Imports tab before joining here.)
 2. **Parse CSV** — Splits the line into its 15 fields and checks each one. If a frame has the wrong number of fields, a missing value, or text where a number should be, the **whole frame is dropped** and a frame-drop (`FD`) event is logged.
 3. **Raw → Real Conversion** — Scales the raw -32767…32767 numbers into real units (raw ÷ 32767 × real-world maximum):
    - `rpm` → up to 5,500 RPM (rounded to a whole number)
@@ -167,7 +167,7 @@ Whatever the source, every raw frame travels through the **Background Flow** in 
 7. **Flags** — Converts the 0/1 light signals (`L_REGEN`, `L_ERR`, `L_WARN`, `L_OK`, `L_PUMP`, `drive_ena`) into true/false. Anything that isn't exactly 0 or 1 becomes `null` (flags are **not** healed) and an `error` is logged.
 8. **Validate Bitmasks** — Sanity-checks the `err` and `warn` numbers (they must be whole numbers 0–65535). Invalid values become `null` and an `error` is logged. The bitmask numbers are stored as-is; decoding into named faults happens later in Grafana.
 9. **Build Parameters** — Packs all the clean values together, ready for the database.
-10. **Car Telemetry Database** — Writes the finished row into the `telemetry_records` table.
+10. **Car Telemetry Database** — Writes the finished row into the `telemetry_records` table. The `time` column is **unique**: if a row with the same timestamp already exists, the new row is silently skipped. This means accidentally replaying the same data (e.g. importing a CSV twice) can never create duplicates.
 
 ### What happens when something goes wrong
 
@@ -329,6 +329,8 @@ Great for replaying logged sessions. Remember: **both kinds of CSV need the time
 4. Update the file path in the matching **"file in"** node (the comments next to them say *"Edit Path to Insert Your File"*).
 5. Click the inject button to load and process the file. Blank lines are ignored; rows with bad timestamps or field counts are dropped and logged.
 
+> 🔁 **Safe to re-run:** timestamps are unique in the database, so importing the same file twice simply skips the rows that are already stored — no duplicates.
+
 ---
 
 ## 🔌 Optional: running Node-RED locally for a direct serial connection
@@ -463,7 +465,7 @@ Flyway creates these automatically. You never write them by hand.
 
 | Column | Type | Notes |
 |---|---|---|
-| `time` | timestamp | when the reading happened (from the receiver ESP32, or arrival time as fallback) |
+| `time` | timestamp | when the reading happened (from the receiver ESP32, or arrival time as fallback). **Unique** — a second row with the same timestamp is skipped on insert |
 | `rpm`, `amp`, `volt`, `trq` | number | converted real-world values |
 | `mode` | integer | 0=Neutral, 1=Drive, 2=Reverse |
 | `err`, `warn` | integer | bitmask numbers (decoded via the definition tables) |
@@ -513,7 +515,8 @@ car-telemetry-attempt/
 │   └── migrations/           ← SQL files Flyway runs to build the tables
 │       ├── V1__init.sql              (telemetry_records)
 │       ├── V2__add_event_logs.sql    (event_logs)
-│       └── V3__add_bitmask_definitions.sql
+│       ├── V3__add_bitmask_definitions.sql
+│       └── V4__unique_timestamp.sql  (no duplicate timestamps)
 ├── nodered/
 │   ├── Dockerfile            ← builds Node-RED with the extra nodes baked in
 │   ├── flows.json            ← the data-flow wiring (the whole pipeline)
@@ -543,6 +546,9 @@ Your data source is sending 15-field frames without the leading timestamp. The d
 
 **My CSV rows are all being dropped.**
 The CSV import expects a timestamp as the **first** column (16 columns total). A 15-column file without timestamps will be rejected with *"Bad field count"* — add a timestamp column first.
+
+**I imported a CSV but the row count didn't go up (or went up less than expected).**
+Rows whose timestamps already exist in `telemetry_records` are skipped on purpose (duplicate protection). If you're re-importing the same file, that's everything working as designed. Check `SELECT count(*)` before and after, and the event log for dropped (`FD`) rows.
 
 **Node-RED can't connect to the database (local setup).**
 You almost certainly still have the host/port set to `postgresdb:5432`. Locally it must be `localhost:5433`, with the user/password/database matching your `.env`. See [Step 6](#step-6--fix-the-database-connection-the-important-change).
