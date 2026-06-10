@@ -409,7 +409,7 @@
         "name": "link out 1",
         "mode": "link",
         "links": [
-            "595351ac2dd69914"
+            "29a6a2f2f328e217"
         ],
         "x": 1705,
         "y": 300,
@@ -565,7 +565,7 @@
         "type": "postgresql",
         "z": "fe649a070c585a18",
         "name": "Car Telemetry Database",
-        "query": "INSERT INTO telemetry_records\n    (time, rpm, amp, volt, trq, mode, err, warn, igbt_c, mot_c,\n     l_regen, l_err, l_warn, l_ok, l_pump, drive_ena, healed_fields)\nVALUES\n    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);",
+        "query": "INSERT INTO telemetry_records\n    (time, rpm, amp, volt, trq, mode, err, warn, igbt_c, mot_c,\n     l_regen, l_err, l_warn, l_ok, l_pump, drive_ena, healed_fields)\nVALUES\n    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)\nON CONFLICT (time) DO NOTHING;",
         "postgreSQLConfig": "pg-config",
         "split": false,
         "rowsPerMsg": 1,
@@ -887,7 +887,7 @@
         "type": "postgresql",
         "z": "f6f2187d.f17ca8",
         "name": "Car Telemetry Database",
-        "query": "INSERT INTO telemetry_records\n    (time, rpm, amp, volt, trq, mode, err, warn, igbt_c, mot_c,\n     l_regen, l_err, l_warn, l_ok, l_pump, drive_ena, healed_fields)\nVALUES\n    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);",
+        "query": "INSERT INTO telemetry_records\n    (time, rpm, amp, volt, trq, mode, err, warn, igbt_c, mot_c,\n     l_regen, l_err, l_warn, l_ok, l_pump, drive_ena, healed_fields)\nVALUES\n    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)\nON CONFLICT (time) DO NOTHING;",
         "postgreSQLConfig": "pg-config",
         "split": false,
         "rowsPerMsg": 1,
@@ -1204,7 +1204,6 @@
         "z": "f6f2187d.f17ca8",
         "name": "link in 1",
         "links": [
-            "ba0281515b0dd58a",
             "bf9e58810d8e6472"
         ],
         "x": 625,
@@ -1224,5 +1223,21 @@
         "x": 250,
         "y": 200,
         "wires": []
+    },
+    {
+        "id": "29a6a2f2f328e217",
+        "type": "link in",
+        "z": "f6f2187d.f17ca8",
+        "name": "link in 2",
+        "links": [
+            "ba0281515b0dd58a"
+        ],
+        "x": 1075,
+        "y": 320,
+        "wires": [
+            [
+                "96914126869b24ea"
+            ]
+        ]
     }
 ]

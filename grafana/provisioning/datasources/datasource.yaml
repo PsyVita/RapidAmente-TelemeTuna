@@ -1,4 +1,4 @@
-# This file is read by Grafana to provision the data source for TimescaleDB. It uses environment variables defined in the .env file to set up the connection details for the PostgreSQL database. The data source is configured to be the default one for Grafana, and it specifies that it is a TimescaleDB instance by setting the appropriate jsonData fields.
+# This file is read by Grafana to provision the data source for TimescaleDB. It uses environment variables defined in the .env file to set up the connection details for the PostgreSQL database. The data source is configured to be the default one for Grafana, and it specifies that it is a PostgreSQL instance by setting the appropriate jsonData fields.
 
 apiVersion: 1
 
