@@ -398,7 +398,7 @@
         "y": 300,
         "wires": [
             [
-                "ba0281515b0dd58a"
+                "dc65229463529790"
             ]
         ]
     },
@@ -411,7 +411,7 @@
         "links": [
             "595351ac2dd69914"
         ],
-        "x": 1445,
+        "x": 1705,
         "y": 300,
         "wires": []
     },
@@ -519,7 +519,7 @@
         "type": "function",
         "z": "fe649a070c585a18",
         "name": "Strip Timestamp",
-        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    if (fields.length >= 16) {\n        const ts = fields[0].trim();\n        const parsed = new Date(ts);\n\n        if (!ts || isNaN(parsed.getTime())) {\n            const m = `Invalid timestamp: \"${ts}\" — row dropped.`;\n            node.warn(m);\n            sendLog(\"FD\", m);\n            return null;\n        }\n\n        msg.timestamp = parsed.toISOString();\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else {\n        const m = `Bad field count: got ${fields.length}, expected 16+. Row dropped. Are you sure this data has been processed? `;\n        node.warn(m);\n        sendLog(\"FD\", m);\n        return null;\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
+        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    if (fields.length >= 16) {\n        const ts = fields[0].trim();\n        const parsed = new Date(ts);\n\n        if (!ts || isNaN(parsed.getTime())) {\n            const m = `Invalid timestamp: \"${ts}\" — row dropped.`;\n            node.warn(m);\n            sendLog(\"FD\", m);\n            return null;\n        }\n\n        msg.timestamp = parsed.toISOString();\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else {\n        const m = `Bad field count: got ${fields.length}, expected 16+. Row dropped. Please insert timestamp before inputting this csv.`;\n        node.warn(m);\n        sendLog(\"FD\", m);\n        return null;\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
@@ -696,6 +696,27 @@
         "x": 1540,
         "y": 460,
         "wires": []
+    },
+    {
+        "id": "dc65229463529790",
+        "type": "function",
+        "z": "fe649a070c585a18",
+        "name": "Strip Timestamp",
+        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    if (fields.length >= 16) {\n        const ts = fields[0].trim();\n        const parsed = new Date(ts);\n\n        if (!ts || isNaN(parsed.getTime())) {\n            const m = `Invalid timestamp: \"${ts}\" — row dropped.`;\n            node.warn(m);\n            sendLog(\"FD\", m);\n            return null;\n        }\n\n        msg.timestamp = parsed.toISOString();\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else {\n        const m = `Bad field count: got ${fields.length}, expected 16+. Row dropped. Please insert timestamp before inputting this csv.`;\n        node.warn(m);\n        sendLog(\"FD\", m);\n        return null;\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1540,
+        "y": 300,
+        "wires": [
+            [
+                "ba0281515b0dd58a"
+            ],
+            []
+        ]
     },
     {
         "id": "6dc119dca255f8c0",
@@ -1031,7 +1052,7 @@
         "type": "debug",
         "z": "f6f2187d.f17ca8",
         "name": "debug 1",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1149,7 +1170,7 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Strip Timestamp",
-        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n    const isFirstRow = msg.parts && msg.parts.index === 0;\n\n    // Reset the flag at the start of each new CSV file.\n    if (isFirstRow) {\n        context.set(\"noTsLogSent\", false);\n    }\n\n    if (fields.length >= 16) {\n        // ── Raw CSV path ──\n        // Timestamp is field 0. Strip it and pass fields 1–15 forward.\n        const ts = fields[0].trim();\n        const parsed = ts ? new Date(ts) : null;\n        const isValid = parsed && !isNaN(parsed.getTime());\n\n        if (isValid) {\n            // Good timestamp — use it and update tracker.\n            msg.timestamp = parsed.toISOString();\n            context.set(\"synthTime\", parsed.getTime());\n        } else {\n            const m = ts\n                ? `Corrupted timestamp: \"${ts}\" — Dropped the frame.`\n                : \"Blank timestamp field — Dropped the frame.\";\n            node.warn(m);\n            sendLog(\"FD\", m);\n            return null;\n        }\n\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else if (fields.length === 15) {\n        // ── Real-time path (serial / MQTT) ──\n        // No timestamp in data. First message gets system time,\n        // every subsequent message gets last assigned + 300ms.\n        const lastAssigned = context.get(\"lastAssignedTime\");\n\n        if (!lastAssigned) {\n            // First message — seed with actual system time.\n            const now = Date.now();\n            msg.timestamp = new Date(now).toISOString();\n            context.set(\"lastAssignedTime\", now);\n        } else {\n            // All subsequent messages — always +300ms.\n            const next = lastAssigned + 300;\n            msg.timestamp = new Date(next).toISOString();\n            context.set(\"lastAssignedTime\", next);\n        }\n\n        // If this came from a CSV file with no timestamp column, log once.\n        if (msg.parts && !context.get(\"noTsLogSent\")) {\n            const m = \"No timestamp column in CSV — stamping rows with system arrival time.\";\n            node.warn(m);\n            sendLog(\"warn\", m);\n            context.set(\"noTsLogSent\", true);\n        }\n\n    }\n\n    return msg;\n\n    // -----------------------------------------\n    // Defining Functions\n    // -----------------------------------------\n\n    function healCsvTimestamp() {\n        const last = context.get(\"synthTime\");\n        if (last) {\n            const healed = last + 300;\n            context.set(\"synthTime\", healed);\n            return new Date(healed).toISOString();\n        }\n        // No previous valid timestamp — fall back to system time.\n        return new Date().toISOString();\n    }\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
+        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    if (fields.length === 16) {\n        const ts = fields[0].trim();\n        const parsed = ts ? new Date(ts) : null;\n        const isValid = parsed && !isNaN(parsed.getTime());\n\n        if (isValid) {\n            msg.timestamp = parsed.toISOString();\n        } else {\n            const m = ts\n                ? `Corrupted timestamp: \"${ts}\" — Dropped the frame.`\n                : \"Blank timestamp field — Dropped the frame.\";\n            node.warn(m);\n            sendLog(\"FD\", m);\n            return null;\n        }\n\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else if (fields.length === 15) {\n        // No timestamp column — stamp with current system time and log.\n        const now = new Date().toISOString();\n        msg.timestamp = now;\n        const m = \"No timestamp in payload — stamped with system arrival time.\";\n        node.warn(m);\n        sendLog(\"warn\", m);\n\n    } else {\n        const m = `Unexpected field count: ${fields.length} — Dropped the frame.`;\n        node.warn(m);\n        sendLog(\"FD\", m);\n        return null;\n    }\n\n    return msg;\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
