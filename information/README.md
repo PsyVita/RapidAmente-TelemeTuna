@@ -4,7 +4,7 @@
 
 It is built almost entirely out of ready-made building blocks that run inside **Docker**. If you can copy a file and run a couple of commands in a terminal, you can run this project.
 
-> **Old Repository:** https://github.com/PsyVita/car-telemetry-attempt
+> **Repository:** https://github.com/PsyVita/RapidAmente-TelemeTuna
 
 ---
 
