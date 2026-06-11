@@ -849,7 +849,7 @@
                         {
                           "options": {
                             "Heal": {
-                              "color": "super-light-purple",
+                              "color": "#009c61",
                               "index": 0
                             }
                           },
@@ -1578,7 +1578,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "#00a26c",
+                      "color": "#009c61",
                       "value": 0
                     }
                   ]
