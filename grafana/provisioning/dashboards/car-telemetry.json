@@ -132,7 +132,7 @@
       "spec": {
         "enable": false,
         "hide": false,
-        "iconColor": "purple",
+        "iconColor": "#00764f",
         "name": "Healed Frames",
         "query": {
           "datasource": {
@@ -175,7 +175,7 @@
       "spec": {
         "enable": false,
         "hide": false,
-        "iconColor": "#ccccccfa",
+        "iconColor": "light-blue",
         "name": "Frame Drops",
         "query": {
           "datasource": {
@@ -282,7 +282,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT time, ABS(rpm) AS rpm\nFROM telemetry_records\nWHERE time > now() - interval '2 seconds'\nORDER BY time DESC\nLIMIT 1;",
+                      "rawSql": "SELECT time, ABS(rpm) AS rpm\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time DESC\nLIMIT 1;",
                       "sql": {
                         "columns": [
                           {
@@ -327,6 +327,7 @@
                   "mode": "thresholds"
                 },
                 "max": 5500,
+                "min": 0,
                 "thresholds": {
                   "mode": "absolute",
                   "steps": [
@@ -512,7 +513,7 @@
                     {
                       "id": "color",
                       "value": {
-                        "fixedColor": "purple",
+                        "fixedColor": "text",
                         "mode": "fixed"
                       }
                     }
@@ -580,7 +581,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT time, mode\nFROM telemetry_records\nWHERE time > now() - interval '2 seconds'\nORDER BY time DESC\nLIMIT 1;",
+                      "rawSql": "SELECT time, mode\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time DESC\nLIMIT 1;",
                       "sql": {
                         "columns": [
                           {
@@ -711,7 +712,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT time, level, node, message\nFROM event_logs\nWHERE $__timeFilter(time)\nORDER BY time DESC;",
+                      "rawSql": "SELECT time, level, node, message, fields\nFROM event_logs\nWHERE $__timeFilter(time)\nORDER BY time DESC;",
                       "sql": {
                         "columns": [
                           {
@@ -744,7 +745,7 @@
         "description": "",
         "id": 12,
         "links": [],
-        "title": "Event Logs",
+        "title": "Event Logs (Errors and Warnings)",
         "vizConfig": {
           "group": "table",
           "kind": "VizConfig",
@@ -768,7 +769,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
+                      "color": "transparent",
                       "value": 0
                     }
                   ]
@@ -803,18 +804,18 @@
                         {
                           "options": {
                             "FD": {
-                              "color": "#bababa",
+                              "color": "light-blue",
                               "index": 3
                             },
                             "critical": {
-                              "color": "dark-red",
+                              "color": "dark-blue",
                               "index": 2
                             },
                             "error": {
                               "color": "red",
                               "index": 0
                             },
-                            "warning": {
+                            "warn": {
                               "color": "yellow",
                               "index": 1
                             }
@@ -841,6 +842,27 @@
                     {
                       "id": "custom.width",
                       "value": 201
+                    },
+                    {
+                      "id": "mappings",
+                      "value": [
+                        {
+                          "options": {
+                            "Heal": {
+                              "color": "super-light-purple",
+                              "index": 0
+                            }
+                          },
+                          "type": "value"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "custom.cellOptions",
+                      "value": {
+                        "mode": "basic",
+                        "type": "color-background"
+                      }
                     }
                   ]
                 },
@@ -852,7 +874,19 @@
                   "properties": [
                     {
                       "id": "custom.width",
-                      "value": 684
+                      "value": 629
+                    }
+                  ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "fields"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 642
                     }
                   ]
                 }
@@ -895,7 +929,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT \n  'error' AS type,\n  d.bit AS bit_number,\n  d.name,\n  d.description\nFROM err_bit_definitions d\nWHERE (SELECT err FROM telemetry_records WHERE time > now() - interval '10 minutes' ORDER BY time DESC LIMIT 1) & (1 << d.bit) > 0\n\nUNION ALL\n\nSELECT \n  'warning' AS type,\n  d.bit AS bit_number,\n  d.name,\n  d.description\nFROM warn_bit_definitions d\nWHERE (SELECT warn FROM telemetry_records WHERE time > now() - interval '10 minutes' ORDER BY time DESC LIMIT 1) & (1 << d.bit) > 0;",
+                      "rawSql": "WITH latest AS (\n  SELECT err, warn\n  FROM telemetry_records\n  WHERE $__timeFilter(time)\n  ORDER BY time DESC\n  LIMIT 1\n)\n\nSELECT 'error' AS type, d.bit AS bit_number, d.name, d.description\nFROM err_bit_definitions d, latest l\nWHERE (l.err & (1 << d.bit)) > 0\n\nUNION ALL\n\nSELECT 'warning' AS type, d.bit AS bit_number, d.name, d.description\nFROM warn_bit_definitions d, latest l\nWHERE (l.warn & (1 << d.bit)) > 0\n\nUNION ALL\n\n-- \"All clear\" row: appears only when a frame exists but no fault bits are set\nSELECT 'ok' AS type,\n       NULL::smallint AS bit_number,\n       'No active faults' AS name,\n       'All systems normal' AS description\nFROM latest l\nWHERE COALESCE(l.err, 0) = 0 AND COALESCE(l.warn, 0) = 0;",
                       "sql": {
                         "columns": [
                           {
@@ -929,6 +963,7 @@
         "id": 13,
         "links": [],
         "title": "Active Errors & Warnings",
+        "transparent": true,
         "vizConfig": {
           "group": "table",
           "kind": "VizConfig",
@@ -1092,7 +1127,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT l_regen, l_err, l_warn, l_ok, l_pump, drive_ena\nFROM telemetry_records\nORDER BY time DESC\nLIMIT 1;",
+                      "rawSql": "SELECT l_regen, l_err, l_warn, l_ok, l_pump, drive_ena\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time DESC\nLIMIT 1;",
                       "sql": {
                         "columns": [
                           {
@@ -1126,6 +1161,7 @@
         "id": 14,
         "links": [],
         "title": "Live Status",
+        "transparent": true,
         "vizConfig": {
           "group": "stat",
           "kind": "VizConfig",
@@ -1517,7 +1553,7 @@
             "transformations": []
           }
         },
-        "description": "Total heal count during the selected timeframe.",
+        "description": "Total heal count during the selected timeframe.\n\nrpm, amp, volt, trq, mode, igbt_c, mot_c, time",
         "id": 16,
         "links": [],
         "title": "Total Heal Count",
@@ -1542,7 +1578,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "purple",
+                      "color": "#00a26c",
                       "value": 0
                     }
                   ]
@@ -1782,7 +1818,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "red",
+                      "color": "dark-blue",
                       "value": 0
                     }
                   ]
@@ -1902,7 +1938,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "text",
+                      "color": "light-blue",
                       "value": 0
                     }
                   ]
@@ -2052,7 +2088,24 @@
                 },
                 "unit": "rotrpm"
               },
-              "overrides": []
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "rpm",
+                    "scope": "series"
+                  },
+                  "properties": [
+                    {
+                      "id": "color",
+                      "value": {
+                        "fixedColor": "blue",
+                        "mode": "fixed"
+                      }
+                    }
+                  ]
+                }
+              ]
             },
             "options": {
               "annotations": {
@@ -2196,6 +2249,116 @@
         }
       }
     },
+    "panel-21": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "postgresUID"
+                    },
+                    "group": "grafana-postgresql-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "dataset": "telemetry",
+                      "editorMode": "code",
+                      "format": "table",
+                      "rawQuery": true,
+                      "rawSql": "SELECT COALESCE(sum(num_nulls(\n    err, warn,\n    l_regen, l_err, l_warn, l_ok, l_pump, drive_ena\n)), 0) AS total_null_values\nFROM telemetry_records\nWHERE $__timeFilter(time);",
+                      "sql": {
+                        "columns": [
+                          {
+                            "parameters": [],
+                            "type": "function"
+                          }
+                        ],
+                        "groupBy": [
+                          {
+                            "property": {
+                              "type": "string"
+                            },
+                            "type": "groupBy"
+                          }
+                        ],
+                        "limit": 50
+                      },
+                      "table": "telemetry_records"
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "Total individual null count during the selected timeframe.\n\nerr, warn, l_regen, l_err, l_warn, l_ok, l_pump, drive_ena",
+        "id": 21,
+        "links": [],
+        "title": "Total Null Count",
+        "vizConfig": {
+          "group": "stat",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "#808080",
+                        "index": 0
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "percentChangeColorMode": "standard",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "showPercentChange": false,
+              "textMode": "auto",
+              "wideLayout": true
+            }
+          },
+          "version": "13.0.1+security-01"
+        }
+      }
+    },
     "panel-3": {
       "kind": "Panel",
       "spec": {
@@ -2218,7 +2381,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT time, volt\nFROM telemetry_records\nWHERE time > now() - interval '2 seconds'\nORDER BY time DESC\nLIMIT 1;",
+                      "rawSql": "SELECT time, volt\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time DESC\nLIMIT 1;",
                       "sql": {
                         "columns": [
                           {
@@ -2442,6 +2605,13 @@
                     {
                       "id": "max",
                       "value": 212.1
+                    },
+                    {
+                      "id": "color",
+                      "value": {
+                        "fixedColor": "text",
+                        "mode": "fixed"
+                      }
                     }
                   ]
                 },
@@ -2463,8 +2633,22 @@
                     {
                       "id": "max",
                       "value": 212.1
+                    },
+                    {
+                      "id": "color",
+                      "value": {
+                        "fixedColor": "blue",
+                        "mode": "fixed"
+                      }
                     }
                   ]
+                },
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": ""
+                  },
+                  "properties": []
                 }
               ]
             },
@@ -2512,7 +2696,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT time, amp\nFROM telemetry_records\nWHERE time > now() - interval '2 seconds'\nORDER BY time DESC\nLIMIT 1;",
+                      "rawSql": "SELECT time, amp\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time DESC\nLIMIT 1;",
                       "sql": {
                         "columns": [
                           {
@@ -2628,7 +2812,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT time, trq\nFROM telemetry_records\nWHERE time > now() - interval '2 seconds'\nORDER BY time DESC\nLIMIT 1;",
+                      "rawSql": "SELECT time, trq\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time DESC\nLIMIT 1;",
                       "sql": {
                         "columns": [
                           {
@@ -2836,7 +3020,24 @@
                 },
                 "unit": "forceNm"
               },
-              "overrides": []
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "Torque (N·m)",
+                    "scope": "series"
+                  },
+                  "properties": [
+                    {
+                      "id": "color",
+                      "value": {
+                        "fixedColor": "text",
+                        "mode": "fixed"
+                      }
+                    }
+                  ]
+                }
+              ]
             },
             "options": {
               "annotations": {
@@ -2882,7 +3083,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT time, mot_c\nFROM telemetry_records\nWHERE time > now() - interval '2 seconds'\nORDER BY time DESC\nLIMIT 1;",
+                      "rawSql": "SELECT time, mot_c\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time DESC\nLIMIT 1;",
                       "sql": {
                         "columns": [
                           {
@@ -3002,7 +3203,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT time, igbt_c\nFROM telemetry_records\nWHERE time > now() - interval '2 seconds'\nORDER BY time DESC\nLIMIT 1;",
+                      "rawSql": "SELECT time, igbt_c\nFROM telemetry_records\nWHERE $__timeFilter(time)\nORDER BY time DESC\nLIMIT 1;",
                       "sql": {
                         "columns": [
                           {
@@ -3102,267 +3303,306 @@
     }
   },
   "layout": {
-    "kind": "GridLayout",
+    "kind": "TabsLayout",
     "spec": {
-      "items": [
+      "tabs": [
         {
-          "kind": "GridLayoutItem",
+          "kind": "TabsLayoutTab",
           "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-1"
+            "layout": {
+              "kind": "GridLayout",
+              "spec": {
+                "items": [
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-1"
+                      },
+                      "height": 12,
+                      "width": 3,
+                      "x": 0,
+                      "y": 0
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-9"
+                      },
+                      "height": 6,
+                      "width": 3,
+                      "x": 3,
+                      "y": 0
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-2"
+                      },
+                      "height": 12,
+                      "width": 8,
+                      "x": 6,
+                      "y": 0
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-10"
+                      },
+                      "height": 12,
+                      "width": 10,
+                      "x": 14,
+                      "y": 0
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-8"
+                      },
+                      "height": 6,
+                      "width": 3,
+                      "x": 3,
+                      "y": 6
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-11"
+                      },
+                      "height": 6,
+                      "width": 3,
+                      "x": 0,
+                      "y": 12
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-7"
+                      },
+                      "height": 8,
+                      "width": 21,
+                      "x": 3,
+                      "y": 12
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-6"
+                      },
+                      "height": 4,
+                      "width": 3,
+                      "x": 0,
+                      "y": 18
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-4"
+                      },
+                      "height": 10,
+                      "width": 21,
+                      "x": 3,
+                      "y": 20
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-3"
+                      },
+                      "height": 4,
+                      "width": 3,
+                      "x": 0,
+                      "y": 22
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-5"
+                      },
+                      "height": 4,
+                      "width": 3,
+                      "x": 0,
+                      "y": 26
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-13"
+                      },
+                      "height": 5,
+                      "width": 10,
+                      "x": 0,
+                      "y": 30
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-14"
+                      },
+                      "height": 5,
+                      "width": 14,
+                      "x": 10,
+                      "y": 30
+                    }
+                  }
+                ]
+              }
             },
-            "height": 12,
-            "width": 3,
-            "x": 0,
-            "y": 0
+            "title": "Car Live Dashboard"
           }
         },
         {
-          "kind": "GridLayoutItem",
+          "kind": "TabsLayoutTab",
           "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-9"
+            "layout": {
+              "kind": "GridLayout",
+              "spec": {
+                "items": [
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-18"
+                      },
+                      "height": 5,
+                      "width": 3,
+                      "x": 0,
+                      "y": 0
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-12"
+                      },
+                      "height": 20,
+                      "width": 15,
+                      "x": 3,
+                      "y": 0
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-16"
+                      },
+                      "height": 6,
+                      "width": 3,
+                      "x": 18,
+                      "y": 0
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-21"
+                      },
+                      "height": 6,
+                      "width": 3,
+                      "x": 21,
+                      "y": 0
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-19"
+                      },
+                      "height": 5,
+                      "width": 3,
+                      "x": 0,
+                      "y": 5
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-15"
+                      },
+                      "height": 14,
+                      "width": 6,
+                      "x": 18,
+                      "y": 6
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-17"
+                      },
+                      "height": 5,
+                      "width": 3,
+                      "x": 0,
+                      "y": 10
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-20"
+                      },
+                      "height": 5,
+                      "width": 3,
+                      "x": 0,
+                      "y": 15
+                    }
+                  }
+                ]
+              }
             },
-            "height": 6,
-            "width": 3,
-            "x": 3,
-            "y": 0
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-2"
-            },
-            "height": 12,
-            "width": 8,
-            "x": 6,
-            "y": 0
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-10"
-            },
-            "height": 12,
-            "width": 10,
-            "x": 14,
-            "y": 0
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-8"
-            },
-            "height": 6,
-            "width": 3,
-            "x": 3,
-            "y": 6
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-11"
-            },
-            "height": 6,
-            "width": 3,
-            "x": 0,
-            "y": 12
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-7"
-            },
-            "height": 8,
-            "width": 21,
-            "x": 3,
-            "y": 12
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-6"
-            },
-            "height": 4,
-            "width": 3,
-            "x": 0,
-            "y": 18
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-4"
-            },
-            "height": 10,
-            "width": 21,
-            "x": 3,
-            "y": 20
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-3"
-            },
-            "height": 4,
-            "width": 3,
-            "x": 0,
-            "y": 22
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-5"
-            },
-            "height": 4,
-            "width": 3,
-            "x": 0,
-            "y": 26
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-13"
-            },
-            "height": 7,
-            "width": 10,
-            "x": 0,
-            "y": 30
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-14"
-            },
-            "height": 7,
-            "width": 14,
-            "x": 10,
-            "y": 30
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-17"
-            },
-            "height": 4,
-            "width": 2,
-            "x": 0,
-            "y": 37
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-20"
-            },
-            "height": 4,
-            "width": 2,
-            "x": 2,
-            "y": 37
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-12"
-            },
-            "height": 8,
-            "width": 12,
-            "x": 4,
-            "y": 37
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-16"
-            },
-            "height": 8,
-            "width": 3,
-            "x": 16,
-            "y": 37
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-15"
-            },
-            "height": 8,
-            "width": 5,
-            "x": 19,
-            "y": 37
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-18"
-            },
-            "height": 4,
-            "width": 2,
-            "x": 0,
-            "y": 41
-          }
-        },
-        {
-          "kind": "GridLayoutItem",
-          "spec": {
-            "element": {
-              "kind": "ElementReference",
-              "name": "panel-19"
-            },
-            "height": 4,
-            "width": 2,
-            "x": 2,
-            "y": 41
+            "title": "TelemeTuna Pipeline Health"
           }
         }
       ]
@@ -3413,7 +3653,7 @@
     "timezone": "browser",
     "to": "now"
   },
-  "title": "Rapidamente Telemetry Dashboard",
+  "title": "EV TelemeTuna Dashboard",
   "variables": []
 }
 
