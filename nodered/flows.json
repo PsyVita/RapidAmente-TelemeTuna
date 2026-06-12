@@ -692,10 +692,10 @@
         "id": "2c49a56cd0123cac",
         "type": "comment",
         "z": "fe649a070c585a18",
-        "name": "Parse Out Timestamp (No Healing)",
+        "name": "Parse Out Timestamp",
         "info": "",
-        "x": 1540,
-        "y": 460,
+        "x": 1560,
+        "y": 260,
         "wires": []
     },
     {
@@ -720,6 +720,16 @@
                 "70d78daf4231c3c7"
             ]
         ]
+    },
+    {
+        "id": "8c0f79eabe211cce",
+        "type": "comment",
+        "z": "fe649a070c585a18",
+        "name": "Only Accepts 16 Fields (Requires Timestamp)",
+        "info": "",
+        "x": 1630,
+        "y": 220,
+        "wires": []
     },
     {
         "id": "6dc119dca255f8c0",
@@ -1174,7 +1184,7 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Strip Timestamp",
-        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    if (fields.length === 16) {\n        const ts = fields[0].trim();\n        const parsed = ts ? new Date(ts) : null;\n        const isValid = parsed && !isNaN(parsed.getTime());\n\n        if (isValid) {\n            msg.timestamp = parsed.toISOString();\n        } else {\n            const m = ts\n                ? `Corrupted timestamp: \"${ts}\" — Dropped the frame.`\n                : \"Blank timestamp field — Dropped the frame.\";\n            node.warn(m);\n            sendLog(\"FD\", m);\n            return null;\n        }\n\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else if (fields.length === 15) {\n        // No timestamp column — stamp with current system time and log.\n        const now = new Date().toISOString();\n        msg.timestamp = now;\n        const m = \"No timestamp in payload — stamped with system arrival time.\";\n        node.warn(m);\n        sendLog(\"warn\", m);\n\n    } else {\n        const m = `Unexpected field count: ${fields.length} — Dropped the frame.`;\n        node.warn(m);\n        sendLog(\"FD\", m);\n        return null;\n    }\n\n    return msg;\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
+        "func": "try {\n\n    const fields = String(msg.payload).split(\",\");\n\n    if (fields.length === 16) {\n        const ts = fields[0].trim();\n        const parsed = ts ? new Date(ts) : null;\n        const isValid = parsed && !isNaN(parsed.getTime());\n\n        if (isValid) {\n            msg.timestamp = parsed.toISOString();\n        } else {\n            const m = ts\n                ? `Corrupted timestamp: \"${ts}\" — Dropped the frame.`\n                : \"Blank timestamp field — Dropped the frame.\";\n            node.warn(m);\n            sendLog(\"FD\", m);\n            return null;\n        }\n\n        msg.payload = fields.slice(1, 16).join(\",\");\n\n    } else if (fields.length === 15) {\n        // No timestamp column — stamp with current system time and log.\n        const now = new Date().toISOString();\n        msg.timestamp = now;\n        //const m = \"No timestamp in payload — stamped with system arrival time.\";\n        //node.warn(m);\n        //sendLog(\"warn\", m);\n\n    } else {\n        const m = `Unexpected field count: ${fields.length} — Dropped the frame.`;\n        node.warn(m);\n        sendLog(\"FD\", m);\n        return null;\n    }\n\n    return msg;\n\n    function sendLog(level, message) {\n        node.send([null, {\n            payload: {\n                time: new Date().toISOString(),\n                level: level,\n                node: \"Strip Timestamp\",\n                message: message,\n                fields: null\n            }\n        }]);\n    }\n\n} catch (error) {\n    node.error(`Critical Failure in 'Strip Timestamp': ${error.message}`, msg);\n    return null;\n}",
         "outputs": 2,
         "timeout": 0,
         "noerr": 0,
@@ -1196,8 +1206,8 @@
         "id": "4185383bf9c49659",
         "type": "comment",
         "z": "f6f2187d.f17ca8",
-        "name": "Strip Timestamp + Format into 15 Fields",
-        "info": "Possible cases:\n\nAll 15 fields, serial/MQTT — normal, never log (serial expects no timestamp)\nAll 15 fields, CSV — log once on first occurrence\nAll 16 fields, valid timestamps — no log\n16 fields, corrupted/blank timestamp — log every occurrence\nRow 0 = 16 valid, later row = 15 — log when it first drops (flag not set yet)\nRow 0 = 15, rows 1+ = 16 valid — log on row 0, rows 1+ use real timestamps\nRow 0 = 16 corrupted, row 1 = 16 valid — log on row 0, row 1 recovers correctly",
+        "name": "Accepts 15 Fields OR 16 with Timestamp",
+        "info": "Note for ",
         "x": 880,
         "y": 380,
         "wires": []
@@ -1243,5 +1253,15 @@
                 "96914126869b24ea"
             ]
         ]
+    },
+    {
+        "id": "55e6eefe0df7c1f5",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "Note to Future Developer",
+        "info": "## Why Node-RED-side timestamping stays\n\nMQTT only guarantees message delivery between the broker and the computer\n(broker-side queuing). It does NOT buffer messages on the ESP32 side — if the\nESP32 loses its connection, any data generated while offline is simply lost,\nnever queued.\n\nThis means every message that reaches the computer was sent in real time, so\narrival intervals are accurate. Timestamping in Node-RED therefore does NOT\ncondense or distort the graph.\n\n## If you want ESP32-side queuing (survive disconnects)\n\nTwo changes are required, and they must come together:\n\n1. **ESP32 firmware**: buffer/queue sensor readings locally during disconnects,\n   then flush the backlog on reconnect.\n2. **ESP32 timestamps**: have the ESP32 attach an ISO-format timestamp to each\n   reading at the moment it is measured (may require an RTC module or NTP sync).\n\nWhy both? When the ESP32 reconnects and flushes its buffer, all queued packets\narrive within a few seconds. If the receiving side assigns timestamps on\narrival, hours of readings get plotted as a single cluster at the reconnect\ntime. Only sender-side timestamps preserve when each reading actually happened.\n\n## Node-RED compatibility\n\nThe current Node-RED flow accepts both formats:\n\n- 15 fields (no timestamp) → Node-RED timestamps on arrival\n- 16 fields (1 timestamp + 15) → ESP32-provided timestamp is used\n\nSo if you later add queuing + timestamps to the ESP32, no Node-RED changes\nare needed.\n\n## Current decision\n\nESP32 sends no timestamps → Node-RED-side timestamping stays.",
+        "x": 830,
+        "y": 340,
+        "wires": []
     }
 ]
