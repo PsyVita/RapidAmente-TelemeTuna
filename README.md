@@ -12,19 +12,22 @@ It is built almost entirely out of ready-made building blocks that run inside **
 
 1. [What this project does](#-what-this-project-does)
 2. [How it all fits together (the big picture)](#-how-it-all-fits-together-the-big-picture)
-3. [What's inside the box (the services)](#-whats-inside-the-box-the-services)
-4. [The data: what a "frame" looks like](#-the-data-what-a-frame-looks-like)
-5. [The processing pipeline, step by step](#-the-processing-pipeline-step-by-step)
-6. [Before you start (prerequisites)](#-before-you-start-prerequisites)
-7. [Installation & first run](#-installation--first-run)
-8. [How to feed data in](#-how-to-feed-data-in)
-9. [Optional: running Node-RED locally for a direct serial connection](#-optional-running-node-red-locally-for-a-direct-serial-connection)
-10. [The database tables](#-the-database-tables)
-11. [The Grafana dashboard](#-the-grafana-dashboard)
-12. [Team access: watching together (LAN or cloud)](#-team-access-watching-together-lan-or-cloud)
-13. [Project folder layout](#-project-folder-layout)
-14. [Troubleshooting](#-troubleshooting)
-15. [Glossary (plain-English definitions)](#-glossary-plain-english-definitions)
+3. [Deployment: cloud first, local optional](#-deployment-cloud-first-local-optional)
+4. [What's inside the box (the services)](#-whats-inside-the-box-the-services)
+5. [The data: what a "frame" looks like](#-the-data-what-a-frame-looks-like)
+6. [Timestamps: who stamps, and why](#-timestamps-who-stamps-and-why)
+7. [The processing pipeline, step by step](#-the-processing-pipeline-step-by-step)
+8. [Before you start (prerequisites)](#-before-you-start-prerequisites)
+9. [Installation & first run](#-installation--first-run)
+10. [How to feed data in](#-how-to-feed-data-in)
+11. [Optional: running Node-RED locally for a direct serial connection](#-optional-running-node-red-locally-for-a-direct-serial-connection)
+12. [The database tables](#-the-database-tables)
+13. [The Grafana dashboard](#-the-grafana-dashboard)
+14. [Team access: watching together](#-team-access-watching-together)
+15. [Design decisions & concerns — the exhaustive FAQ](#-design-decisions--concerns--the-exhaustive-faq)
+16. [Project folder layout](#-project-folder-layout)
+17. [Troubleshooting](#-troubleshooting)
+18. [Glossary (plain-English definitions)](#-glossary-plain-english-definitions)
 
 ---
 
@@ -39,7 +42,7 @@ An electric race car is covered in sensors. While it drives, those sensors const
 - Which gear it is in (**Drive / Reverse / Neutral**)
 - A set of warning and error flags (cooling pump on, regen braking active, faults, etc.)
 
-On the car, a **sender ESP32** collects this data and radios it to a **receiver ESP32** in the pit. The receiver stamps each reading with a timestamp and publishes it over **MQTT** to this platform.
+On the car, a **sender ESP32** collects this data and radios it to a **receiver ESP32** using **LoRa**. The receiver publishes each reading over **MQTT** to this platform, where it is timestamped on arrival (see [Timestamps](#-timestamps-who-stamps-and-why) for why that's the right call).
 
 That raw data is messy. It arrives as long strings of numbers, sometimes with missing values, sometimes corrupted, and the numbers are in a "raw" computer format (-32767 to 32767) instead of real-world units.
 
@@ -57,30 +60,63 @@ Everything is logged, so you can always trace *why* a value looks the way it doe
 ## 🧩 How it all fits together (the big picture)
 
 ```
-   On the car                In the pit              ┌──────────────────────────────────────────┐
-                                                     │           DOCKER (one command)            │
-  ┌──────────┐   radio    ┌──────────┐    MQTT       │                                           │
-  │  Sender  │ ─────────▶ │ Receiver │ ────────────▶ │   ┌──────────┐      ┌──────────────────┐  │
-  │  ESP32   │   (LoRa)   │  ESP32   │  (timestamped │   │ Mosquitto│─────▶│     Node-RED     │  │
-  └──────────┘            └──────────┘    frames)    │   │  (MQTT)  │      │  (clean+convert) │  │
-                                                     │   └──────────┘      └────────┬─────────┘  │
-                          ┌──────────┐               │                              │            │
-                          │ CSV file │ ──────────────┼──────────────────────────────┤            │
-                          │ (replay) │               │                              ▼            │
-                          └──────────┘               │                     ┌──────────────────┐  │
-                                                     │                     │   PostgreSQL DB  │  │
-                                                     │   ┌──────────┐      │ (stores readings)│  │
-                                                     │   │  Flyway  │      └────────┬─────────┘  │
-                                                     │   │ (sets up │               │            │
-                                                     │   │  the DB) │               ▼            │
-                                                     │   └──────────┘      ┌──────────────────┐  │
-                                                     │                     │      Grafana     │  │
-                                                     │                     │   (dashboards)   │  │
-                                                     │                     └──────────────────┘  │
-                                                     └──────────────────────────────────────────┘
+   On the car                                ┌─────────────────────────────────────────────┐
+                                             │      CLOUD SERVER (or local PC) — DOCKER     │
+  ┌──────────┐   radio    ┌──────────┐ MQTT  │                                              │
+  │  Sender  │ ─────────▶ │ Receiver │ ────▶ │   ┌──────────┐      ┌──────────────────┐     │
+  │  ESP32   │   (LoRa)   │  ESP32   │ WiFi  │   │ Mosquitto│─────▶│     Node-RED     │     │
+  └──────────┘            └──────────┘       │   │  (MQTT)  │      │ (stamp+clean+    │     │
+                                             │   └──────────┘      │  convert+heal)   │     │
+                          ┌──────────┐       │                     └────────┬─────────┘     │
+                          │ CSV file │ ──────┼──────────────────────────────┤               │
+                          │ (replay) │       │                              ▼               │
+                          └──────────┘       │                     ┌──────────────────┐     │
+                                             │   ┌──────────┐      │   PostgreSQL DB  │     │
+                                             │   │  Flyway  │      │ (stores readings)│     │
+                                             │   │ (builds  │      └────────┬─────────┘     │
+                                             │   │  tables) │               │               │
+                                             │   └──────────┘      ┌────────┴─────────┐     │
+                                             │                     ▼                  ▼     │
+                                             │                 ┌─────────┐      ┌─────────┐ │
+                                             │                 │ Grafana │      │ pgAdmin │ │
+                                             │                 │ (charts)│      │ (browse)│ │
+                                             │                 └─────────┘      └─────────┘ │
+                                             └─────────────────────────────────────────────┘
+                                                       ▲ team watches from anywhere ▲
 ```
 
-**In words:** The sender ESP32 on the car radios each reading to the receiver ESP32, which timestamps it and publishes it to **Mosquitto** (the MQTT "post office"). **Node-RED** is the "brain" that picks the message up, cleans and converts it, and writes the result into **PostgreSQL**. **Grafana** reads from PostgreSQL to draw the charts. **Flyway** is a one-shot helper that builds the database tables the first time you start up. *(In the race setup, the Mosquitto broker will be hosted in the cloud on the PC side; the one bundled in Docker is there for local testing — the rest of the pipeline works the same either way.)* CSV files can be fed straight into Node-RED to replay old data through the very same pipeline.
+**In words:** The sender ESP32 on the car radios each reading to the receiver ESP32, which publishes it to **Mosquitto** (the MQTT "post office"). **Node-RED** is the "brain" that picks the message up, stamps it with the arrival time, cleans and converts it, and writes the result into **PostgreSQL**. **Grafana** reads from PostgreSQL to draw the charts, and **pgAdmin** lets you inspect the raw tables by hand. **Flyway** is a one-shot helper that builds the database tables the first time you start up. CSV files can be fed straight into Node-RED to replay old data through the very same pipeline.
+
+---
+
+## ☁️ Deployment: cloud first, local optional
+
+The same Docker setup runs anywhere. Pick the deployment that fits you:
+
+### Option A — Everything on a cloud server *(how the RapidAmente team runs it)*
+
+The **whole platform** — Mosquitto, Node-RED, PostgreSQL, Grafana, pgAdmin — runs on one cloud VM. The receiver ESP32 publishes to the **cloud server's public IP**, and the whole team watches the dashboards from anywhere, no shared network needed:
+
+```
+http://<cloud-public-ip>:3001   ← Grafana       http://<cloud-public-ip>:1881  ← Node-RED
+http://<cloud-public-ip>:5051   ← pgAdmin       <cloud-public-ip>:1883         ← MQTT (ESP32 publishes here)
+```
+
+**Cloud checklist:**
+
+1. Create a small VM (any provider — 1–2 GB RAM is plenty), install Docker, clone the repo, follow the normal [installation steps](#-installation--first-run).
+2. **Change every default password in `.env` first** — a public IP is visible to the whole world within hours, not just to the team.
+3. In the cloud firewall / security group, open only what's needed: `1883` (so the ESP32 can publish), `3001`, `1881`, `5051` (ideally allow-listed to the team's IPs). **Keep `5433` closed** — nothing outside Docker needs the database directly.
+4. The receiver ESP32 just needs any internet-connected Wi-Fi (a phone hotspot at the track works) and the broker address set to the cloud IP.
+5. Turn on your provider's automatic disk snapshots — it's a one-checkbox backup of everything.
+
+### Option B — Everything on one local PC
+
+The classic setup: run the stack on a laptop, open everything at `localhost`. Best for development, testing, and tracks with zero connectivity. Teammates on the **same network** can still watch (see [Team access](#-team-access-watching-together)).
+
+### Option C — Hybrid
+
+Local stack on the pit laptop, but the Mosquitto broker in the cloud (point Node-RED's MQTT node and the ESP32 at the cloud broker). Useful when the dashboard machine sits behind a strict network but the car still needs a reachable broker.
 
 ---
 
@@ -91,23 +127,22 @@ When you start the project with Docker, six things run together. You don't insta
 | Service | What it is | Where you reach it | Why it's here |
 |---|---|---|---|
 | **PostgreSQL** | The database | `localhost:5433` | Permanent storage for every reading |
-| **Node-RED** | Visual data-flow tool | http://localhost:1881 | The "brain" — cleans, converts, heals, logs |
+| **Node-RED** | Visual data-flow tool | http://localhost:1881 | The "brain" — stamps, cleans, converts, heals, logs |
 | **Grafana** | Dashboard tool | http://localhost:3001 | Live charts and gauges |
 | **Mosquitto** | MQTT message broker | `localhost:1883` | Carries live data messages |
 | **Flyway** | Database migration tool | *(runs once, then exits)* | Creates the tables automatically on first start |
 | **pgAdmin** | Database admin UI | http://localhost:5051 | Browse and query the stored data by hand |
 
-> 💡 **Why these ports?** They are deliberately shifted (5433 instead of the usual 5432, 1881 instead of 1880, 3001 instead of 3000, 5051 instead of the usual 5050) so they don't collide with other software you might already have running.
+> 💡 **Why these ports?** They are deliberately shifted (5433 instead of the usual 5432, 1881 instead of 1880, 3001 instead of 3000, 5051 instead of the usual 5050) so they don't collide with other software you might already have running. On a cloud deployment, replace `localhost` with the server's public IP.
 
 ---
 
 ## 🔢 The data: what a "frame" looks like
 
-Each reading from the car is one line of comma-separated values, called a **frame**. The standard frame has **16 fields**: a timestamp (added by the receiver ESP32) followed by **15 data fields**, always in this order:
+Each reading from the car is one line of comma-separated values, called a **frame**. A live frame from the car has **15 data fields**, always in this order:
 
 | # | Field | Meaning | Example raw value |
 |---|-------|---------|-------------------|
-| 0 | *(timestamp)* | When the reading was taken (added by the receiver ESP32) | `2024-01-01T00:00:00.600Z` |
 | 1 | `rpm` | Motor speed (raw, -32767…32767) | `15000` |
 | 2 | `amp` | Current (raw) | `-8000` |
 | 3 | `volt` | Voltage (raw) | `19660` |
@@ -117,31 +152,48 @@ Each reading from the car is one line of comma-separated values, called a **fram
 | 7 | `mot_c` | Motor temperature (raw sensor count) | `11644` |
 | 8 | `err` | Error bitmask (a number; each bit = one fault) | `0` |
 | 9 | `warn` | Warning bitmask | `0` |
-| 10 | `L_REGEN` | Regenerative braking active? (0/1) | `0` |
+| 10 | `L_REGEN` | Regenerative braking active? | `0` |
 | 11 | `L_ERR` | Error light (0/1) | `0` |
 | 12 | `L_WARN` | Warning light (0/1) | `0` |
 | 13 | `L_OK` | "All OK" light (0/1) | `1` |
 | 14 | `L_PUMP` | Cooling pump light (0/1) | `0` |
 | 15 | `drive_ena` | Drive enabled? (0/1) | `1` |
 
-Example standard frame:
+Example live frame (15 fields — TelemeTuna stamps it on arrival):
+
+```
+15000,-8000,19660,12000,D,21357,11644,0,0,0,0,0,1,0,1
+```
+
+A **16-field** variant with a leading ISO timestamp is also accepted (and is **required** for CSV imports):
 
 ```
 2024-01-01T00:00:00.600Z,15000,-8000,19660,12000,D,21357,11644,0,0,0,0,0,1,0,1
 ```
 
-### The 15-field fallback
+Negative values are normal: negative `amp`/`trq` means the car is **regenerating** — charging the battery while braking.
 
-If a frame arrives over MQTT with only the 15 data fields and **no timestamp** (for example from a test tool that doesn't stamp its output), the pipeline does not throw it away: it stamps the frame with the moment it arrived and writes a `warn` entry to the event log so you know the timestamp is approximate. This is a **safety fallback only** — the receiver ESP32 is expected to always provide the timestamp.
+---
 
-### Raw vs. Processed CSV
+## ⏱️ Timestamps: who stamps, and why
 
-Both kinds of CSV import **expect a timestamp as the first column** (16 columns total):
+This was a deliberate design decision, documented inside the Node-RED flow itself ("Note to Future Developer"):
 
-- A **raw** CSV holds a timestamp + the 15 raw fields exactly as the car produced them (raw -32767…32767 numbers). It goes through the **full cleaning pipeline**.
-- A **processed** CSV holds a timestamp + 15 fields that have *already been through* this program once (real-world units, true/false flags). It is parsed and written straight to the database **without** conversion or healing, so already-clean data isn't mangled twice.
+**Current decision: the ESP32 sends no timestamps. Node-RED stamps each frame the moment it arrives.**
 
-Rows with a missing or unreadable timestamp are dropped and logged.
+**Why arrival-stamping is accurate here:** MQTT only guarantees delivery between the *broker and the computer*. It does **not** buffer messages on the ESP32 side — if the ESP32 loses its connection, data generated while offline is simply lost, never queued. So every message that reaches the platform was sent in real time, arrival intervals mirror real intervals, and arrival timestamps do **not** condense or distort the graphs.
+
+**The 16-field path is the future-proofing.** If the team ever adds ESP32-side queuing (so disconnects don't lose data), two changes must come **together**: (1) the firmware buffers readings during disconnects and flushes them on reconnect, and (2) the ESP32 attaches a real timestamp to each reading at measurement time (RTC module or NTP sync). Without sender timestamps, a flushed backlog would arrive in seconds and be plotted as one cluster at the reconnect moment. The pipeline already accepts the 16-field format, so that upgrade needs **zero Node-RED changes**.
+
+**Rules as implemented:**
+
+| Frame arrives with | What happens |
+|---|---|
+| 15 fields (live MQTT) | Stamped silently with arrival time — the normal case |
+| 16 fields, valid timestamp | The provided timestamp is used (CSV replays; future ESP32 firmware) |
+| 16 fields, broken/blank timestamp | Frame dropped, logged as `FD` |
+| Any other field count | Frame dropped, logged as `FD` |
+| CSV import with 15 fields | Rejected — CSV files **must** include the timestamp column |
 
 ---
 
@@ -149,64 +201,60 @@ Rows with a missing or unreadable timestamp are dropped and logged.
 
 Inside Node-RED there are three "tabs" (think of them as three pages of wiring):
 
-- **Real-Time Imports** — the entry point for live data (the MQTT listener on topic `car_telemetry`).
-- **CSV Imports** — the entry points for loading raw or processed files.
-- **Background Flow** — the actual cleaning/conversion pipeline that live data and raw CSVs funnel into.
+- **Real-Time Imports** — the entry point for live data (the MQTT listener on topic `car_telemetry`, QoS 2).
+- **CSV Imports** — the entry points for loading raw or processed files (timestamp column required; it's stripped here, then raw rows join the pipeline below).
+- **Background Flow** — the cleaning/conversion pipeline that live data and raw CSVs funnel into.
 
-Live MQTT frames travel through the **Background Flow** starting at step 1. Raw CSV rows have their timestamp separated on the CSV Imports tab first, then join the pipeline directly at step 2 — keeping the original timestamps from the file:
+Every raw frame passes through these stations, in order:
 
-1. **Strip Timestamp** *(live data)* — Separates the timestamp from the data. A 16-field frame keeps its own timestamp; a 15-field frame is stamped with its arrival time and a warning is logged (see fallback above). Any other field count drops the frame. (Raw CSV rows get the same treatment from the **Strip Timestamp** node on the CSV Imports tab before joining here.)
-2. **Parse CSV** — Splits the line into its 15 fields and checks each one. If a frame has the wrong number of fields, a missing value, or text where a number should be, the **whole frame is dropped** and a frame-drop (`FD`) event is logged.
-3. **Raw → Real Conversion** — Scales the raw -32767…32767 numbers into real units (raw ÷ 32767 × real-world maximum):
-   - `rpm` → up to 5,500 RPM (rounded to a whole number)
-   - `amp` → up to 212.1 A
-   - `volt` → up to 200 V
-   - `trq` → up to 125 Nm
-   A raw value outside -32767…32767 becomes `null` and is logged (the Heal step will repair it).
-4. **Map Mode** — Turns the gear letter into a number (`N`=0, `D`=1, `R`=2). Anything else becomes `null` and is logged.
-5. **Temperature Conversion** — Converts the raw temperature counts into °C. IGBT temperature uses a precise 32-point lookup table with linear interpolation; motor temperature uses a straight-line formula (raw 11446 = 30 °C, raw 16000 = 100 °C). Out-of-range raw values become `null` and are logged.
-6. **Heal** — The safety net for the continuous values (`rpm`, `amp`, `volt`, `trq`, `igbt_c`, `mot_c`, `mode`). If a converted value is impossible (out of a sensible range, missing, `null`, or `NaN`), it is replaced with the **last known-good value** for that field. Every healed field name is recorded in the row's `healed_fields` column *and* summarized in the event log, so you always know it happened.
-7. **Flags** — Converts the 0/1 light signals (`L_REGEN`, `L_ERR`, `L_WARN`, `L_OK`, `L_PUMP`, `drive_ena`) into true/false. Anything that isn't exactly 0 or 1 becomes `null` (flags are **not** healed) and an `error` is logged.
-8. **Validate Bitmasks** — Sanity-checks the `err` and `warn` numbers (they must be whole numbers 0–65535). Invalid values become `null` and an `error` is logged. The bitmask numbers are stored as-is; decoding into named faults happens later in Grafana.
-9. **Build Parameters** — Packs all the clean values together, ready for the database.
-10. **Car Telemetry Database** — Writes the finished row into the `telemetry_records` table. The `time` column is **unique**: if a row with the same timestamp already exists, the new row is silently skipped. This means accidentally replaying the same data (e.g. importing a CSV twice) can never create duplicates.
+1. **Strip Timestamp** — Separates time from data. A 16-field frame keeps its own timestamp; a 15-field frame is stamped with arrival time (silently — this is the normal live case). Any other field count drops the frame (`FD`).
+2. **Parse CSV** — Splits the line into its 15 fields and checks each one: right count, gear present, every other field a real number. Any failure drops the **whole frame** (`FD`) — at this stage the structure isn't trusted yet, so no repairs are attempted.
+3. **Raw → Real Conversion** — Scales raw -32767…32767 into real units via `real = raw ÷ 32767 × max`:
+   - `rpm` → max 5,500 RPM (rounded to a whole number — sensor precision doesn't justify decimals)
+   - `amp` → max 212.1 A · `volt` → max 200 V · `trq` → max 125 Nm (1 decimal each)
+   - A raw value outside ±32767 didn't come from the hardware → becomes `null` + `warn` logged (the Heal step will repair it).
+4. **Map Mode** — `N`→0, `D`→1, `R`→2. Anything else → `null` + `warn` (healable — the car can't teleport between gears in 300 ms).
+5. **Temperature Conversion** — raw counts → °C:
+   - **IGBT:** 32-point manufacturer lookup table (raw 16308 = −30 °C … raw 28480 = +125 °C) with straight-line interpolation between neighboring points.
+   - **Motor:** linear sensor, two-point fit: `temp = 30 + (raw − 11446) × 70 ÷ 4554` (valid raw range 10000–20000).
+   - Out-of-range raw values → `null` + `warn`, healable.
+6. **Heal** — The safety net for the seven continuous values. Keeps a per-field snapshot of the last known-good value and checks each new value against a plausibility range: rpm ±6000, amp ±250, volt ±250, trq ±150, temps −40…200 °C, mode 0–2. Valid → keep & update snapshot. Invalid/missing/null → **replace with the snapshot value** and record the field name. Every healed row carries its `healed_fields` list into the database **and** a summary into the event log — repairs are never silent.
+7. **Flags** — The six 0/1 lights become true/false. Anything that isn't exactly 0 or 1 → `null` + `error` logged. **Flags are never healed** — copying yesterday's "no error" over a corrupted error light could hide a real fault.
+8. **Validate Bitmasks** — `err` and `warn` must be whole numbers 0–65535 (what 16 bits can hold). Invalid → `null` + `error`. The numbers are stored as-is; decoding into fault names happens in Grafana at display time.
+9. **Build Parameters** — Packs timestamp, converted values, flags, bitmasks, and the healed-fields list into one ordered row.
+10. **Car Telemetry Database** — Inserts into `telemetry_records` with `ON CONFLICT (time) DO NOTHING`: the `time` column is unique, so replaying the same data can never create duplicates.
 
 ### What happens when something goes wrong
 
-Every step can raise its hand. There are two ways problems are recorded:
-
-- Each pipeline node has a second output that sends structured warnings to a **"Normalize Log Event"** node, which writes them to the `event_logs` table.
-- A **crash** in any node is caught by a global **Catch** node and logged as `critical`.
-
-This means **nothing fails silently** — if a reading looks odd, there's a matching entry in the log explaining why.
+- Every station has a **second output** that sends structured complaints to a **"Normalize Log Event"** node → the `event_logs` table.
+- A global **Catch node** per tab grabs unexpected crashes in any station and logs them as `critical` — the pipeline keeps running for the next frame.
+- **Deliberate exception:** the Catch nodes do *not* watch "Normalize Log Event" or "Log Database" themselves. If the database is down, a caught log-write failure would generate another log write, which fails, which generates another… an infinite loop. Excluding the logging chain breaks that loop (the trade-off: log writes that fail when the DB is down are lost — see the FAQ).
 
 ### Event log severity levels
 
 | Level | When it's used |
 |---|---|
-| `warn` | A single value was out of bounds and was *healed* (replaced with the last good value), or a frame arrived without a timestamp and was stamped on arrival. |
-| `error` | A value was wrong and **not** healed (flags, bitmasks), so it was set to null. |
-| `FD` | "Frame Dropped" — the whole frame was thrown away (wrong field count, non-numeric data, bad timestamp). |
-| `critical` | An unexpected code error happened (caught by the global safety net). |
+| `warn` | A value was out of bounds and was *healed* (replaced with the last good value) |
+| `error` | A value was wrong and **not** healed (flags, bitmasks) — stored as null |
+| `FD` | "Frame Dropped" — the whole frame was unusable and discarded |
+| `critical` | An unexpected code error happened (caught by the safety net) |
 
 ### Built-in test generator (no hardware needed)
 
-The Background Flow tab contains a **"FAKE Data Generator"** wired to a **"Test Injection Node"**. One click simulates a full driving cycle (idle → accelerate → cruise → coast → regen → stop) and then deliberately injects fault bitmasks, every flag combination, and corrupted values that exercise the healing system — pushing realistic data through the entire pipeline into the database. (Its frames carry no timestamp, so you will also see the 15-field fallback warnings in action.)
+The Background Flow tab contains a **"FAKE Data Generator"** wired to a **"Test Injection Node"**. One click simulates a full driving cycle (idle → accelerate → cruise → coast → regen → stop) and then deliberately exercises **every defence in the pipeline**, phase by phase: fault bitmask combinations (FAULTS), every status-light combination (FLAGS), corrupted values that trigger healing (HEAL), malformed frames that get dropped whole — wrong field counts, non-numeric values, bad timestamps (DROPS) — and finally simulated code errors that land in the log as `critical` (CRITICAL). After one run, every panel on both dashboard tabs has something to show.
 
 ---
 
 ## ✅ Before you start (prerequisites)
 
-You only need **two** things installed:
+You only need **two** things installed (on your PC or on the cloud VM):
 
-1. **Docker Desktop** — https://www.docker.com/products/docker-desktop/
-   This bundles everything (`docker` and `docker compose`). Install it, open it once, and wait until it says it's running.
-2. **Git** — https://git-scm.com/downloads (to download this project).
-   *(Or just download the project as a ZIP from GitHub if you prefer.)*
+1. **Docker Desktop** (or Docker Engine on a Linux server) — https://www.docker.com/products/docker-desktop/
+2. **Git** — https://git-scm.com/downloads (or download the project as a ZIP from GitHub).
 
-That's it. You do **not** need to install PostgreSQL, Node-RED, Grafana, or Node.js separately — Docker provides them.
+That's it. PostgreSQL, Node-RED, Grafana, Mosquitto, Flyway, and pgAdmin all come inside the project.
 
-> The only optional extra is **Node.js + Node-RED**, and only if you want the advanced *local serial port* setup described in its own section below.
+> The only optional extra is **Node.js + Node-RED**, and only for the advanced *local serial port* setup described in its own section below.
 
 ---
 
@@ -221,14 +269,12 @@ cd RapidAmente-TelemeTuna
 
 ### Step 2 — Create your environment (`.env`) file
 
-The project keeps passwords out of the code in a file called `.env`. A template is provided that you copy and rename.
-
 ```bash
 cd infrastructure
 cp .env.example .env
 ```
 
-Now open `infrastructure/.env` in any text editor. It looks like this:
+Open `infrastructure/.env` in any text editor and set your own values:
 
 ```dotenv
 # PostgreSQL
@@ -245,54 +291,42 @@ PGADMIN_EMAIL=admin@admin.com
 PGADMIN_PASSWORD=password
 ```
 
-Change the values to whatever you like (especially the passwords). **Remember what you set** — you'll use:
-- `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` to connect to the database.
+**Remember what you set** — you'll use:
+- `POSTGRES_*` to connect to the database (Node-RED and pgAdmin use them automatically).
 - `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` to log in to Grafana.
 - `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` to log in to pgAdmin (the email just needs to *look* like an email).
 
-> ⚠️ The `.env` file is intentionally **not** uploaded to GitHub (it's listed in `.gitignore`) because it holds your passwords. Only `.env.example` is shared. This is why you have to create your own `.env` the first time.
+> ⚠️ The `.env` file is intentionally **not** uploaded to GitHub (it's in `.gitignore`) because it holds your passwords. On a cloud deployment, treat strong passwords here as mandatory, not optional.
 
 ### Step 3 — Start everything
-
-From the `infrastructure` folder:
 
 ```bash
 docker compose up -d
 ```
 
-The first time, this downloads the images and builds Node-RED, so it can take a few minutes. The `-d` means "run in the background."
-
-**What happens automatically:**
-- PostgreSQL starts and creates an empty database.
-- **Flyway** runs once and builds all the tables (`telemetry_records`, `event_logs`, and the bitmask definition tables). Then it exits — that's normal, don't be alarmed that it "stopped."
-- Node-RED, Grafana, and Mosquitto come up and stay running.
+First start takes a few minutes (downloads + builds). What happens automatically: PostgreSQL starts → Flyway builds all tables and exits (that's normal!) → Node-RED, Grafana, Mosquitto, and pgAdmin come up and stay running.
 
 ### Step 4 — Check that it's working
 
-Open these in your browser:
+| What | Address | Login |
+|---|---|---|
+| Node-RED | http://localhost:1881 | none |
+| Grafana | http://localhost:3001 | Grafana user/password from `.env` |
+| pgAdmin | http://localhost:5051 | pgAdmin email/password from `.env` |
 
-- **Node-RED (the brain/editor):** http://localhost:1881
-- **Grafana (dashboards):** http://localhost:3001 — log in with the Grafana user/password from your `.env`.
-- **pgAdmin (database browser):** http://localhost:5051 — log in with the `PGADMIN_EMAIL` / `PGADMIN_PASSWORD` from your `.env`.
+> 🐘 **First time in pgAdmin:** register the database once. Right-click *Servers* → *Register* → *Server*, any name, and under *Connection* set **Host** = `postgresdb`, **Port** = `5432`, plus the `POSTGRES_*` values from `.env`. Tick **Save password**. (It must be `postgresdb:5432`, *not* `localhost:5433` — pgAdmin lives *inside* the Docker network with the database.)
 
-> 🐘 **First time in pgAdmin:** register the database once. Right-click *Servers* → *Register* → *Server*, give it any name, and under *Connection* set **Host** = `postgresdb`, **Port** = `5432`, plus the `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` from your `.env`. Tick **Save password** so you never type it again. (It must be `postgresdb:5432`, *not* `localhost:5433` — pgAdmin lives *inside* the Docker network with the database.)
-
-To peek directly at the database from the terminal:
+Command-line peek at the database:
 
 ```bash
 docker exec -it telemetry-postgresdb psql -U <YOUR_POSTGRES_USER> -d <YOUR_POSTGRES_DB> -c "SELECT count(*) FROM telemetry_records;"
 ```
 
-(Replace the placeholders with what you put in `.env`.)
+### Step 5 — Generate test data (no car needed!)
 
-### Step 5 — Generate some test data (no hardware needed!)
-
-You don't need a real car to see it work:
-
-1. Open Node-RED at http://localhost:1881.
-2. Go to the **Background Flow** tab.
-3. Find the **"Test Injection Node"** (it's connected to the **"FAKE Data Generator"**) and click the little square button on its left edge.
-4. Watch the generator's status bar step through the driving cycle and test phases while rows appear in Grafana.
+1. Open Node-RED → **Background Flow** tab.
+2. Click the square button on the **Test Injection Node** (wired to the **FAKE Data Generator**).
+3. Watch the status bar under the node step through the phases while both Grafana tabs fill with data.
 
 ### Useful Docker commands
 
@@ -301,251 +335,186 @@ docker compose ps          # see what's running
 docker compose logs -f     # watch live logs from all services
 docker compose logs flyway # check the database got set up
 docker compose down        # stop everything (keeps your data)
-docker compose down -v     # stop AND erase all stored data (start fresh)
+docker compose down -v     # stop AND erase all stored data (be careful!)
 ```
 
 ---
 
 ## 📥 How to feed data in
 
-### Option 1 — MQTT from the receiver ESP32 (the live path)
+### Way 1 — Live MQTT (the racing setup)
 
-Node-RED is always listening on the MQTT topic **`car_telemetry`** (broker: Mosquitto, port `1883`).
+Node-RED is always listening on MQTT topic **`car_telemetry`**. The receiver ESP32 publishes each 15-field frame there — cloud deployment: to the cloud server's IP on port 1883; local: to the PC's IP. Frames flow straight into the pipeline, stamped on arrival. Nothing to click.
 
-> ☁️ **Cloud broker:** for the real race setup, the Mosquitto broker will be hosted in the cloud (on the PC side) instead of the local Docker one — the receiver ESP32 publishes there and Node-RED subscribes to it. Same topic, same frame format; only the broker address changes.
-
-The receiver ESP32 should publish each frame as plain text in the standard 16-field format — **timestamp first, then the 15 data fields**:
-
-```
-2024-01-01T00:00:00.600Z,15000,-8000,19660,12000,D,21357,11644,0,0,0,0,0,1,0,1
-```
-
-Anything published there flows straight into the pipeline. If the timestamp is ever missing (15 fields), the frame is still accepted and stamped with its arrival time, but a warning is logged — don't rely on this.
-
-You can also test by hand from any machine with an MQTT client:
+Test it by hand from any machine with an MQTT client:
 
 ```bash
-mosquitto_pub -h localhost -p 1883 -t car_telemetry \
-  -m "2024-01-01T00:00:00.600Z,15000,-8000,19660,12000,D,21357,11644,0,0,0,0,0,1,0,1"
+mosquitto_pub -h <server-ip> -p 1883 -t car_telemetry \
+  -m "15000,-8000,19660,12000,D,21357,11644,0,0,0,0,0,1,0,1"
 ```
 
-### Option 2 — CSV file import (replays and testing)
+### Way 2 — CSV file import (replays and testing)
 
-Great for replaying logged sessions. Remember: **both kinds of CSV need the timestamp column** (16 columns total).
+Both CSV types **require a timestamp as the first column** (16 columns total):
 
-1. Put your CSV file somewhere Node-RED can read it. In the Docker setup, the `nodered` folder is mounted inside the container at `/data`, so a file at `nodered/data/yourfile.csv` is seen by Node-RED as `/data/data/yourfile.csv`. *(Create the `nodered/data` folder if it doesn't exist — test CSVs are deliberately not committed to the repository.)*
-2. In Node-RED, open the **CSV Imports** tab.
-3. There are two starting points:
-   - **Load Raw CSV** — for files with timestamp + 15 **raw** fields. These go through the full cleaning pipeline.
-   - **Load Processed CSV** — for files with timestamp + 15 **already-processed** fields. These are written straight to the database.
-4. Update the file path in the matching **"file in"** node (the comments next to them say *"Edit Path to Insert Your File"*).
-5. Click the inject button to load and process the file. Blank lines are ignored; rows with bad timestamps or field counts are dropped and logged.
+- **Raw CSV** — timestamp + 15 raw fields → full cleaning pipeline (keeps the file's original timestamps).
+- **Processed CSV** — timestamp + 15 already-cleaned fields (data that went through TelemeTuna before) → written straight to the database, no double-cleaning.
 
-> 🔁 **Safe to re-run:** timestamps are unique in the database, so importing the same file twice simply skips the rows that are already stored — no duplicates.
+**How to:**
+
+1. Put the file in `nodered/data/` — Node-RED sees it as `/data/data/yourfile.csv`.
+2. Open the **CSV Imports** tab in Node-RED.
+3. Edit the file path in the matching **file-in** node (comment: "Edit Path to Insert Your File").
+4. Click the inject button on **Load Raw CSV** or **Load Processed CSV**.
+
+Blank lines are ignored; rows with bad timestamps or field counts are dropped and logged. 🔁 **Safe to re-run:** duplicate timestamps are skipped, so importing the same file twice never duplicates data.
+
+### Way 3 — Direct serial (advanced, local only)
+
+See the [dedicated section below](#-optional-running-node-red-locally-for-a-direct-serial-connection) — only needed when the LoRa receiver is plugged into the computer by USB and you want to skip MQTT entirely.
 
 ---
 
 ## 🔌 Optional: running Node-RED locally for a direct serial connection
 
-> **Most people can skip this section.** The normal live path is MQTT from the receiver ESP32 (Option 1 above). This section only matters if you want Node-RED to read a USB serial device (e.g. the LoRa receiver plugged straight into your laptop) **directly**, without MQTT.
+> **Most users skip this.** Docker containers cannot access USB serial ports, so reading the receiver directly requires Node-RED to run natively on your machine. The serial-port nodes visible in the committed flow are disabled placeholders; the active local flow is provided separately and not committed.
 
-### Why this is needed
-
-Docker containers are sealed off from your computer's physical hardware. They **cannot directly access USB serial ports** (especially on macOS and Windows). So to use Node-RED's built-in serial-port nodes, you must run Node-RED **natively on your own machine** instead of in the container. The serial-port nodes you can see in the committed flow are disabled placeholders for exactly this purpose.
-
-The plan is: **keep PostgreSQL, Grafana, Mosquitto, and Flyway running in Docker** (they don't need hardware access), but **turn off the Docker Node-RED** and run a local one in its place.
-
-> 📝 The local flow (the wiring that includes the active serial-port nodes) is provided to you separately and is **not** committed to this repository. You'll import it into your local Node-RED in Step 5.
-
-### Step 1 — Install Node.js (which includes npm)
-
-Download the **LTS** version from https://nodejs.org and install it. Verify with:
-
-```bash
-node --version
-npm --version
-```
-
-### Step 2 — Install Node-RED on your computer
-
-```bash
-npm install -g --unsafe-perm node-red
-```
-
-Test that it installed (stop it again with `Ctrl+C`):
-
-```bash
-node-red
-```
-
-This creates a settings folder in your home directory called **`~/.node-red`** — that's where your local Node-RED lives.
-
-### Step 3 — Install the required add-on nodes (palette)
-
-```bash
-cd ~/.node-red
-npm install node-red-node-serialport node-red-contrib-postgresql
-```
-
-- `node-red-node-serialport` — lets Node-RED read the USB serial port (the important one).
-- `node-red-contrib-postgresql` — lets Node-RED write to the database.
-
-*(Alternatively, install these from inside Node-RED via the menu ☰ → **Manage palette** → **Install**.)*
-
-### Step 4 — Turn off the Docker Node-RED (so the two don't clash)
-
-You don't want two Node-REDs both writing to the database. Stop just the container:
-
-```bash
-cd infrastructure
-docker compose stop node-red
-```
-
-Leave everything else running. (`docker compose ps` should still show PostgreSQL, Mosquitto, and Grafana up, but not `telemetry-nodered`.)
-
-### Step 5 — Start local Node-RED and import the flow
-
-```bash
-node-red
-```
-
-Open **http://localhost:1880** (note: **1880**, the local default — *not* 1881, which is the Docker one). Then import the provided local flow: menu ☰ → **Import** → paste the flow JSON → **Import**.
-
-### Step 6 — Fix the database connection (the important change)
-
-Inside Docker, Node-RED reaches the database using the name `postgresdb` on port `5432`. Your **local** Node-RED is outside Docker, so it must use the port Docker *published* to your computer: **`localhost:5433`**.
-
-1. Double-click any **PostgreSQL** node (e.g. *"Car Telemetry Database"*), then click the pencil ✏️ next to its config to edit the **"Telemetry DB"** connection.
-2. Set the fields to:
-
-   | Field | Value |
-   |---|---|
-   | **Host** | `localhost` |
-   | **Port** | `5433` |
-   | **Database** | the `POSTGRES_DB` from your `.env` (e.g. `telemetry`) |
-   | **User** | the `POSTGRES_USER` from your `.env` |
-   | **Password** | the `POSTGRES_PASSWORD` from your `.env` |
-
-3. Click **Update** / **Done**. This one connection config is shared by all the database nodes, so you only set it once.
-
-> Always double-check the user, password, and database name match your own `.env`, or the writes will silently fail.
-
-### Step 7 — Fix the CSV file paths (if you use CSV import)
-
-The Docker paths like `/data/data/yourfile.csv` only exist *inside* the container. On your local machine, change the **"file in"** nodes on the **CSV Imports** tab to a real path on your computer, for example:
-
-```
-/Users/you/githubProjects/RapidAmente-TelemeTuna/nodered/data/yourfile.csv
-```
-
-### Step 8 — Configure the serial-port node
-
-1. Double-click the **serial in** node, then edit its serial-port config.
-2. Set the **Serial Port** to your actual device:
-   - **macOS:** something like `/dev/cu.usbserial-0001` or `/dev/cu.usbmodemXXXX`
-   - **Windows:** something like `COM5`
-   - **Linux:** something like `/dev/ttyUSB0`
-3. Set the **Baud Rate** to match your device (this project uses **38400** for the LoRa receiver).
-4. Click **Update** / **Done** and then **Deploy** (top-right).
-
-To find your serial port name:
-- **macOS / Linux:** `ls /dev/cu.*` or `ls /dev/ttyUSB*`
-- **Windows:** open Device Manager → "Ports (COM & LPT)".
-
-### Step 9 — Deploy and verify
-
-Click the red **Deploy** button. The serial node should turn green ("connected"). Live frames will now flow through the same pipeline into the Dockerized PostgreSQL, and Grafana (still on http://localhost:3001) will keep showing them.
-
-### Quick recap of what changes for the local option
+1. Install Node.js (LTS) from https://nodejs.org, then Node-RED: `npm install -g --unsafe-perm node-red`
+2. Install the add-ons: `cd ~/.node-red && npm install node-red-node-serialport node-red-contrib-postgresql`
+3. Stop the Docker Node-RED so the two don't clash: `docker compose stop node-red` (leave everything else running).
+4. Start local Node-RED → http://localhost:**1880** (the local default — not 1881) and import the provided local flow.
+5. **Fix the database connection** — the important change: local Node-RED is *outside* Docker, so the PostgreSQL config must be **Host `localhost`, Port `5433`** (not `postgresdb:5432`), with the user/password/database from your `.env`. One shared config covers all database nodes.
+6. Fix CSV paths (if used) to real paths on your disk.
+7. Configure the serial node: your device (macOS `/dev/cu.usbserial-…`, Windows `COM5`, Linux `/dev/ttyUSB0`), baud **38400**, then Deploy. The node should turn green.
 
 | Thing | Docker default | Local Node-RED value |
 |---|---|---|
-| Node-RED editor URL | http://localhost:1881 | http://localhost:1880 |
-| Database **Host** | `postgresdb` | `localhost` |
-| Database **Port** | `5432` | `5433` |
-| CSV file path | `/data/data/...` | a real path on your disk |
-| Serial port | (can't be used) | your real device, e.g. `/dev/cu.usbserial-0001` |
-| Docker `node-red` service | running | **stopped** |
+| Editor URL | http://localhost:1881 | http://localhost:1880 |
+| DB host/port | `postgresdb` / `5432` | `localhost` / `5433` |
+| CSV path | `/data/data/...` | real path on disk |
+| Serial port | (unusable) | your device |
+| Docker node-red | running | **stopped** |
 
 ---
 
 ## 🗄️ The database tables
 
-Flyway creates these automatically. You never write them by hand.
+Flyway creates these automatically from the migration files (V1–V4). You never write them by hand.
 
 ### `telemetry_records` — every cleaned reading
 
 | Column | Type | Notes |
 |---|---|---|
-| `time` | timestamp | when the reading happened (from the receiver ESP32, or arrival time as fallback). **Unique** — a second row with the same timestamp is skipped on insert |
+| `time` | timestamp | when the reading happened. **Unique** — a second row with the same timestamp is skipped on insert (V4) |
 | `rpm`, `amp`, `volt`, `trq` | number | converted real-world values |
 | `mode` | integer | 0=Neutral, 1=Drive, 2=Reverse |
-| `err`, `warn` | integer | bitmask numbers (decoded via the definition tables) |
+| `err`, `warn` | integer | bitmask numbers (decoded in Grafana via the definition tables) |
 | `igbt_c`, `mot_c` | number | temperatures in °C |
-| `l_regen`, `l_err`, `l_warn`, `l_ok`, `l_pump`, `drive_ena` | true/false | status lights |
-| `healed_fields` | list of text | which fields (if any) had to be healed for this row |
+| `l_regen`, `l_err`, `l_warn`, `l_ok`, `l_pump`, `drive_ena` | true/false | status lights (null = was corrupted, never healed) |
+| `healed_fields` | list of text | which fields (if any) were repaired for this row |
 
 ### `event_logs` — the pipeline's diary
-
-Every warning, error, frame drop, and crash from the pipeline lands here.
 
 | Column | Type | Notes |
 |---|---|---|
 | `time` | timestamp | when it happened |
 | `level` | text | `warn`, `error`, `FD`, `critical` |
-| `node` | text | which pipeline step raised it |
+| `node` | text | which pipeline station raised it |
 | `message` | text | human-readable explanation |
-| `fields` | list of text | which field names were involved (e.g. the healed fields) |
+| `fields` | list of text | involved field names (e.g. the healed fields) |
 
 ### `err_bit_definitions` & `warn_bit_definitions` — the fault dictionary
 
-The `err` and `warn` columns are stored as plain numbers where each individual **bit** means a specific fault (for example, bit 7 of `err` = "IGBT-Temp. Max. Limit"). These two reference tables translate each bit (0–15) into a human-readable name and description, so Grafana can show "IGBT-Temp. Max. Limit" instead of a cryptic number.
+`err` and `warn` are stored as plain numbers where each **bit** means one specific fault (bit 7 of `err` = "IGBT-Temp. Max. Limit"). These tables map all 16 + 16 bits to names and descriptions straight from the motor controller's manual, so Grafana can show readable fault names instead of cryptic numbers.
 
 ---
 
 ## 📊 The Grafana dashboard
 
-A pre-built dashboard is provisioned automatically — open Grafana at http://localhost:3001 and it's already there. It refreshes very fast (down to 300 ms) and shows, over your selected time window:
+A pre-built dashboard — the **EV TelemeTuna Dashboard** — is provisioned automatically. It refreshes very fast (down to 300 ms) and is organized into **two tabs**:
 
-- **Live gauges & stats** — RPM, voltage, current, torque, motor & IGBT temperature, drive mode, and the six status lights, always showing the latest reading.
+### Tab 1 — Car Live Dashboard
+
+- **Live gauges & stats** — RPM, voltage, current, torque, motor & IGBT temperature, drive mode, and the six status lights.
 - **Time-series charts** — RPM, torque, voltage & current, and both temperatures over time.
-- **Active Errors & Warnings** — the current `err`/`warn` bitmasks decoded into named faults using the definition tables.
-- **Pipeline health** — the live `event_logs` feed plus counters for healed frames, errors, criticals, frame drops, and warnings.
-- **Optional annotations** — overlays for car errors, car warnings, healed frames, frame drops, and program criticals can be toggled in the dashboard settings.
+- **Active Errors & Warnings** — the latest `err`/`warn` bitmasks decoded into named faults. When a frame exists and no fault bits are set, it shows a friendly **"No active faults — All systems normal"** row, so an empty table is never ambiguous.
+
+### Tab 2 — TelemeTuna Pipeline Health
+
+- **Connection** — a true live indicator: shows **Connected <๏)))>< ∿∿∿** (blue) if *anything* arrived within the last second — including dropped frames, because malformed-but-arriving data still proves the radio link is alive — and **Disconnected <×)))>< ···** otherwise. Unlike everything else, this panel always checks against *right now*, regardless of the time picker.
+- **Event Logs** — the live `event_logs` feed (time, level, node, message, affected fields).
+- **Counters** — healed frames, errors, criticals, frame drops, warnings, and **Total Null Count** (how many flag/bitmask values had to be stored as unknown in the window).
+- **Healed Fields** — every reading that needed repair and exactly which fields were patched.
+
+### One rule to remember: everything follows the time picker
+
+**Every** panel except Connection — including the live gauges and status lights — shows data from the **currently selected time range** only. The "live" panels simply display the most recent reading *inside that window*:
+
+- Watching live? Keep the default *Last 15 minutes* and the gauges behave like real-time instruments.
+- A gauge showing **"-" / grey** means *no reading in the selected window* — either the data stopped (check the Connection panel) or you're looking at the wrong time range.
+- Replaying an old CSV? Set the time picker to cover the file's dates and the **whole dashboard** — gauges included — replays that moment in history.
+- The counters count only within the window: "Heal Count: 3" means 3 healed frames *in the selected range*, not all-time. Zooming into a chart shrinks the counters, because zooming *is* changing the time range.
+
+**Optional annotations** — overlays for car errors, car warnings, healed frames, frame drops, and program criticals can be toggled in the dashboard settings.
 
 ---
 
-## 👥 Team access: watching together (LAN or cloud)
+## 👥 Team access: watching together
 
-Everything you open in a browser — the **Grafana dashboards**, the **Node-RED editor**, and **pgAdmin** — can be watched by the whole team at the same time, not just on the computer running Docker. There are two ways to share it:
+**Cloud deployment (Option A):** nothing extra to do — everyone opens the cloud IP addresses from anywhere.
 
-### Option A — One PC hosts, the team joins over the local network
+**Local deployment (Option B):** the stack runs on one computer; anyone on the **same network (same subnet)** replaces `localhost` with the host computer's IP on that network (`ipconfig` on Windows, `ifconfig` on macOS/Linux): `http://<host-ip>:3001` (Grafana), `:1881` (Node-RED), `:5051` (pgAdmin). Gotchas: same Wi-Fi/hotspot required (a phone on 5G can't see a laptop on Wi-Fi), and the host's firewall must allow those ports. Each service still asks for its own login.
 
-The stack runs on one computer (e.g. the pit laptop). Anyone whose device is **on the same network (same subnet)** can reach every service by replacing `localhost` with the host computer's IP address on that network:
+---
 
-| Service | Teammates open |
-|---|---|
-| Grafana | `http://<host-ip>:3001` |
-| Node-RED | `http://<host-ip>:1881` |
-| pgAdmin | `http://<host-ip>:5051` |
+## 🤔 Design decisions & concerns — the exhaustive FAQ
 
-To find the host IP: `ipconfig` (Windows) or `ifconfig` / `ipconfig getifaddr en0` (macOS/Linux) on the hosting machine.
+**Why does Node-RED stamp timestamps instead of the car?**
+The ESP32 has no wall clock, and MQTT never queues data on the ESP32 side — anything that arrives was sent in real time, so arrival timestamps are accurate. The flow contains a "Note to Future Developer" explaining exactly what must change (firmware buffering **plus** sender timestamps, together) if offline buffering is ever added. See [Timestamps](#-timestamps-who-stamps-and-why).
 
-Things that trip people up: everyone must be on the **same subnet** (same Wi-Fi/hotspot — a phone on 5G can't see a laptop on Wi-Fi), and the host's firewall must allow incoming connections on those ports. Each service still asks for its own login.
+**If the radio drops, is data lost?** Yes — readings generated while the link is down are gone (the ESP32 doesn't buffer). The dashboard shows an honest gap, and the Connection panel shows Disconnected. This is a known, accepted trade-off; fixing it requires the firmware upgrade described above.
 
-### Option B — Host the whole platform in the cloud *(planned)*
+**Why are some bad values healed, others nulled, others dropped?** Three deliberate tiers. *Continuous physics* (rpm, amp, volt, trq, temps, mode) changes smoothly, so the previous value is an excellent 300-ms-old estimate → **heal**. *Discrete signals* (flags, fault bitmasks) can genuinely change between frames — copying an old "no fault" over a corrupted value could hide a real fault → **null + error log**, never guessed. *Structurally broken frames* (wrong field count, text where numbers belong) can't be trusted at all → **dropped whole + FD log**. In one sentence: interpolate physics, never interpolate alarms.
 
-The same Docker setup runs unchanged on a cloud server. The team then uses the **cloud server's public IP** instead, from anywhere — no shared network needed:
+**Can healing hide real problems?** No — every healed row stores the repaired field names in `telemetry_records.healed_fields`, *and* logs a summary, *and* can be overlaid on charts via the Healed Frames annotation. A long streak of the same healed field is itself diagnostic (failing sensor or wiring).
 
-```
-http://<cloud-public-ip>:3001   ← Grafana
-http://<cloud-public-ip>:1881   ← Node-RED
-http://<cloud-public-ip>:5051   ← pgAdmin
-```
+**Why is `time` unique / why are duplicates silently skipped?** So that re-importing a CSV, replaying a session, or any reconnect hiccup can never double-count data (`ON CONFLICT (time) DO NOTHING`, migration V4). The cost: two genuinely different readings with identical timestamps would collide — at one frame per ~300 ms with millisecond stamps, that doesn't happen in practice.
 
-This pairs naturally with the cloud-hosted Mosquitto broker: the receiver ESP32 publishes to the cloud broker, the cloud Node-RED processes it, and everyone watches the same dashboards live.
+**What happens if the database goes down?** Telemetry inserts fail and those readings are lost (there's no buffering between Node-RED and PostgreSQL). Importantly, the Catch nodes deliberately do **not** watch the logging chain ("Normalize Log Event" → "Log Database") — if they did, a failed log write would trigger another log write, forever. The loop is broken by design; the trade-off is that errors occurring *while the DB is down* go unrecorded. In Docker, `restart: unless-stopped` brings PostgreSQL back automatically.
 
-> ⚠️ **Before exposing anything to the internet:** change every default password in `.env` (Grafana, pgAdmin, PostgreSQL) — a public IP is visible to the whole world, not just the team.
+**What happens if the broker (Mosquitto) goes down?** The ESP32's publishes go nowhere (lost), and Node-RED's MQTT node shows disconnected, reconnecting automatically. Same honest-gap behavior.
+
+**Why does the Connection panel count dropped frames as "connected"?** Because it answers "is the radio link alive?", not "is the data good?". A malformed frame that arrives still proves the link works — the data quality story is told by the FD counter next to it.
+
+**Why is fault decoding done in Grafana instead of Node-RED?** The raw bitmask number is stored; Grafana joins it against the definition tables at display time (`err & (1 << bit)`). Storage stays compact, and fault names/descriptions can be corrected later without touching historical data.
+
+**Why do CSVs require timestamps when live frames don't?** A CSV is *historical* data — stamping it with import time would be a lie, planting old readings at today's date. Live frames are *present* data — arrival time is the truth. Different tenses, different rules.
+
+**Why is the processed-CSV path separate?** Processed files already contain real units and true/false flags. Sending them through conversion again would scale already-scaled numbers (and "heal" perfectly fine values). The processed path parses and inserts only.
+
+**Why drop a frame for one bad field at the parse stage, but heal one bad field later?** Before parsing succeeds, the program can't know *which* field is which — a 14-field frame might be missing any field. After parsing, identity is certain and surgical repair is safe.
+
+**Why QoS 2 with a persistent session on the MQTT subscription?** Maximum delivery guarantee between broker and platform: nothing the broker accepted is lost, even if Node-RED restarts. The queue-flush clumping concern doesn't apply because the broker→platform link is on the same machine (or same datacenter) and essentially never backlogs; the fragile link (car→receiver) has no queue at all.
+
+**Why PostgreSQL and not TimescaleDB?** Considered (see `information/processDocumentation.md`). The project runs in sessions, not continuously; plain PostgreSQL with a time index handles this scale comfortably with one less moving part.
+
+**Why Flyway instead of writing tables by hand or an ORM (Prisma)?** Versioned migrations (V1–V4) run once each, in order, automatically, with history tracked in the database itself — and Flyway runs as a throwaway container, nothing to install.
+
+**Why is Flyway "exited" in `docker compose ps`?** That's its design: run migrations, quit. Check it succeeded with `docker compose logs flyway`.
+
+**Why the shifted ports (5433/1881/3001/5051)?** To avoid colliding with default installs of the same tools on your machine. Inside the Docker network, services still talk on standard ports (e.g. `postgresdb:5432`).
+
+**Is it safe to click "Test Injection" twice?** Yes — a new run kills the previous one (the generator clears its interval timer first). Timestamps are current-time so the runs just append.
+
+**Can two people import CSVs or run the generator at once?** Yes, but their rows interleave in the database by timestamp; the unique-time rule resolves any exact collisions by keeping the first arrival.
+
+**What's protected when someone runs `docker compose down -v`?** Nothing, by default — it erases all volumes (database included). Mitigations the team uses/recommends: marking the database volume `external: true` (compose then refuses to delete it), a scheduled `pg_dump` backup container writing to a plain folder, cloud disk snapshots, and restricting who has SSH access on the cloud box in the first place.
+
+**Is the data sent by the car encrypted or authenticated?** No — LoRa frames and MQTT (port 1883, `allow_anonymous true`) are plaintext. On a cloud deployment, anyone who finds the broker could publish fake frames. Acceptable for a race-team prototype; the hardening path is MQTT username/password + TLS (port 8883) on Mosquitto, both supported by ESP32 and Node-RED.
+
+**How fast can data arrive?** The pipeline is event-driven; the FAKE generator pushes a frame every 300 ms comfortably, and Grafana's minimum refresh is 300 ms. The practical ceiling is far above the car's transmit rate.
+
+**What's the storage footprint?** One row ≈ a few hundred bytes. A 2-hour session at 300 ms ≈ 24,000 rows ≈ a few MB. Years of racing fit in single-digit GB.
 
 ---
 
@@ -580,58 +549,65 @@ RapidAmente-TelemeTuna/
 ## 🛠️ Troubleshooting
 
 **"Flyway exited / stopped" — is that broken?**
-No. Flyway is supposed to run once, build the tables, and quit. Check it succeeded with `docker compose logs flyway`.
+No. Flyway runs once, builds the tables, and quits. Check with `docker compose logs flyway`.
 
 **No data is showing up in Grafana.**
-- Did you actually feed data in? Try the **FAKE Data Generator** in Node-RED first.
-- Is the receiver ESP32 publishing to the right place? Topic must be `car_telemetry`, broker port `1883`.
-- Check the `event_logs` table — frames may have been dropped (`FD`) for being malformed.
+- Check the **Connection panel** (Pipeline Health tab) first — Disconnected means nothing is arriving at all.
+- Did you feed data in? Try the **FAKE Data Generator**.
+- Check `event_logs` — frames may have been dropped (`FD`) for being malformed.
 - Confirm rows exist: `docker exec -it telemetry-postgresdb psql -U <USER> -d <DB> -c "SELECT count(*) FROM telemetry_records;"`
 
-**Lots of "No timestamp in payload" warnings in the event log.**
-Your data source is sending 15-field frames without the leading timestamp. The data is still stored (stamped on arrival), but the receiver ESP32 should be fixed to include the timestamp.
+**Connection says Disconnected but the car is sending.**
+Wrong broker address on the ESP32 (must be the cloud/host IP, port 1883), wrong topic (must be `car_telemetry`), or port 1883 blocked by the firewall / security group.
+
+**Charts say "No data" after a CSV replay.**
+The dashboard is looking at *Last 15 minutes* — set an absolute time range covering the file's dates.
 
 **My CSV rows are all being dropped.**
-The CSV import expects a timestamp as the **first** column (16 columns total). A 15-column file without timestamps will be rejected with *"Bad field count"* — add a timestamp column first.
+CSV import requires a timestamp as the **first** column (16 columns total). A 15-column file is rejected with *"Bad field count"*.
 
-**I imported a CSV but the row count didn't go up (or went up less than expected).**
-Rows whose timestamps already exist in `telemetry_records` are skipped on purpose (duplicate protection). If you're re-importing the same file, that's everything working as designed. Check `SELECT count(*)` before and after, and the event log for dropped (`FD`) rows.
+**CSV import added no rows (or fewer than expected).**
+Those timestamps already exist — duplicate protection working as designed.
+
+**Heal/error counters look too low (or too high).**
+They count only within the selected time range — widen or narrow the time picker.
 
 **Node-RED can't connect to the database (local setup).**
-You almost certainly still have the host/port set to `postgresdb:5432`. Locally it must be `localhost:5433`, with the user/password/database matching your `.env`. See [Step 6](#step-6--fix-the-database-connection-the-important-change).
+You still have `postgresdb:5432` configured. Locally it must be `localhost:5433` with credentials matching your `.env`.
 
-**Teammates can't open the dashboards from their device.**
-Check they're using the host computer's IP (not `localhost`), that both devices are on the **same subnet** (same Wi-Fi network/hotspot), and that the host's firewall allows incoming connections on ports 3001 / 1881 / 5051. For the cloud setup, use the cloud server's public IP and make sure those ports are open in the cloud firewall/security group.
+**Teammates can't open the dashboards.**
+Cloud: use the cloud public IP; check ports 3001/1881/5051 in the cloud firewall. Local: host's LAN IP (not `localhost`), same subnet, host firewall open.
 
 **Port already in use.**
-Something else on your machine is using 5433, 1881, 1883, or 3001. Stop that program, or change the published port in `infrastructure/docker-compose.yaml`.
+Something else owns 5433, 1881, 1883, 3001, or 5051 — stop it or change the published port in `infrastructure/docker-compose.yaml`.
 
-**Can't log in to Grafana.**
-Use the `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` from your `.env`. If you changed them *after* the first start, you may need `docker compose down -v` (this erases stored data) and start again.
+**Can't log in to Grafana / pgAdmin.**
+Use the values from `.env`. If you changed them *after* first start, `docker compose down -v` (erases data!) and restart, or change them in the running app.
 
 **Serial port won't open (local setup).**
-Double-check the exact device name (`ls /dev/cu.*` on macOS, Device Manager on Windows), make sure no other program (like the Arduino IDE) is already holding the port, and confirm the baud rate matches the device (38400).
+Check the exact device name (`ls /dev/cu.*` on macOS, Device Manager on Windows), make sure no other program holds the port, baud = 38400.
 
 ---
 
 ## 📖 Glossary (plain-English definitions)
 
-- **ESP32** — a small, cheap microcontroller board. This project uses two: a **sender** on the car and a **receiver** in the pit.
-- **LoRa** — a long-range, low-power radio technology; how the sender ESP32 talks to the receiver ESP32.
-- **Docker / container** — a way to package software so it runs the same on any computer, without you installing each piece by hand.
-- **Docker Compose** — a tool that starts several containers together from one config file.
-- **Node-RED** — a visual, drag-and-wire programming tool. Here it's the "brain" that cleans and routes the data.
-- **MQTT / Mosquitto** — a lightweight messaging system for sending small messages (like sensor readings) around. Mosquitto is the specific "post office" (broker) used.
-- **PostgreSQL (Postgres)** — the database that stores all the readings permanently.
-- **Flyway** — a tool that builds/updates the database tables automatically and remembers which changes it already applied.
-- **pgAdmin** — a web interface for browsing and querying the PostgreSQL database by hand.
-- **Grafana** — the tool that draws live charts and gauges from the database.
-- **Serial port** — a USB connection your computer uses to talk to hardware like a radio receiver.
-- **Baud rate** — the speed of a serial connection (e.g. 38400). Both sides must agree on it.
-- **Raw value** — the unconverted number (-32767…32767) straight from the hardware, before it's turned into real units.
-- **Healing** — replacing a clearly-broken reading with the last known-good value so one glitch doesn't ruin the data.
-- **Bitmask** — a single number that secretly holds many yes/no flags, one per bit. The definition tables explain what each bit means.
-- **Frame** — one complete reading: one line of comma-separated values (timestamp + 15 data fields).
+- **ESP32** — a small, cheap microcontroller board with built-in Wi-Fi. This project uses two: a **sender** on the car and a **receiver** that publishes to MQTT.
+- **LoRa** — long-range, low-power radio; how the sender talks to the receiver.
+- **Docker / container** — packages software so it runs the same on any computer, no manual installs.
+- **Docker Compose** — starts several containers together from one config file.
+- **Node-RED** — a visual, drag-and-wire programming tool; here it's the pipeline "brain".
+- **MQTT / Mosquitto** — a lightweight publish/subscribe messaging system; Mosquitto is the broker ("post office").
+- **QoS (MQTT)** — delivery guarantee level between broker and subscriber; this project subscribes at QoS 2 (strongest).
+- **PostgreSQL (Postgres)** — the database storing all readings permanently.
+- **Flyway** — applies versioned SQL migrations automatically, once each.
+- **Grafana** — draws the live charts and gauges from the database.
+- **pgAdmin** — a web interface for browsing the PostgreSQL database by hand.
+- **Serial port / baud rate** — USB link to hardware and its speed (38400 here).
+- **Raw value** — the unconverted -32767…32767 number from the hardware.
+- **Healing** — replacing a clearly-broken reading with the last known-good value, with full disclosure in the data and logs.
+- **Bitmask** — one number holding up to 16 yes/no fault switches, one per bit.
+- **Frame** — one complete reading: 15 comma-separated data fields (16 with a leading timestamp).
+- **FD** — "frame dropped": the log level for discarded frames.
 
 ---
 
