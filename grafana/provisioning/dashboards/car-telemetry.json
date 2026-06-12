@@ -2359,6 +2359,131 @@
         }
       }
     },
+    "panel-22": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "postgresUID"
+                    },
+                    "group": "grafana-postgresql-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "dataset": "telemetry",
+                      "editorMode": "code",
+                      "format": "table",
+                      "rawQuery": true,
+                      "rawSql": "SELECT\n  CASE\n    WHEN (\n      SELECT max(time) FROM telemetry_records\n    ) > now() - interval '1 second'\n    OR (\n      SELECT max(time) FROM event_logs WHERE level = 'FD'\n    ) > now() - interval '1 second'\n    THEN 1\n    ELSE 0\n  END AS status;",
+                      "sql": {
+                        "columns": [
+                          {
+                            "parameters": [],
+                            "type": "function"
+                          }
+                        ],
+                        "groupBy": [
+                          {
+                            "property": {
+                              "type": "string"
+                            },
+                            "type": "groupBy"
+                          }
+                        ],
+                        "limit": 50
+                      },
+                      "table": "telemetry_records"
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "Disconnected: ESP32 is disconnected from the MQTT broker. Check if ESP32 is properly connected to WiFi. \n\nConnected: ESP32 is connected to the broker and is currently sending information.",
+        "id": 22,
+        "links": [],
+        "title": "Connection",
+        "vizConfig": {
+          "group": "stat",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "text",
+                        "index": 0,
+                        "text": "Disconnected <×)))>< ···"
+                      },
+                      "1": {
+                        "color": "blue",
+                        "index": 1,
+                        "text": "Connected <๏)))>< ∿∿∿"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "transparent",
+                      "value": 0
+                    }
+                  ]
+                }
+              },
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "status",
+                    "scope": "series"
+                  },
+                  "properties": []
+                }
+              ]
+            },
+            "options": {
+              "colorMode": "background_solid",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "percentChangeColorMode": "standard",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "showPercentChange": false,
+              "textMode": "auto",
+              "wideLayout": true
+            }
+          },
+          "version": "13.0.1+security-01"
+        }
+      }
+    },
     "panel-3": {
       "kind": "Panel",
       "spec": {
@@ -3526,12 +3651,25 @@
                     "spec": {
                       "element": {
                         "kind": "ElementReference",
+                        "name": "panel-22"
+                      },
+                      "height": 3,
+                      "width": 6,
+                      "x": 18,
+                      "y": 0
+                    }
+                  },
+                  {
+                    "kind": "GridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
                         "name": "panel-16"
                       },
                       "height": 6,
                       "width": 3,
                       "x": 18,
-                      "y": 0
+                      "y": 3
                     }
                   },
                   {
@@ -3544,7 +3682,7 @@
                       "height": 6,
                       "width": 3,
                       "x": 21,
-                      "y": 0
+                      "y": 3
                     }
                   },
                   {
@@ -3567,10 +3705,10 @@
                         "kind": "ElementReference",
                         "name": "panel-15"
                       },
-                      "height": 14,
+                      "height": 11,
                       "width": 6,
                       "x": 18,
-                      "y": 6
+                      "y": 9
                     }
                   },
                   {
