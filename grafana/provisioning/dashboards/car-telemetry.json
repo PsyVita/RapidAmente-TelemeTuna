@@ -2381,7 +2381,7 @@
                       "editorMode": "code",
                       "format": "table",
                       "rawQuery": true,
-                      "rawSql": "SELECT\n  CASE\n    WHEN (\n      SELECT max(time) FROM telemetry_records\n    ) > now() - interval '1 second'\n    OR (\n      SELECT max(time) FROM event_logs WHERE level = 'FD'\n    ) > now() - interval '1 second'\n    THEN 1\n    ELSE 0\n  END AS status;",
+                      "rawSql": "SELECT\n  CASE\n    WHEN GREATEST(\n      (SELECT max(time) FROM telemetry_records),\n      (SELECT max(time) FROM event_logs WHERE level = 'FD')\n    ) > now() - interval '1 second' THEN 0\n    WHEN GREATEST(\n      (SELECT max(time) FROM telemetry_records),\n      (SELECT max(time) FROM event_logs WHERE level = 'FD')\n    ) > now() - interval '5 minutes' THEN 1\n    ELSE 2\n  END AS status;",
                       "sql": {
                         "columns": [
                           {
@@ -2411,7 +2411,7 @@
             "transformations": []
           }
         },
-        "description": "Disconnected: ESP32 is disconnected from the MQTT broker. Check if ESP32 is properly connected to WiFi. \n\nConnected: ESP32 is connected to the broker and is currently sending information.",
+        "description": "Disconnected: ESP32 is disconnected from the MQTT broker. Check if ESP32 is properly connected to WiFi. \n\nIf it has been disconnected for less than 5 minutes, the fish would only be asleep (-). If disconnected for over 5 minutes, the fish becomes temporarily dead (x). \nMake the ESP32 send data to the broker to revive the fish!\n\nConnected: ESP32 is connected to the broker and is currently sending information.",
         "id": 22,
         "links": [],
         "title": "Connection",
@@ -2428,14 +2428,19 @@
                   {
                     "options": {
                       "0": {
-                        "color": "text",
+                        "color": "blue",
                         "index": 0,
-                        "text": "Disconnected <×)))>< ···"
+                        "text": "Connected <๏)))>< ∿∿∿"
                       },
                       "1": {
-                        "color": "blue",
+                        "color": "text",
                         "index": 1,
-                        "text": "Connected <๏)))>< ∿∿∿"
+                        "text": "Disconnected <-)))><         "
+                      },
+                      "2": {
+                        "color": "transparent",
+                        "index": 2,
+                        "text": "Disconnected <×)))><         "
                       }
                     },
                     "type": "value"
