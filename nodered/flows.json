@@ -81,7 +81,7 @@
         "type": "mqtt-broker",
         "name": "",
         "broker": "mosquitto",
-        "port": 1883,
+        "port": "1884",
         "clientid": "nodered-telemetry-mqtt",
         "autoConnect": true,
         "usetls": false,

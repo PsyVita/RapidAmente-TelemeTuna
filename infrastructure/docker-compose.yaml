@@ -100,7 +100,7 @@ services:
     container_name: telemetry-mosquitto
     image: eclipse-mosquitto:latest
     ports:
-      - "1883:1883"
+      - "1884:1883"
     volumes:
       - ../mosquitto/config:/mosquitto/config
       - mosquitto_data:/mosquitto/data
