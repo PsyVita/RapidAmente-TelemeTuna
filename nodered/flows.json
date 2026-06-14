@@ -25,7 +25,7 @@
     {
         "id": "ea7391026ef5d8ce",
         "type": "tab",
-        "label": "Test Node",
+        "label": "Test Flow",
         "disabled": false,
         "info": "",
         "env": []
@@ -416,7 +416,7 @@
         "id": "ba0281515b0dd58a",
         "type": "link out",
         "z": "fe649a070c585a18",
-        "name": "link out 1",
+        "name": "Raw CSV Link Out",
         "mode": "link",
         "links": [
             "29a6a2f2f328e217"
@@ -1165,7 +1165,7 @@
         "id": "595351ac2dd69914",
         "type": "link in",
         "z": "f6f2187d.f17ca8",
-        "name": "link in 1",
+        "name": "Link In to Background Flow (for Real-Time Imports and Test Flow)",
         "links": [
             "1e6479e8e5f19a09",
             "4393d8d4338f624a",
@@ -1193,7 +1193,7 @@
         "id": "29a6a2f2f328e217",
         "type": "link in",
         "z": "f6f2187d.f17ca8",
-        "name": "link in 2",
+        "name": "Link In to Background Flow (for Raw CSV)",
         "links": [
             "ba0281515b0dd58a"
         ],
@@ -1278,7 +1278,7 @@
         "id": "1e6479e8e5f19a09",
         "type": "link out",
         "z": "ea7391026ef5d8ce",
-        "name": "link out 4",
+        "name": "Test Flow Link Out",
         "mode": "link",
         "links": [
             "595351ac2dd69914"
