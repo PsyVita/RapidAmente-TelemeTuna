@@ -12,6 +12,7 @@
 # Ignore Node-RED dependencies and cache
 services/nodered/node_modules/
 services/nodered/.npm/
+services/nodered/flows_cred.json
 
 # Ignore ALL hidden configuration files 
 services/nodered/.*.json
