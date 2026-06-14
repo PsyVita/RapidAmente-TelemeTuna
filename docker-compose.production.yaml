@@ -1,0 +1,14 @@
+# Docker Compose file for production environment (on a server or cloud instance).
+# These tell Docker to use external volumes, which should be created beforehand using `docker volume create <volume_name>`.
+# Data will then be saved to these volumes on the cloud provider's storage, which persist even if the containers are removed or recreated.
+# Docker compose down -v will not remove these volumes, so your data will be safe even if you accidentally run that command.
+
+volumes:
+  postgres_data:
+    external: true
+  grafana_data:
+    external: true
+  mosquitto_data:
+    external: true
+  pgadmin_data:
+    external: true

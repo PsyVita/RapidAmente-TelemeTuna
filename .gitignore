@@ -1,29 +1,44 @@
-# Files to ignore when pushing to git repository.
-
-# Secrets
+# =========================
+# Environment Variables
+# =========================
+# Never commit secrets to GitHub. The .env.example is safe to commit.
 .env
-.env.*
-!.env.example
+*.env
+!services/.env.example
 
-# Node libraries — rebuildable with `npm install` from package.json
-node_modules/
+# =========================
+# Application Stack (Node-RED)
+# =========================
+# Ignore Node-RED dependencies and cache
+services/nodered/node_modules/
+services/nodered/.npm/
 
-# Node-RED
-nodered/.config*
-nodered/.sessions*
-nodered/lib/
-nodered/node_modules/
-nodered/flows_cred.json
-nodered/settings.js
-nodered/package.json
-nodered/package-lock.json
-nodered/.flows.json.backup
-nodered/.npm/
+# Ignore ALL hidden configuration files 
+services/nodered/.*.json
 
-#Test data
-test_*.csv
+# Ignore ALL backup files (both hidden and visible)
+services/nodered/*.backup
+services/nodered/.*.backup
 
+# =========================
+# AI Assistants & IDEs
+# =========================
+# Ignore AI context folders
+.claude/
 
-# Editor / OS junk
+# Standard IDE ignores (VS Code, JetBrains, etc.)
 .vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# OS Generated Files
+# =========================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
