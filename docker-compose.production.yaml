@@ -6,9 +6,3 @@
 volumes:
   postgres_data:
     external: true
-  grafana_data:
-    external: true
-  mosquitto_data:
-    external: true
-  pgadmin_data:
-    external: true

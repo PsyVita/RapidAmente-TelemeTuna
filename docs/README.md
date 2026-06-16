@@ -99,16 +99,22 @@ The **whole platform** — Mosquitto, Node-RED, PostgreSQL, Grafana, pgAdmin —
 
 ```
 http://<cloud-public-ip>:3001   ← Grafana       http://<cloud-public-ip>:1881  ← Node-RED
-http://<cloud-public-ip>:5051   ← pgAdmin       <cloud-public-ip>:1883         ← MQTT (ESP32 publishes here)
+http://<cloud-public-ip>:5051   ← pgAdmin       <cloud-public-ip>:1884         ← MQTT (ESP32 publishes here)
 ```
 
 **Cloud checklist:**
 
 1. Create a small VM (any provider — 1–2 GB RAM is plenty), install Docker, clone the repo, follow the normal [installation steps](#-installation--first-run).
 2. **Change every default password in `.env` first** — a public IP is visible to the whole world within hours, not just to the team.
-3. In the cloud firewall / security group, open only what's needed: `1883` (so the ESP32 can publish), `3001`, `1881`, `5051` (ideally allow-listed to the team's IPs). **Keep `5433` closed** — nothing outside Docker needs the database directly.
-4. The receiver ESP32 just needs any internet-connected Wi-Fi (a phone hotspot at the track works) and the broker address set to the cloud IP.
-5. Turn on your provider's automatic disk snapshots — it's a one-checkbox backup of everything.
+3. **Use the production compose override** so a stray `docker compose down -v` can't wipe your database. Create the external volume once, then bring the stack up with both files (see [Development vs production compose](#development-vs-production-compose)):
+
+   ```bash
+   docker volume create postgres_data
+   docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d
+   ```
+4. In the cloud firewall / security group, open only what's needed: `1884` (so the ESP32 can publish over MQTT), `3001`, `1881`, `5051` (ideally allow-listed to the team's IPs). **Keep `5433` closed** — nothing outside Docker needs the database directly.
+5. The receiver ESP32 just needs any internet-connected Wi-Fi (a phone hotspot at the track works) and the broker address set to the cloud IP **on port 1884**.
+6. Turn on your provider's automatic disk snapshots — it's a one-checkbox backup of everything.
 
 ### Option B — Everything on one local PC
 
@@ -129,11 +135,13 @@ When you start the project with Docker, six things run together. You don't insta
 | **PostgreSQL** | The database | `localhost:5433` | Permanent storage for every reading |
 | **Node-RED** | Visual data-flow tool | http://localhost:1881 | The "brain" — stamps, cleans, converts, heals, logs |
 | **Grafana** | Dashboard tool | http://localhost:3001 | Live charts and gauges |
-| **Mosquitto** | MQTT message broker | `localhost:1883` | Carries live data messages |
+| **Mosquitto** | MQTT message broker | `localhost:1884` | Carries live data messages |
 | **Flyway** | Database migration tool | *(runs once, then exits)* | Creates the tables automatically on first start |
 | **pgAdmin** | Database admin UI | http://localhost:5051 | Browse and query the stored data by hand |
 
-> 💡 **Why these ports?** They are deliberately shifted (5433 instead of the usual 5432, 1881 instead of 1880, 3001 instead of 3000, 5051 instead of the usual 5050) so they don't collide with other software you might already have running. On a cloud deployment, replace `localhost` with the server's public IP.
+> 💡 **Why these ports?** They are deliberately shifted (5433 instead of the usual 5432, 1881 instead of 1880, 3001 instead of 3000, 1884 instead of 1883 for MQTT, 5051 instead of the usual 5050) so they don't collide with other software you might already have running. On a cloud deployment, replace `localhost` with the server's public IP.
+
+> 🛰️ **MQTT port note:** the broker uses **1884** consistently — Mosquitto's `listener` is set to `1884`, Node-RED's MQTT node connects to `mosquitto:1884`, and external publishers (the ESP32) use `<host-or-cloud-ip>:1884`. Inside the Docker network the service name is `mosquitto`.
 
 ---
 
@@ -199,11 +207,25 @@ This was a deliberate design decision, documented inside the Node-RED flow itsel
 
 ## ⚙️ The processing pipeline, step by step
 
-Inside Node-RED there are three "tabs" (think of them as three pages of wiring):
+Inside Node-RED there are **four "tabs"** (think of them as four pages of wiring):
 
-- **Real-Time Imports** — the entry point for live data (the MQTT listener on topic `car_telemetry`, QoS 2).
+- **Real-Time Imports** — the entry point for live data. Two source options feed it: **Option 2 — MQTT** (the listener on topic `car_telemetry`, QoS 2 — the normal racing path) and **Option 1 — Serial Port** (the `fishPort` serial-in node, shipped **disabled**; only used by a locally-run Node-RED wired to a USB receiver).
 - **CSV Imports** — the entry points for loading raw or processed files (timestamp column required; it's stripped here, then raw rows join the pipeline below).
 - **Background Flow** — the cleaning/conversion pipeline that live data and raw CSVs funnel into.
+- **Test Flow** — the **FAKE Data Generator** and its **Test Injection Node**, kept on their own tab so the test rig is never confused with real wiring. (Comment on the tab: *"ONLY click for testing the program."*)
+
+### How the tabs are wired together (the link nodes)
+
+Node-RED's *link out → link in* nodes carry frames between tabs without drawing wires across the canvas. Each entry tab has a **link-out**; the Background Flow has the matching **link-ins**:
+
+| Source tab | Link-out node | Routes to link-in |
+|---|---|---|
+| Real-Time Imports (MQTT) | **`link out 3`** | `Link In to Background Flow (for Real-Time Imports and Test Flow)` |
+| Real-Time Imports (Serial, disabled) | **`link out 2`** | `Link In to Background Flow (for Real-Time Imports and Test Flow)` |
+| Test Flow | **`Test Flow Link Out`** | `Link In to Background Flow (for Real-Time Imports and Test Flow)` |
+| CSV Imports (raw) | **`Raw CSV Link Out`** | `Link In to Background Flow (for Raw CSV)` |
+
+So the Background Flow has **two** entry link-ins: one shared by live MQTT, the disabled serial option, and the Test Flow; and a separate one for raw CSVs. (Processed CSVs never enter the Background Flow — they're parsed and written straight to the database inside the CSV Imports tab.)
 
 Every raw frame passes through these stations, in order:
 
@@ -241,7 +263,7 @@ Every raw frame passes through these stations, in order:
 
 ### Built-in test generator (no hardware needed)
 
-The Background Flow tab contains a **"FAKE Data Generator"** wired to a **"Test Injection Node"**. One click simulates a full driving cycle (idle → accelerate → cruise → coast → regen → stop) and then deliberately exercises **every defence in the pipeline**, phase by phase: fault bitmask combinations (FAULTS), every status-light combination (FLAGS), corrupted values that trigger healing (HEAL), malformed frames that get dropped whole — wrong field counts, non-numeric values, bad timestamps (DROPS) — and finally simulated code errors that land in the log as `critical` (CRITICAL). After one run, every panel on both dashboard tabs has something to show.
+The **Test Flow** tab contains a **"FAKE Data Generator"** wired to a **"Test Injection Node"** (it reaches the pipeline through the `Test Flow Link Out` → `Link In to Background Flow (for Real-Time Imports and Test Flow)` pair). One click simulates a full driving cycle (idle → accelerate → cruise → coast → regen → stop) and then deliberately exercises **every defence in the pipeline**, phase by phase: fault bitmask combinations (FAULTS), every status-light combination (FLAGS), corrupted values that trigger healing (HEAL), malformed frames that get dropped whole — wrong field counts, non-numeric values, bad timestamps (DROPS) — and finally simulated code errors that land in the log as `critical` (CRITICAL). After one run, every panel on both dashboard tabs has something to show.
 
 ---
 
@@ -269,12 +291,13 @@ cd RapidAmente-TelemeTuna
 
 ### Step 2 — Create your environment (`.env`) file
 
+The `.env.example` template and the compose files now live at the **repository root**, so this is done from the project root (no `cd` needed):
+
 ```bash
-cd infrastructure
 cp .env.example .env
 ```
 
-Open `infrastructure/.env` in any text editor and set your own values:
+Open `.env` in any text editor and set your own values:
 
 ```dotenv
 # PostgreSQL
@@ -304,7 +327,27 @@ PGADMIN_PASSWORD=password
 docker compose up -d
 ```
 
-First start takes a few minutes (downloads + builds). What happens automatically: PostgreSQL starts → Flyway builds all tables and exits (that's normal!) → Node-RED, Grafana, Mosquitto, and pgAdmin come up and stay running.
+Both `docker-compose.yaml` and `.env` are at the repo root, so run this from the project root. First start takes a few minutes (downloads + builds). What happens automatically: PostgreSQL starts → Flyway builds all tables and exits (that's normal!) → Node-RED, Grafana, Mosquitto, and pgAdmin come up and stay running.
+
+#### Development vs production compose
+
+There are **two** compose files at the root:
+
+| File | Purpose |
+|---|---|
+| `docker-compose.yaml` | The full stack — all six services, ports, healthchecks, and **named** Docker volumes. This is everything you need for local development. |
+| `docker-compose.production.yaml` | A small **override** that redeclares just the **database** volume (`postgres_data`) as `external: true`. Layer it on top of the base file for cloud/server deployments. |
+
+Plain `docker compose up -d` uses managed named volumes — simple, but `docker compose down -v` would erase them. For a server, mark the **database** volume **external** so Compose refuses to delete it: create it once, then bring the stack up with **both** files (the override is merged on top of the base):
+
+```bash
+docker volume create postgres_data
+docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d
+```
+
+An external volume survives `docker compose down -v`, container recreation, and image upgrades — the telemetry lives on the provider's disk, not in a volume Compose feels free to remove. **Only `postgres_data` is protected this way**, because it's the only irreplaceable data: Grafana's dashboards and datasource are re-provisioned from `services/grafana/provisioning/` on every start, and the Mosquitto/pgAdmin volumes are convenience-only, so they stay as managed named volumes.
+
+> 🧱 The compose files follow the modern Compose spec, so there is **no top-level `version:` key** (it's obsolete). Image pins: `postgres:16` (pinned), plus `grafana/grafana:latest`, `eclipse-mosquitto:latest`, `flyway/flyway:latest`, `dpage/pgadmin4:latest`, and a custom Node-RED image built from `nodered/node-red:latest`. Every long-running service has a healthcheck and `restart: unless-stopped`; Flyway intentionally runs once and exits.
 
 ### Step 4 — Check that it's working
 
@@ -324,7 +367,7 @@ docker exec -it telemetry-postgresdb psql -U <YOUR_POSTGRES_USER> -d <YOUR_POSTG
 
 ### Step 5 — Generate test data (no car needed!)
 
-1. Open Node-RED → **Background Flow** tab.
+1. Open Node-RED → **Test Flow** tab.
 2. Click the square button on the **Test Injection Node** (wired to the **FAKE Data Generator**).
 3. Watch the status bar under the node step through the phases while both Grafana tabs fill with data.
 
@@ -344,12 +387,12 @@ docker compose down -v     # stop AND erase all stored data (be careful!)
 
 ### Way 1 — Live MQTT (the racing setup)
 
-Node-RED is always listening on MQTT topic **`car_telemetry`**. The receiver ESP32 publishes each 15-field frame there — cloud deployment: to the cloud server's IP on port 1883; local: to the PC's IP. Frames flow straight into the pipeline, stamped on arrival. Nothing to click.
+Node-RED is always listening on MQTT topic **`car_telemetry`**. The receiver ESP32 publishes each 15-field frame there — cloud deployment: to the cloud server's IP on **port 1884**; local: to the PC's IP on **port 1884**. Frames flow straight into the pipeline, stamped on arrival. Nothing to click.
 
 Test it by hand from any machine with an MQTT client:
 
 ```bash
-mosquitto_pub -h <server-ip> -p 1883 -t car_telemetry \
+mosquitto_pub -h <server-ip> -p 1884 -t car_telemetry \
   -m "15000,-8000,19660,12000,D,21357,11644,0,0,0,0,0,1,0,1"
 ```
 
@@ -362,7 +405,7 @@ Both CSV types **require a timestamp as the first column** (16 columns total):
 
 **How to:**
 
-1. Put the file in `nodered/data/` — Node-RED sees it as `/data/data/yourfile.csv`.
+1. Put the file in `services/nodered/data/` — Node-RED sees it as `/data/data/yourfile.csv` (the whole `services/nodered/` folder is mounted into the container at `/data`). Two ready-made samples already live there: `test_raw.csv` and `test_processed.csv`.
 2. Open the **CSV Imports** tab in Node-RED.
 3. Edit the file path in the matching **file-in** node (comment: "Edit Path to Insert Your File").
 4. Click the inject button on **Load Raw CSV** or **Load Processed CSV**.
@@ -377,7 +420,7 @@ See the [dedicated section below](#-optional-running-node-red-locally-for-a-dire
 
 ## 🔌 Optional: running Node-RED locally for a direct serial connection
 
-> **Most users skip this.** Docker containers cannot access USB serial ports, so reading the receiver directly requires Node-RED to run natively on your machine. The serial-port nodes visible in the committed flow are disabled placeholders; the active local flow is provided separately and not committed.
+> **Most users skip this.** Docker containers cannot access USB serial ports, so reading the receiver directly requires Node-RED to run natively on your machine. In the committed flow the serial path is **Option 1** in the **Real-Time Imports** tab — the `fishPort` serial-in node, which ships **disabled** (MQTT is **Option 2** and is the default). To use serial, run Node-RED locally, enable `fishPort`, and point it at your device; its output already feeds `link out 2` → the Background Flow, exactly like the MQTT path.
 
 1. Install Node.js (LTS) from https://nodejs.org, then Node-RED: `npm install -g --unsafe-perm node-red`
 2. Install the add-ons: `cd ~/.node-red && npm install node-red-node-serialport node-red-contrib-postgresql`
@@ -431,7 +474,9 @@ Flyway creates these automatically from the migration files (V1–V4). You never
 
 ## 📊 The Grafana dashboard
 
-A pre-built dashboard — the **EV TelemeTuna Dashboard** — is provisioned automatically. It refreshes very fast (down to 300 ms) and is organized into **two tabs**:
+A pre-built dashboard — the **EV TelemeTuna Dashboard** — is provisioned automatically from `services/grafana/provisioning/` (datasource + dashboard JSON). It refreshes very fast (down to 300 ms) and is organized into **two tabs**:
+
+> 🧩 The dashboard file (`car-telemetry.json`) is exported in Grafana's newer **v2 schema** (`apiVersion: dashboard.grafana.app/v2`, `kind: Dashboard`), so if you hand-edit it, expect the `spec.elements` / `spec.layout` structure rather than the old flat `panels` array. The datasource is provisioned separately as **Car Telemetry PostgreSQL** (`url: postgresdb:5432`).
 
 ### Tab 1 — Car Live Dashboard
 
@@ -496,21 +541,21 @@ The ESP32 has no wall clock, and MQTT never queues data on the ESP32 side — an
 
 **Why QoS 2 with a persistent session on the MQTT subscription?** Maximum delivery guarantee between broker and platform: nothing the broker accepted is lost, even if Node-RED restarts. The queue-flush clumping concern doesn't apply because the broker→platform link is on the same machine (or same datacenter) and essentially never backlogs; the fragile link (car→receiver) has no queue at all.
 
-**Why PostgreSQL and not TimescaleDB?** Considered (see `information/processDocumentation.md`). The project runs in sessions, not continuously; plain PostgreSQL with a time index handles this scale comfortably with one less moving part.
+**Why PostgreSQL and not TimescaleDB?** Considered (see `docs/processDocumentation.md`). The project runs in sessions, not continuously; plain PostgreSQL with a time index handles this scale comfortably with one less moving part.
 
 **Why Flyway instead of writing tables by hand or an ORM (Prisma)?** Versioned migrations (V1–V4) run once each, in order, automatically, with history tracked in the database itself — and Flyway runs as a throwaway container, nothing to install.
 
 **Why is Flyway "exited" in `docker compose ps`?** That's its design: run migrations, quit. Check it succeeded with `docker compose logs flyway`.
 
-**Why the shifted ports (5433/1881/3001/5051)?** To avoid colliding with default installs of the same tools on your machine. Inside the Docker network, services still talk on standard ports (e.g. `postgresdb:5432`).
+**Why the shifted ports (5433/1881/3001/1884/5051)?** To avoid colliding with default installs of the same tools on your machine. Inside the Docker network most services still talk on their standard ports (e.g. `postgresdb:5432`, `grafana:3000`, `node-red:1880`) — the published host port is what's shifted. **Mosquitto is the exception:** its `listener` is set to `1884`, so it listens on 1884 *both* inside the container and on the host, and Node-RED connects to `mosquitto:1884`. ⚠️ If you change the MQTT port, keep all three in sync: `mosquitto.conf`'s `listener`, the Node-RED MQTT-broker node's port, and **both sides** of the compose port mapping (`1884:1884`).
 
 **Is it safe to click "Test Injection" twice?** Yes — a new run kills the previous one (the generator clears its interval timer first). Timestamps are current-time so the runs just append.
 
 **Can two people import CSVs or run the generator at once?** Yes, but their rows interleave in the database by timestamp; the unique-time rule resolves any exact collisions by keeping the first arrival.
 
-**What's protected when someone runs `docker compose down -v`?** Nothing, by default — it erases all volumes (database included). Mitigations the team uses/recommends: marking the database volume `external: true` (compose then refuses to delete it), a scheduled `pg_dump` backup container writing to a plain folder, cloud disk snapshots, and restricting who has SSH access on the cloud box in the first place.
+**What's protected when someone runs `docker compose down -v`?** With the plain `docker-compose.yaml` (named volumes): nothing — it erases all volumes (database included). That's what **`docker-compose.production.yaml`** is for: it marks the **database** volume (`postgres_data`) as `external: true`, so once you've `docker volume create postgres_data` and bring the stack up with both files, `down -v` **refuses** to delete it. The other three volumes stay managed (and would be wiped by `down -v`) on purpose — Grafana re-provisions its dashboards/datasource from files, and the Mosquitto/pgAdmin data is reconstructable — so only the irreplaceable telemetry is locked down. Other mitigations the team uses/recommends: a scheduled `pg_dump` backup container writing to a plain folder, cloud disk snapshots, and restricting who has SSH access on the cloud box in the first place.
 
-**Is the data sent by the car encrypted or authenticated?** No — LoRa frames and MQTT (port 1883, `allow_anonymous true`) are plaintext. On a cloud deployment, anyone who finds the broker could publish fake frames. Acceptable for a race-team prototype; the hardening path is MQTT username/password + TLS (port 8883) on Mosquitto, both supported by ESP32 and Node-RED.
+**Is the data sent by the car encrypted or authenticated?** No — LoRa frames and MQTT (port 1884, `allow_anonymous true`) are plaintext. On a cloud deployment, anyone who finds the broker could publish fake frames. Acceptable for a race-team prototype; the hardening path is MQTT username/password + TLS (port 8883) on Mosquitto, both supported by ESP32 and Node-RED.
 
 **How fast can data arrive?** The pipeline is event-driven; the FAKE generator pushes a frame every 300 ms comfortably, and Grafana's minimum refresh is 300 ms. The practical ceiling is far above the car's transmit rate.
 
@@ -520,29 +565,43 @@ The ESP32 has no wall clock, and MQTT never queues data on the ESP32 side — an
 
 ## 📁 Project folder layout
 
+The project was reorganized: the compose files and `.env` now sit at the **repo root**, every service's config lives under **`services/`**, all documentation under **`docs/`**, and cloud-provisioning code under **`infrastructure/`**.
+
 ```
 RapidAmente-TelemeTuna/
-├── README.md                 ← you are here
-├── infrastructure/
-│   ├── docker-compose.yaml   ← defines all the services
-│   ├── .env.example          ← template for your secrets (copy to .env)
-│   └── .env                  ← YOUR secrets (you create this; not on GitHub)
-├── database/
-│   └── migrations/           ← SQL files Flyway runs to build the tables
-│       ├── V1__init.sql              (telemetry_records)
-│       ├── V2__add_event_logs.sql    (event_logs)
-│       ├── V3__add_bitmask_definitions.sql
-│       └── V4__unique_timestamp.sql  (no duplicate timestamps)
-├── nodered/
-│   ├── Dockerfile            ← builds Node-RED with the extra nodes baked in
-│   ├── flows.json            ← the data-flow wiring (the whole pipeline)
-│   └── data/                 ← put your CSV files here (not committed)
-├── mosquitto/
-│   └── config/mosquitto.conf ← MQTT broker settings
-├── grafana/
-│   └── provisioning/         ← pre-built dashboard & database connection
-└── information/              ← the author's process log
+├── docker-compose.yaml             ← the full stack (all six services)
+├── docker-compose.production.yaml  ← override: marks the data volumes external (servers)
+├── .env.example                    ← template for your secrets (copy to .env)
+├── .env                            ← YOUR secrets (you create this; not on GitHub)
+├── .gitignore
+├── docs/
+│   ├── README.md                   ← you are here (GitHub renders it as the repo README)
+│   ├── processDocumentation.md     ← the author's process & design log
+│   └── TelemeTuna-Manual.html      ← user manual (placeholder for now)
+├── infrastructure/                 ← Terraform / infrastructure-as-code lives here
+│                                     (provisioning the cloud VM, networking, etc.)
+└── services/
+    ├── database/
+    │   └── migrations/             ← SQL files Flyway runs to build the tables
+    │       ├── V1__init.sql                 (telemetry_records)
+    │       ├── V2__add_event_logs.sql       (event_logs)
+    │       ├── V3__add_bitmask_definitions.sql
+    │       └── V4__unique_timestamp.sql     (no duplicate timestamps)
+    ├── grafana/
+    │   └── provisioning/           ← auto-loaded by Grafana on start
+    │       ├── dashboards/         (car-telemetry.json [v2 schema], dashboard.yaml)
+    │       └── datasources/        (datasource.yaml → Car Telemetry PostgreSQL)
+    ├── mosquitto/
+    │   └── config/mosquitto.conf   ← MQTT broker settings (listener 1884)
+    └── nodered/
+        ├── Dockerfile              ← builds Node-RED with the extra nodes baked in
+        ├── flows.json              ← the data-flow wiring (the whole pipeline)
+        ├── settings.js             ← Node-RED runtime settings (flowFile, uiPort 1880…)
+        ├── package.json            ← extra Node-RED node dependencies
+        └── data/                   ← CSV files (samples: test_raw.csv, test_processed.csv)
 ```
+
+> 🔐 `flows_cred.json` (Node-RED's encrypted credentials) and any `*.backup`/hidden flow files are **gitignored** and never committed. So is `.env`.
 
 ---
 
@@ -558,7 +617,7 @@ No. Flyway runs once, builds the tables, and quits. Check with `docker compose l
 - Confirm rows exist: `docker exec -it telemetry-postgresdb psql -U <USER> -d <DB> -c "SELECT count(*) FROM telemetry_records;"`
 
 **Connection says Disconnected but the car is sending.**
-Wrong broker address on the ESP32 (must be the cloud/host IP, port 1883), wrong topic (must be `car_telemetry`), or port 1883 blocked by the firewall / security group.
+Wrong broker address on the ESP32 (must be the cloud/host IP, **port 1884**), wrong topic (must be `car_telemetry`), or port 1884 blocked by the firewall / security group. Also confirm the compose port mapping is `1884:1884` (see note below) so the broker is actually reachable from outside Docker.
 
 **Charts say "No data" after a CSV replay.**
 The dashboard is looking at *Last 15 minutes* — set an absolute time range covering the file's dates.
@@ -579,7 +638,13 @@ You still have `postgresdb:5432` configured. Locally it must be `localhost:5433`
 Cloud: use the cloud public IP; check ports 3001/1881/5051 in the cloud firewall. Local: host's LAN IP (not `localhost`), same subnet, host firewall open.
 
 **Port already in use.**
-Something else owns 5433, 1881, 1883, 3001, or 5051 — stop it or change the published port in `infrastructure/docker-compose.yaml`.
+Something else owns 5433, 1881, 1884, 3001, or 5051 — stop it or change the published port in `docker-compose.yaml` (at the repo root).
+
+**MQTT works between containers but external publishers (ESP32 / `mosquitto_pub`) can't connect.**
+Check the Mosquitto port mapping in `docker-compose.yaml`. Because `mosquitto.conf` sets `listener 1884`, the broker listens on **1884 inside the container**, so the mapping must be **`1884:1884`** — not `1884:1883`. With `1884:1883`, host traffic is forwarded to container port 1883 where nothing is listening, so external connections silently fail while the internal Node-RED → `mosquitto:1884` link keeps working.
+
+**Mosquitto shows `unhealthy` in `docker compose ps`.**
+The container healthcheck runs `mosquitto_sub`, which defaults to port 1883. Since the broker now listens on 1884, the check must pass `-p 1884` — otherwise the broker is fine but Docker keeps reporting it unhealthy (and `depends_on` waits stall). Both fixes ship in the current `docker-compose.yaml`.
 
 **Can't log in to Grafana / pgAdmin.**
 Use the values from `.env`. If you changed them *after* first start, `docker compose down -v` (erases data!) and restart, or change them in the running app.
@@ -594,7 +659,8 @@ Check the exact device name (`ls /dev/cu.*` on macOS, Device Manager on Windows)
 - **ESP32** — a small, cheap microcontroller board with built-in Wi-Fi. This project uses two: a **sender** on the car and a **receiver** that publishes to MQTT.
 - **LoRa** — long-range, low-power radio; how the sender talks to the receiver.
 - **Docker / container** — packages software so it runs the same on any computer, no manual installs.
-- **Docker Compose** — starts several containers together from one config file.
+- **Docker Compose** — starts several containers together from one config file. This project has two: `docker-compose.yaml` (base) and `docker-compose.production.yaml` (an override that makes the data volumes external for servers).
+- **Terraform / infrastructure-as-code (IaC)** — declarative files that provision cloud resources (the VM, networking, firewall rules, volumes) from code instead of by hand. This repo reserves the `infrastructure/` folder for them.
 - **Node-RED** — a visual, drag-and-wire programming tool; here it's the pipeline "brain".
 - **MQTT / Mosquitto** — a lightweight publish/subscribe messaging system; Mosquitto is the broker ("post office").
 - **QoS (MQTT)** — delivery guarantee level between broker and subscriber; this project subscribes at QoS 2 (strongest).
@@ -612,29 +678,3 @@ Check the exact device name (`ls /dev/cu.*` on macOS, Device Manager on Windows)
 ---
 
 *Thanks for reading — feel free to try it out. If anything's wrong with the tuna, or should you have any inquiries, please feel free to contact me on Instagram: [praery.in.april](https://www.instagram.com/praery.in.april)* 🐟
-
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣿⡇⠛⠛⠿⡿⡟⠻⣻⣿⠛⠛⠟⠛⠛⠛⠃⠙⠛⣛
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠁⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⣴⣶⣿⣿⣿⡏⠘⠟⠀⠀⠀⣼⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠘⢿⣿⣿⣿⡇⠠⡶⢠⠰⢸⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡯⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡠⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠂⠀⡙⣿⣿⢳⢰⡇⠀⠀⠈⠛⠛
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢻⠿⠃⠀⠀⠀⠀⠀⣀⣾⣿⣿⣿⣿⣧⣈⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠠⡱⢬⠉⠀⠈⣷⢔⠄⠀⢀⠀
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠇⠀⡘⠀⠀⠀⣠⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⡀⠀⠀⠀⠀⠈⡈⢁⡰⠀⠸⠀⠀⠀⣤⠀
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠀⠀⣼⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣀⠀⠀⠀⠈⠐⠯⠁⠁⠀⡁⣷⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡷⠀⣾⡏⢀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠀⠀⠀⠀⠀⠀⠀⠀⠄⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⠟⡛⠃⠀⠀⠀⣿⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡆⠀⠈⠀⡀⠀⠀⠀⠀⡿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⡟⣴⠒⢠⣴⣿⡆⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠂⠀⠀⡇⣿⣿
-⢂⠀⠀⠀⠀⠀⠀⢀⡿⠀⢸⣿⣿⡇⣿⣿⣿⣯⡉⠻⠿⢿⣿⢿⣿⣿⣿⣿⣿⣿⡿⣿⣿⣿⢿⣿⣿⢟⠀⣤⣶⡆⠀⡄⠀⠀⠀⡇⣿⣿
-⢸⣄⠀⠀⠀⠀⠀⠈⠃⠀⠘⠿⠿⠁⣿⣿⣿⣿⣷⣤⣄⣀⠀⠁⢸⣿⣿⠛⠋⠉⠉⢀⣀⣜⣶⣶⡧⠊⠀⢳⣿⡇⠘⣸⠀⡄⠀⠘⣿⣿
-⢸⣿⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣽⣇⡈⠉⠉⠉⠁⠀⠠⣴⣾⣿⣿⣧⠀⠀⠈⠉⠉⠙⠛⠋⢁⡤⠀⠘⢿⠇⠀⠻⠀⡇⠀⠀⣿⣿
-⣘⣿⣾⣧⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡟⣿⣿⣶⣤⣤⣶⣾⣿⣿⣿⣿⣿⣿⣷⠙⣦⣄⣀⣀⢀⢶⣾⣿⠀⠀⠀⠀⠀⠀⠀⠇⠀⠀⣻⡿
-⠿⣿⣭⡙⢷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠘⢻⣿⣿⣿⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⣧⣌⢿⣿⣿⣿⣿⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠘⠐⣿⣗
-⠀⠉⢻⣿⣦⣙⢿⣦⣀⡀⠀⠀⠀⠀⢠⣴⣝⠿⣟⣿⣿⣯⠙⠁⠈⠙⠛⠉⠁⠋⣿⣿⣿⣿⠿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣛
-⡀⣀⠘⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⠶⠂⣿⣿⣿⣿⣿⣿⣿⣦⣤⣤⣀⠀⠀⠀⢀⣿⣿⣿⣇⣴⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⢀⠀⢠⡄⣿
-⣿⣷⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠈⣛⣿⣿⣿⡿⣿⣿⣿⢿⢻⣿⣻⣶⣿⣿⢿⣿⣿⡟⠀⠀⠀⠀⠤⠠⠀⠜⠀⠀⠀⠆⠤⠤⠟
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⣁⣤⠀⠀⠀⠑⠙⢻⣿⣧⣀⣉⣈⡉⠳⠃⢀⣀⠈⠀⢺⠟⠁⠀⠀⠀⠀⠀⠐⢶⠀⣄⠀⠀⠀⢰⣶⣶⣶
-⣿⣿⠿⠿⠟⠛⠛⠃⣀⣀⣾⣿⣿⣆⠀⠀⠀⠀⠀⡸⣿⠎⠫⠉⡛⢷⡶⢿⠟⠀⢀⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠀⠀⠀⢺⣿⣿⣿
-⣭⣤⣶⣶⣶⣶⣖⣿⠻⣷⣝⠻⣿⣿⣷⣄⠀⠀⠀⠀⢻⣧⡀⠀⠀⠀⠀⠀⠀⠀⠊⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⠂⠻⢿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣬⢷⡌⠻⣦⠙⢿⣿⣿⣶⡀⠀⠀⠀⠘⢿⣷⣶⣶⠶⠶⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣷⠆⢀⣤⠉⣽⣾⢶⣄⠍⢻
-⣿⣿⣿⣿⣿⣿⣿⣿⡞⢿⣄⠈⠳⣄⠙⣿⡿⣿⣶⣄⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢴⣏⣿⠿⢃⣴⣿⣿⣗⢻⣿⣿⣟⡛⠀
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣾⣿⣷⣦⣄⠱⠶⣶⣤⣌⠙⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣦⡿⠉⢠⣾⣿⣿⣿⢌⣇⢻⣿⣿⣿⣷
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣤⡙⠻⠿⠶⣧⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⡏⠁⣀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
