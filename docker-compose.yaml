@@ -32,6 +32,8 @@ services:
       # set environment variables for Grafana to connect to PostgreSQL datasource
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
       POSTGRES_DB: ${POSTGRES_DB:-db} 
       GF_DASHBOARDS_MIN_REFRESH_INTERVAL: "300ms"
     volumes:
