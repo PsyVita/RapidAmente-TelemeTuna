@@ -49,6 +49,36 @@ variable "repo_url" {
 }
 
 
+# --- App credentials (non-secret: usernames / db / email) -------------------
+# These become SSM parameters and are written into the instance .env at boot,
+# so the app no longer depends on .env.example in production.
+
+variable "postgres_user" {
+  description = "Postgres username."
+  type        = string
+  default     = "user"
+}
+
+variable "postgres_db" {
+  description = "Postgres database name."
+  type        = string
+  default     = "telemetry"
+}
+
+variable "grafana_admin_user" {
+  description = "Grafana admin username."
+  type        = string
+  default     = "user"
+}
+
+variable "pgadmin_email" {
+  description = "pgAdmin login email."
+  type        = string
+  default     = "admin@admin.com"
+}
+
+# --- App credentials (secret: passwords) ------------------------------------
+
 variable "postgres_password" {
   description = "Postgres password (set in terraform.tfvars; never committed)"
   type        = string

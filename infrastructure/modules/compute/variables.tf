@@ -52,9 +52,3 @@ variable "instance_profile_name" {
   description = "IAM instance profile name to attach."
   type        = string
 }
-
-variable "eip_name" {
-  description = "Name tag of the pre-allocated Elastic IP to attach."
-  type        = string
-  default     = "telemetuna-eip"
-}

@@ -42,8 +42,12 @@ mount -a
 # Postgres data already exists, so it is safe to run every time.
 rm -rf /mnt/pgdata/lost+found
 
-echo "==> [4/9] Reading secrets from SSM Parameter Store"
+echo "==> [4/9] Reading config + secrets from SSM Parameter Store"
 export AWS_DEFAULT_REGION=${aws_region}
+PG_USER=$(aws ssm get-parameter --name "/${project}/${environment}/postgres_user" --query Parameter.Value --output text)
+PG_DB=$(aws ssm get-parameter --name "/${project}/${environment}/postgres_db" --query Parameter.Value --output text)
+GF_USER=$(aws ssm get-parameter --name "/${project}/${environment}/grafana_admin_user" --query Parameter.Value --output text)
+PGA_EMAIL=$(aws ssm get-parameter --name "/${project}/${environment}/pgadmin_email" --query Parameter.Value --output text)
 PG_PASS=$(aws ssm get-parameter --name "/${project}/${environment}/postgres_password" --with-decryption --query Parameter.Value --output text)
 GF_PASS=$(aws ssm get-parameter --name "/${project}/${environment}/grafana_password" --with-decryption --query Parameter.Value --output text)
 PGA_PASS=$(aws ssm get-parameter --name "/${project}/${environment}/pgadmin_password" --with-decryption --query Parameter.Value --output text)
@@ -65,15 +69,17 @@ echo "==> [6/9] Binding the postgres_data volume to the EBS disk"
 docker volume inspect postgres_data >/dev/null 2>&1 || \
   docker volume create --driver local --opt type=none --opt o=bind --opt device=/mnt/pgdata postgres_data
 
-echo "==> [7/9] Writing .env (non-secret config from repo .env.example + secrets from SSM)"
+echo "==> [7/9] Writing .env entirely from SSM (no .env.example dependency)"
 umask 077
-# Non-secret settings (DB name, usernames, email) come straight from the repo's
-# committed .env.example — that's the single source of truth for app config.
-# Strip its placeholder password lines, then append the real passwords from SSM.
-grep -vE '^(POSTGRES_PASSWORD|GRAFANA_ADMIN_PASSWORD|PGADMIN_PASSWORD)=' .env.example > .env
-cat >> .env <<EOF
+# All app credentials come from SSM (set via Terraform tfvars). The repo's
+# .env.example is for local development only; the production .env is built here.
+cat > .env <<EOF
+POSTGRES_USER=$${PG_USER}
 POSTGRES_PASSWORD=$${PG_PASS}
+POSTGRES_DB=$${PG_DB}
+GRAFANA_ADMIN_USER=$${GF_USER}
 GRAFANA_ADMIN_PASSWORD=$${GF_PASS}
+PGADMIN_EMAIL=$${PGA_EMAIL}
 PGADMIN_PASSWORD=$${PGA_PASS}
 EOF
 

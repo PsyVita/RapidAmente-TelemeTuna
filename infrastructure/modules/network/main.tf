@@ -28,10 +28,38 @@ resource "aws_security_group" "telemetuna" {
   }
 }
 
+# Node-RED — host port 1881 (container 1880).
+resource "aws_vpc_security_group_ingress_rule" "NodeRed" {
+  security_group_id = aws_security_group.telemetuna.id
+  description       = "Node-RED"
+  cidr_ipv4         = var.admin_cidr
+  from_port         = 1881
+  to_port           = 1881
+  ip_protocol       = "tcp"
+
+  tags = {
+    Name = "${var.project}-${var.environment}-nodered-in"
+  }
+}
+
+# MQTT broker — host port 1884 (container 1883).
+resource "aws_vpc_security_group_ingress_rule" "mqtt" {
+  security_group_id = aws_security_group.telemetuna.id
+  description       = "MQTT broker"
+  cidr_ipv4         = var.admin_cidr
+  from_port         = 1884
+  to_port           = 1884
+  ip_protocol       = "tcp"
+
+  tags = {
+    Name = "${var.project}-${var.environment}-mqtt-in"
+  }
+}
+
 # Grafana dashboards — host port 3001 (container 3000).
 resource "aws_vpc_security_group_ingress_rule" "grafana" {
   security_group_id = aws_security_group.telemetuna.id
-  description       = "Grafana UI (admin only)"
+  description       = "Grafana UI"
   cidr_ipv4         = var.admin_cidr
   from_port         = 3001
   to_port           = 3001
@@ -42,19 +70,35 @@ resource "aws_vpc_security_group_ingress_rule" "grafana" {
   }
 }
 
-# MQTT broker — host port 1884 (container 1883).
-resource "aws_vpc_security_group_ingress_rule" "mqtt" {
+# pgAdmin — host port 5051 (container 5050).
+resource "aws_vpc_security_group_ingress_rule" "pgadmin" {
   security_group_id = aws_security_group.telemetuna.id
-  description       = "MQTT broker (admin only during setup)"
+  description       = "pgAdmin"
   cidr_ipv4         = var.admin_cidr
-  from_port         = 1884
-  to_port           = 1884
+  from_port         = 5051
+  to_port           = 5051
   ip_protocol       = "tcp"
 
   tags = {
-    Name = "${var.project}-${var.environment}-mqtt-in"
+    Name = "${var.project}-${var.environment}-pgadmin-in"
   }
 }
+
+
+resource "aws_vpc_security_group_ingress_rule" "postgres" {
+  security_group_id = aws_security_group.telemetuna.id
+  description       = "postgres"
+  cidr_ipv4         = var.admin_cidr
+  from_port         = 5433
+  to_port           = 5433
+  ip_protocol       = "tcp"
+
+  tags = {
+    Name = "${var.project}-${var.environment}-postgres-in"
+  }
+}
+
+
 
 # Allow all outbound (Docker pulls, OS updates, SSM agent).
 resource "aws_vpc_security_group_egress_rule" "all" {

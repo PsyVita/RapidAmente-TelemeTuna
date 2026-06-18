@@ -66,15 +66,18 @@ resource "aws_volume_attachment" "postgres_data" {
   instance_id = aws_instance.telemetuna.id
 }
 
-# Elastic IP is allocated OUTSIDE Terraform (tagged Name=<eip_name>); we only look
-# it up and attach it, so `terraform destroy` can never release the address.
-data "aws_eip" "telemetuna" {
+# Elastic IP CREATED and managed by Terraform, then attached to the instance.
+# NOTE: `terraform destroy` releases this address, so the public IP changes on a
+# full rebuild. Use stop/start (not destroy) to keep the same IP day to day.
+resource "aws_eip" "telemetuna" {
+  domain = "vpc"
+
   tags = {
-    Name = var.eip_name
+    Name = "${var.project}-${var.environment}-eip"
   }
 }
 
 resource "aws_eip_association" "telemetuna" {
   instance_id   = aws_instance.telemetuna.id
-  allocation_id = data.aws_eip.telemetuna.id
+  allocation_id = aws_eip.telemetuna.id
 }

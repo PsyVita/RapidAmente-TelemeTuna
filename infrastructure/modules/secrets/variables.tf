@@ -8,6 +8,26 @@ variable "environment" {
   type        = string
 }
 
+variable "postgres_user" {
+  description = "Postgres username."
+  type        = string
+}
+
+variable "postgres_db" {
+  description = "Postgres database name."
+  type        = string
+}
+
+variable "grafana_admin_user" {
+  description = "Grafana admin username."
+  type        = string
+}
+
+variable "pgadmin_email" {
+  description = "pgAdmin login email."
+  type        = string
+}
+
 variable "postgres_password" {
   description = "Postgres password."
   type        = string

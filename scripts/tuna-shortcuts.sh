@@ -6,9 +6,9 @@ TUNA_REGION="${TUNA_REGION:-ap-southeast-7}"
 TUNA_PROFILE="${TUNA_PROFILE:-op-tuna}"
 
 # Each login picks a role for THIS shell: signs in AND repoints the tuna-* actions.
-tuna-login-op() { export TUNA_PROFILE=op-tuna; aws sso login --profile op-tuna; }
-tuna-login-ic() { export TUNA_PROFILE=ic-tuna; aws sso login --profile ic-tuna; }
-tuna-login-ad() { export TUNA_PROFILE=ad-tuna; aws sso login --profile ad-tuna; }
+tuna-login-op() { export TUNA_PROFILE=op-tuna; export AWS_PROFILE=op-tuna; aws sso login --profile op-tuna; }
+tuna-login-ic() { export TUNA_PROFILE=ic-tuna; export AWS_PROFILE=ic-tuna; aws sso login --profile ic-tuna; }
+tuna-login-ad() { export TUNA_PROFILE=ad-tuna; export AWS_PROFILE=ad-tuna; aws sso login --profile ad-tuna; }
 
 tuna-whoami() { echo "active TUNA_PROFILE=$TUNA_PROFILE"; }
 tuna-check() {
@@ -45,26 +45,12 @@ _tuna_browse() {
   elif command -v start >/dev/null 2>&1; then start "$1" # Added Windows Git Bash support
   else echo "$1"; fi
 }
-tuna-grafana() { _tuna_browse "http://$(tuna-ip):3001"; }   # public, works for everyone
+# The UI ports (3001/1881/5051) are open in the security group, so these just
+# open the public URL directly — no SSM tunnel needed, works for any role.
+tuna-grafana() { _tuna_browse "http://$(tuna-ip):3001"; }   # Grafana
+tuna-nodered() { _tuna_browse "http://$(tuna-ip):1881"; }   # Node-RED
+tuna-pgadmin() { _tuna_browse "http://$(tuna-ip):5051"; }   # pgAdmin
 
-# Node-RED and pgAdmin are firewalled off — reached via a local SSM tunnel.
-# These need an SSM-capable role (op-tuna/ad-tuna), NOT ic-tuna.
-tuna-nodered() {
-  echo "Node-RED -> http://localhost:1881   (keep this window open; Ctrl-C to stop)"
-  ( sleep 3; _tuna_browse http://localhost:1881 ) >/dev/null 2>&1 &
-  aws ssm start-session --target "$(tuna-id)" \
-    --document-name AWS-StartPortForwardingSession \
-    --parameters '{"portNumber":["1881"],"localPortNumber":["1881"]}' \
-    --region "$TUNA_REGION" --profile "$TUNA_PROFILE"
-}
-tuna-pgadmin() {
-  echo "pgAdmin -> http://localhost:5051   (keep this window open; Ctrl-C to stop)"
-  ( sleep 3; _tuna_browse http://localhost:5051 ) >/dev/null 2>&1 &
-  aws ssm start-session --target "$(tuna-id)" \
-    --document-name AWS-StartPortForwardingSession \
-    --parameters '{"portNumber":["5051"],"localPortNumber":["5051"]}' \
-    --region "$TUNA_REGION" --profile "$TUNA_PROFILE"
-}
 tuna-ssm() { aws ssm start-session --target "$(tuna-id)" --region "$TUNA_REGION" --profile "$TUNA_PROFILE"; }
 
 # --- Remote one-shot commands: run on the box via SSM and print the output. ---
@@ -103,7 +89,9 @@ tuna-help() {
   printf '    %-13s | %s\n' "tuna-stop"     "Stop the instance (pause; data safe, same IP)"
   printf '    %-13s | %s\n' "tuna-status"   "Show instance ID, state, and public IP"
   printf '    %-13s | %s\n' "tuna-ip"       "Print just the public IP"
-  printf '    %-13s | %s\n' "tuna-grafana"  "Open Grafana in your browser (public)"
+  printf '    %-13s | %s\n' "tuna-grafana"  "Open Grafana in your browser"
+  printf '    %-13s | %s\n' "tuna-nodered"  "Open Node-RED in your browser"
+  printf '    %-13s | %s\n' "tuna-pgadmin"  "Open pgAdmin in your browser"
   printf '    %-13s | %s\n' "tuna-help"     "Show this help"
   echo
   echo "  SSM-capable roles ONLY (op-tuna / ad-tuna) + instance must be running:"
@@ -114,6 +102,4 @@ tuna-help() {
   printf '    %-13s | %s\n' "tuna-logs"    "Tail logs; one svc: tuna-logs grafana"
   printf '    %-13s | %s\n' "tuna-restart" "Restart stack; or tuna-restart grafana"
   printf '    %-13s | %s\n' "tuna-disk"    "Show disk usage on the box"
-  printf '    %-13s | %s\n' "tuna-nodered" "Tunnel + open Node-RED via SSM"
-  printf '    %-13s | %s\n' "tuna-pgadmin" "Tunnel + open pgAdmin via SSM"
 }

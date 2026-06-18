@@ -4,6 +4,6 @@ output "instance_id" {
 }
 
 output "public_ip" {
-  description = "Public IP (the attached Elastic IP)."
-  value       = data.aws_eip.telemetuna.public_ip
+  description = "Public IP (the Terraform-managed Elastic IP)."
+  value       = aws_eip.telemetuna.public_ip
 }

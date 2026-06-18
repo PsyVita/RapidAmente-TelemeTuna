@@ -13,6 +13,10 @@ module "secrets" {
   source                 = "./modules/secrets"
   project                = var.project
   environment            = var.environment
+  postgres_user          = var.postgres_user
+  postgres_db            = var.postgres_db
+  grafana_admin_user     = var.grafana_admin_user
+  pgadmin_email          = var.pgadmin_email
   postgres_password      = var.postgres_password
   grafana_admin_password = var.grafana_admin_password
   pgadmin_password       = var.pgadmin_password
