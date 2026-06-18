@@ -1,0 +1,18 @@
+# Actual values for this deployment.
+
+aws_region  = "ap-southeast-7"
+project     = "telemetuna"
+environment = "prod"
+admin_cidr  = "0.0.0.0/0"
+root_volume_size = 10
+data_volume_size = 10   
+
+# Passwords for overwriting .env in the EC2 instance. These are pushed into SSM Parameter Store as SecureStrings and read back by the EC2 boot script to build /opt/RapidAmente-TelemeTuna/.env. Edit this before running terraform apply. 
+
+postgres_password      = "REPLACE_with_strong_postgres_password"
+grafana_admin_password = "REPLACE_with_strong_grafana_password"
+pgadmin_password       = "REPLACE_with_strong_pgadmin_password"
+
+# The AWS CLI profile to use for SSM Session Manager (for `terraform output ssm_start_session`).
+
+cli_profile = "tuna"

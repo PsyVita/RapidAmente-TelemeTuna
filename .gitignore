@@ -43,3 +43,14 @@ services/nodered/.*.backup
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# =========================
+# Cloud
+# =========================
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+terraform.tfvars
+*.auto.tfvars

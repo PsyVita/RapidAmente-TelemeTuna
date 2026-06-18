@@ -97,3 +97,8 @@ Stage 14
 1. I reorganized everything so that it's more optimal for cloud deployment. 
 2. Added Terraform. (brew install terraform)
 3. Added aws command line. 
+4. Create all terraform files and structure. 
+5. Find credentials for terraform and create a profile in your locals. (type "aws sso login --profile tuna" to log in.)
+
+Stop instance: aws ec2 stop-instances --instance-ids i-06b295951279096f1 --region ap-southeast-7 --profile tuna
+Start instance: aws ec2 start-instances --instance-ids i-06b295951279096f1 --region ap-southeast-7 --profile tuna

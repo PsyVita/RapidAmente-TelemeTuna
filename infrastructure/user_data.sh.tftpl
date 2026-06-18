@@ -1,0 +1,109 @@
+#!/bin/bash
+# Boot script for the TelemeTuna server. Runs once on first launch.
+# Terraform interpolations are injected at apply time; shell variables use a doubled dollar sign.
+set -euo pipefail
+
+echo "==> [1/9] Installing Docker + Compose"
+apt-get update -y
+apt-get install -y ca-certificates curl gnupg unzip jq git
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+. /etc/os-release
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $${VERSION_CODENAME} stable" > /etc/apt/sources.list.d/docker.list
+apt-get update -y
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+echo "==> [2/9] Installing AWS CLI v2"
+curl -s "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip
+unzip -q /tmp/awscliv2.zip -d /tmp
+/tmp/aws/install
+
+echo "==> [3/9] Mounting the dedicated Postgres data volume"
+ROOT_PART=$(findmnt -no SOURCE /)
+ROOT_DISK=$(lsblk -no PKNAME "$${ROOT_PART}")
+DATA_DEV=""
+for i in $(seq 1 30); do
+  DATA_DEV=$(lsblk -dpno NAME,TYPE | awk '$2=="disk"{print $1}' | grep -v "/dev/$${ROOT_DISK}" | head -n1 || true)
+  if [ -n "$${DATA_DEV}" ]; then break; fi
+  sleep 5
+done
+if [ -z "$${DATA_DEV}" ]; then echo "ERROR: data volume not found"; exit 1; fi
+if ! blkid "$${DATA_DEV}" >/dev/null 2>&1; then mkfs -t ext4 "$${DATA_DEV}"; fi
+mkdir -p /mnt/pgdata
+UUID=$(blkid -s UUID -o value "$${DATA_DEV}")
+grep -q "$${UUID}" /etc/fstab || echo "UUID=$${UUID} /mnt/pgdata ext4 defaults,nofail 0 2" >> /etc/fstab
+mount -a
+
+# A freshly formatted ext4 volume always contains a lost+found directory at its root.
+# Postgres binds this directory as its data dir and refuses to initdb into a non-empty
+# dir ("directory exists but is not empty ... contains a lost+found directory"), so it
+# crash-loops. Remove it on a fresh volume. This is a no-op on later boots / once
+# Postgres data already exists, so it is safe to run every time.
+rm -rf /mnt/pgdata/lost+found
+
+echo "==> [4/9] Reading secrets from SSM Parameter Store"
+export AWS_DEFAULT_REGION=${aws_region}
+PG_PASS=$(aws ssm get-parameter --name "/${project}/${environment}/postgres_password" --with-decryption --query Parameter.Value --output text)
+GF_PASS=$(aws ssm get-parameter --name "/${project}/${environment}/grafana_password" --with-decryption --query Parameter.Value --output text)
+PGA_PASS=$(aws ssm get-parameter --name "/${project}/${environment}/pgadmin_password" --with-decryption --query Parameter.Value --output text)
+
+echo "==> [5/9] Cloning the application repo"
+cd /opt
+if [ ! -d RapidAmente-TelemeTuna ]; then
+  git clone ${repo_url} RapidAmente-TelemeTuna
+fi
+cd RapidAmente-TelemeTuna
+
+# Node-RED bind-mounts ./services/nodered into the container as /data and runs as
+# uid 1000 (the node-red user). The repo is cloned as root, so without this the
+# container cannot write to /data ("EACCES: permission denied, mkdir /data/node_modules")
+# and crash-loops. Hand the directory to uid 1000 so Node-RED can write its working files.
+chown -R 1000:1000 /opt/RapidAmente-TelemeTuna/services/nodered
+
+echo "==> [6/9] Binding the postgres_data volume to the EBS disk"
+docker volume inspect postgres_data >/dev/null 2>&1 || \
+  docker volume create --driver local --opt type=none --opt o=bind --opt device=/mnt/pgdata postgres_data
+
+echo "==> [7/9] Writing .env (non-secret config from repo .env.example + secrets from SSM)"
+umask 077
+# Non-secret settings (DB name, usernames, email) come straight from the repo's
+# committed .env.example — that's the single source of truth for app config.
+# Strip its placeholder password lines, then append the real passwords from SSM.
+grep -vE '^(POSTGRES_PASSWORD|GRAFANA_ADMIN_PASSWORD|PGADMIN_PASSWORD)=' .env.example > .env
+cat >> .env <<EOF
+POSTGRES_PASSWORD=$${PG_PASS}
+GRAFANA_ADMIN_PASSWORD=$${GF_PASS}
+PGADMIN_PASSWORD=$${PGA_PASS}
+EOF
+
+echo "==> [8/9] Writing helper scripts"
+# Start the stack (first launch).
+cat > /opt/RapidAmente-TelemeTuna/start-telemetuna.sh <<'EOS'
+#!/bin/bash
+set -euo pipefail
+cd /opt/RapidAmente-TelemeTuna
+docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d
+EOS
+chmod +x /opt/RapidAmente-TelemeTuna/start-telemetuna.sh
+
+# Pull latest code and restart (use this to ship app updates).
+cat > /opt/RapidAmente-TelemeTuna/update-telemetuna.sh <<'EOS'
+#!/bin/bash
+set -euo pipefail
+cd /opt/RapidAmente-TelemeTuna
+git pull
+docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d --build
+EOS
+chmod +x /opt/RapidAmente-TelemeTuna/update-telemetuna.sh
+
+echo "==> [9/9] Starting the stack automatically (docker compose up -d)"
+# Auto-start: the volume is bound, secrets are written, and the known first-boot
+# permission issues (lost+found, node-red /data ownership) are already handled above,
+# so the stack can come up unattended. Containers use 'restart: unless-stopped', so
+# they also survive instance reboot/stop-start without re-running this script.
+/opt/RapidAmente-TelemeTuna/start-telemetuna.sh
+
+echo "==> Setup complete. Stack is starting in the background."
+echo "    Check status: sudo docker ps"
+echo "    Ship updates: sudo /opt/RapidAmente-TelemeTuna/update-telemetuna.sh"
