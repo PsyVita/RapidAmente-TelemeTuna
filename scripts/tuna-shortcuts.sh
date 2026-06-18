@@ -42,6 +42,7 @@ tuna-ip() {
 _tuna_browse() {
   if command -v open >/dev/null 2>&1; then open "$1"
   elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$1"
+  elif command -v start >/dev/null 2>&1; then start "$1" # Added Windows Git Bash support
   else echo "$1"; fi
 }
 tuna-grafana() { _tuna_browse "http://$(tuna-ip):3001"; }   # public, works for everyone

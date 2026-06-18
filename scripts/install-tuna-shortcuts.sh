@@ -32,6 +32,7 @@
 #    - A profile only works for roles you're assigned in Identity Center.
 #    - Safe to re-run: existing profiles are kept; the rc block is replaced,
 #      never duplicated. Only the browser login (aws sso login) is manual.
+#    - WINDOWS USERS: Run this script inside Git Bash.
 # =============================================================================
 set -euo pipefail
 
@@ -56,7 +57,7 @@ fi
 # ---- Ensure AWS CLI v2 is installed -----------------------------------------
 ensure_aws_cli() {
   if command -v aws >/dev/null 2>&1; then return 0; fi
-  echo "AWS CLI not found — installing the latest v2 (may prompt for your password)..."
+  echo "AWS CLI not found — installing the latest v2..."
   case "$(uname -s)" in
     Darwin)
       if command -v brew >/dev/null 2>&1; then
@@ -73,20 +74,33 @@ ensure_aws_cli() {
       sudo /tmp/aws/install --update
       rm -rf /tmp/awscliv2.zip /tmp/aws
       ;;
+    MINGW*|MSYS*|CYGWIN*)
+      echo "Downloading AWS CLI installer for Windows..."
+      curl -fsSL "https://awscli.amazonaws.com/AWSCLIV2.msi" -o AWSCLIV2.msi
+      echo "Installing AWS CLI (a Windows prompt may appear)..."
+      # Run msiexec via cmd to ensure the script waits for it to finish
+      cmd.exe //c "start /wait msiexec.exe /i AWSCLIV2.msi /qb"
+      rm -f AWSCLIV2.msi
+      ;;
     *)
       echo "ERROR: unsupported OS. Install AWS CLI manually:" >&2
       echo "  https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html" >&2
       exit 1
       ;;
   esac
-  command -v aws >/dev/null 2>&1 || { echo "ERROR: AWS CLI install did not succeed; install it manually." >&2; exit 1; }
+  
+  # Note: On Windows Git Bash, the terminal might need a restart to recognize 'aws' in the PATH immediately after install.
+  if ! command -v aws >/dev/null 2>&1; then
+    echo "WARN: AWS CLI installed, but you may need to restart Git Bash for the 'aws' command to be recognized."
+    return 0
+  fi
   echo "AWS CLI ready: $(aws --version)"
 }
 
 # ---- Ensure the SSM Session Manager plugin (for tuna-ssm/nodered/pgadmin) ----
 ensure_ssm_plugin() {
   if command -v session-manager-plugin >/dev/null 2>&1; then return 0; fi
-  echo "Session Manager plugin not found — installing (may prompt for your password)..."
+  echo "Session Manager plugin not found — installing..."
   case "$(uname -s)" in
     Darwin)
       if command -v brew >/dev/null 2>&1; then
@@ -109,15 +123,23 @@ ensure_ssm_plugin() {
       sudo dpkg -i /tmp/session-manager-plugin.deb
       rm -f /tmp/session-manager-plugin.deb
       ;;
+    MINGW*|MSYS*|CYGWIN*)
+      echo "Downloading Session Manager Plugin installer for Windows..."
+      curl -fsSL "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/windows/SessionManagerPluginSetup.exe" -o SessionManagerPluginSetup.exe
+      echo "Please complete the setup in the window that just popped up..."
+      cmd.exe //c "start /wait SessionManagerPluginSetup.exe"
+      rm -f SessionManagerPluginSetup.exe
+      ;;
     *)
       echo "WARN: can't auto-install the Session Manager plugin on this OS — see AWS docs." >&2
       return 0
       ;;
   esac
+  
   if command -v session-manager-plugin >/dev/null 2>&1; then
     echo "Session Manager plugin ready."
   else
-    echo "WARN: plugin install may have failed; SSM tunnels (tuna-ssm/nodered/pgadmin) might not work."
+    echo "WARN: plugin install may have finished, but you might need to restart Git Bash for it to be detected."
   fi
 }
 
@@ -142,9 +164,6 @@ for entry in "${PROFILES[@]}"; do
 done
 
 # ---- 2) Wire the shortcuts file into your shell rc --------------------------
-# We source a committed file rather than generate functions inline — this avoids
-# the macOS bash 3.2 here-doc-in-command-substitution bug and keeps the shortcuts
-# editable in one place.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 SHORTCUTS="$SCRIPT_DIR/tuna-shortcuts.sh"
 START_MARK="# >>> TelemeTuna instance control >>>"
@@ -156,7 +175,6 @@ case "$(basename "${SHELL:-zsh}")" in
 esac
 touch "$RC"
 
-# Remove any previous block, then add a fresh one that sources the shortcuts file.
 if grep -qF "$START_MARK" "$RC"; then
   tmp="$(mktemp)"
   sed "/$START_MARK/,/$END_MARK/d" "$RC" > "$tmp"
@@ -178,7 +196,7 @@ echo "  Shortcuts : $SHORTCUTS"
 echo "  Shell rc  : $RC"
 echo
 echo "  NEXT STEPS"
-echo "    1) Load the commands into THIS shell:"
+echo "    1) Load the commands into THIS shell (Windows users may need to restart Git Bash first):"
 echo
 echo "         source $RC"
 echo
@@ -193,7 +211,6 @@ echo "==================================================================="
 echo
 echo "  All commands (preview):"
 echo
-# Source the shortcuts file and reuse tuna-help so there's only ONE table to maintain.
 if [ -f "$SHORTCUTS" ]; then
   . "$SHORTCUTS"
   tuna-help
