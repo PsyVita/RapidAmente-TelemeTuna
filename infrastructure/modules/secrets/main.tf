@@ -1,12 +1,7 @@
-# secrets.tf
-# Passwords are supplied by YOU via terraform.tfvars (gitignored) and pushed into
-# SSM Parameter Store as SecureStrings. The EC2 boot script reads them back from SSM
-# to build /opt/RapidAmente-TelemeTuna/.env. No random generation, no plaintext in git.
-#
-# Parameter names MUST match what user_data.sh.tftpl reads:
-#   /${project}/${environment}/postgres_password
-#   /${project}/${environment}/grafana_password
-#   /${project}/${environment}/pgadmin_password
+# Passwords (from terraform.tfvars) pushed into SSM Parameter Store as SecureStrings.
+# The EC2 boot script reads these back to build .env. Parameter names MUST match
+# what user_data.sh.tftpl reads:
+#   /${project}/${environment}/postgres_password | grafana_password | pgadmin_password
 
 resource "aws_ssm_parameter" "postgres_password" {
   name        = "/${var.project}/${var.environment}/postgres_password"

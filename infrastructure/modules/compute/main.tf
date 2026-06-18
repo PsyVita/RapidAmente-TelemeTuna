@@ -1,4 +1,4 @@
-# --- Compute: the TelemeTuna server -----------------------------------------
+# Compute: the TelemeTuna server, its data volume, and the Elastic IP attachment.
 
 # Latest Ubuntu 22.04 image from Canonical (no hard-coded AMI IDs).
 data "aws_ami" "ubuntu" {
@@ -15,15 +15,9 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# Pick the first default subnet and learn its Availability Zone (the data
-# volume must live in the same AZ as the instance).
-data "aws_subnet" "selected" {
-  id = tolist(data.aws_subnets.default.ids)[0]
-}
-
 # Dedicated EBS volume for Postgres data only — so snapshots target just the DB.
 resource "aws_ebs_volume" "postgres_data" {
-  availability_zone = data.aws_subnet.selected.availability_zone
+  availability_zone = var.subnet_az
   size              = var.data_volume_size
   type              = "gp3"
   encrypted         = true
@@ -37,9 +31,9 @@ resource "aws_ebs_volume" "postgres_data" {
 resource "aws_instance" "telemetuna" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
-  subnet_id              = data.aws_subnet.selected.id
-  vpc_security_group_ids = [aws_security_group.telemetuna.id]
-  iam_instance_profile   = aws_iam_instance_profile.ec2.name
+  subnet_id              = var.subnet_id
+  vpc_security_group_ids = [var.security_group_id]
+  iam_instance_profile   = var.instance_profile_name
 
   associate_public_ip_address = true
 
@@ -72,3 +66,15 @@ resource "aws_volume_attachment" "postgres_data" {
   instance_id = aws_instance.telemetuna.id
 }
 
+# Elastic IP is allocated OUTSIDE Terraform (tagged Name=<eip_name>); we only look
+# it up and attach it, so `terraform destroy` can never release the address.
+data "aws_eip" "telemetuna" {
+  tags = {
+    Name = var.eip_name
+  }
+}
+
+resource "aws_eip_association" "telemetuna" {
+  instance_id   = aws_instance.telemetuna.id
+  allocation_id = data.aws_eip.telemetuna.id
+}

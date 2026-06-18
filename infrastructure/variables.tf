@@ -70,5 +70,5 @@ variable "pgadmin_password" {
 variable "cli_profile" {
   description = "Local AWS CLI/SSO profile name used in the SSM helper output. Developer-specific; override in your gitignored terraform.tfvars."
   type        = string
-  default     = "tuna"
+  default     = "og-tuna"
 }

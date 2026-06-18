@@ -1,5 +1,4 @@
-# --- Networking -------------------------------------------------------------
-# Use the account's default VPC and its subnets.
+# Networking: default VPC + subnet lookups and the instance security group.
 
 data "aws_vpc" "default" {
   default = true
@@ -12,11 +11,13 @@ data "aws_subnets" "default" {
   }
 }
 
-# --- Firewall (security group) ----------------------------------------------
-# The group itself holds no rules; each rule is a separate, named resource below
-# These are inbound rules which control who can access the instance. Outbound rules are at the bottom of this file.
-# No SSH (22): shell access is via SSM Session Manager.
+# First default subnet + its AZ (the data volume must live in the same AZ).
+data "aws_subnet" "selected" {
+  id = tolist(data.aws_subnets.default.ids)[0]
+}
 
+# --- Firewall (security group) ----------------------------------------------
+# No SSH (22): shell access is via SSM Session Manager.
 resource "aws_security_group" "telemetuna" {
   name        = "${var.project}-${var.environment}-sg"
   description = "TelemeTuna server firewall"
@@ -27,7 +28,7 @@ resource "aws_security_group" "telemetuna" {
   }
 }
 
-# Grafana dashboards — host port 3001 (container 3000), admin IP only.
+# Grafana dashboards — host port 3001 (container 3000).
 resource "aws_vpc_security_group_ingress_rule" "grafana" {
   security_group_id = aws_security_group.telemetuna.id
   description       = "Grafana UI (admin only)"
@@ -41,8 +42,7 @@ resource "aws_vpc_security_group_ingress_rule" "grafana" {
   }
 }
 
-# MQTT broker — host port 1884 (container 1883). Admin-only during setup;
-# opened to the internet (with auth + TLS) in the hardening step.
+# MQTT broker — host port 1884 (container 1883).
 resource "aws_vpc_security_group_ingress_rule" "mqtt" {
   security_group_id = aws_security_group.telemetuna.id
   description       = "MQTT broker (admin only during setup)"
@@ -57,7 +57,6 @@ resource "aws_vpc_security_group_ingress_rule" "mqtt" {
 }
 
 # Allow all outbound (Docker pulls, OS updates, SSM agent).
-# Allowing all outbounds means the instance can send info out to anywhere on the internet.
 resource "aws_vpc_security_group_egress_rule" "all" {
   security_group_id = aws_security_group.telemetuna.id
   description       = "All outbound"

@@ -1,6 +1,5 @@
-# --- IAM role for the EC2 instance ------------------------------------------
-# Lets the server: (1) be managed via SSM Session Manager (shell access, no
-# SSH), and (2) read ONLY its three secrets from Parameter Store.
+# IAM role for the EC2 instance: (1) SSM Session Manager access, and
+# (2) read ONLY its three secrets from Parameter Store.
 
 data "aws_iam_policy_document" "ec2_assume" {
   statement {
@@ -26,17 +25,11 @@ resource "aws_iam_role_policy_attachment" "ssm_core" {
 # Allow reading (and decrypting) ONLY the three secrets this server needs.
 data "aws_iam_policy_document" "read_secrets" {
   statement {
-    sid     = "ReadOwnSecrets"
-    actions = ["ssm:GetParameter", "ssm:GetParameters"]
-    resources = [
-      aws_ssm_parameter.postgres_password.arn,
-      aws_ssm_parameter.grafana_password.arn,
-      aws_ssm_parameter.pgadmin_password.arn,
-    ]
+    sid       = "ReadOwnSecrets"
+    actions   = ["ssm:GetParameter", "ssm:GetParameters"]
+    resources = var.secret_arns
   }
 
-  # SecureString values are encrypted with the AWS-managed SSM key; decrypting
-  # them requires kms:Decrypt. Scoped to SSM use only via the condition.
   statement {
     sid       = "DecryptViaSsm"
     actions   = ["kms:Decrypt"]

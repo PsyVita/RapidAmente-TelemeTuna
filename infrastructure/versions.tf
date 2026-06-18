@@ -9,16 +9,5 @@ terraform {
   }
 }
 
-# Configure the AWS provider. Credentials come from your CLI are never hard-coded here. 
-# default_tags are applied to every resource this project creates, which makes cost tracking and cleanup much easier.
-provider "aws" {
-  region = var.aws_region
-
-  default_tags {
-    tags = {
-      Project     = var.project
-      Environment = var.environment
-      ManagedBy   = "Terraform"
-    }
-  }
-}
+# NOTE: the provider "aws" block moved to providers.tf (configured at the root only;
+# modules inherit it).

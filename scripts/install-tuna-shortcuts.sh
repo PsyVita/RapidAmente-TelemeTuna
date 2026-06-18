@@ -4,7 +4,7 @@
 #   2) Installs tuna-up / tuna-down / tuna-status / tuna-help shell shortcuts
 #
 # Run ONCE per machine, after cloning the repo:
-#   ./scripts/install-tuna-shortcuts.sh                 # profile 'tuna'    -> Operator
+#   ./scripts/install-tuna-shortcuts.sh                 # profile 'og-tuna' -> Operator
 #   ./scripts/install-tuna-shortcuts.sh tuna-ic         # profile 'tuna-ic' -> InstanceController
 #   ./scripts/install-tuna-shortcuts.sh myname Operator # explicit profile + role
 #
@@ -19,12 +19,12 @@ ACCOUNT_ID="166637875233"        # Rapidamente
 REGION="ap-southeast-7"
 # -----------------------------------------------------------------------------
 
-PROFILE="${1:-tuna}"
+PROFILE="${1:-og-tuna}"
 ROLE="${2:-}"
 # Map known profile names to roles if a role wasn't passed explicitly.
 if [ -z "$ROLE" ]; then
   case "$PROFILE" in
-    tuna)    ROLE="Operator" ;;
+    og-tuna) ROLE="Operator" ;;
     tuna-ic) ROLE="InstanceController" ;;
     *)       ROLE="Operator" ;;
   esac
@@ -36,9 +36,9 @@ command -v aws >/dev/null 2>&1 || { echo "ERROR: AWS CLI not found — install i
 if aws configure list-profiles 2>/dev/null | grep -qx "$PROFILE"; then
   echo "AWS profile '$PROFILE' already exists — leaving it as-is."
 else
-  # If the URL placeholder wasn't edited, try borrowing it from an existing 'tuna' profile.
+  # If the URL placeholder wasn't edited, try borrowing it from an existing 'og-tuna' profile.
   if [[ "$SSO_START_URL" == *REPLACE* ]]; then
-    SSO_START_URL="$(aws configure get sso_start_url --profile tuna 2>/dev/null || true)"
+    SSO_START_URL="$(aws configure get sso_start_url --profile og-tuna 2>/dev/null || true)"
   fi
   if [[ -z "$SSO_START_URL" || "$SSO_START_URL" == *REPLACE* ]]; then
     echo "ERROR: set SSO_START_URL at the top of this script to your access portal URL first." >&2
