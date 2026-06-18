@@ -15,4 +15,4 @@ pgadmin_password       = "REPLACE_with_strong_pgadmin_password"
 
 # The AWS CLI profile to use for SSM Session Manager (for `terraform output ssm_start_session`).
 
-cli_profile = "tuna"
+cli_profile = "op-tuna"
