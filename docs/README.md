@@ -206,7 +206,7 @@ sudo /opt/RapidAmente-TelemeTuna/update-telemetuna.sh   # git pull + rebuild + u
 ### Prerequisites (cloud)
 
 - **Terraform ≥ 1.5** — `brew install terraform` (macOS) or see https://developer.hashicorp.com/terraform/install
-- **AWS CLI v2** signed in to an account with permission to create the resources above. The team uses **IAM Identity Center (SSO)**: `aws sso login --profile tuna` (the [`tuna-*` installer](#-team-operations-the-tuna--shortcuts) sets these profiles up for you).
+- **AWS CLI v2** signed in to an account with permission to create the resources above. The team uses **IAM Identity Center (SSO)** through the [`tuna-*` installer](#-team-operations-the-tuna--shortcuts), which creates the `op-tuna` / `ic-tuna` / `ad-tuna` profiles for you — sign in with `tuna-login-op` (equivalently `aws sso login --profile op-tuna`).
 - An idea of **your own public IP** for `admin_cidr` — find it with `curl ifconfig.me`.
 
 ### Variables (`terraform.tfvars`)
@@ -271,14 +271,14 @@ The dedicated Postgres EBS volume is mounted at `/mnt/pgdata` and bound to the D
 ### Day-2 operations
 
 - **Pause/resume to save money, keep the IP:** `tuna-stop` / `tuna-start` (or `aws ec2 stop-instances` / `start-instances`). The Elastic IP and all data stay put.
-- **Ship an app update:** `tuna-restart`, or SSH-free via the on-box `update-telemetuna.sh`.
+- **Ship an app update (new code):** the on-box `update-telemetuna.sh` — it runs `git pull` then `docker compose ... up -d --build`. (`tuna-restart` only *restarts* the running containers; it does **not** pull new code, so use `update-telemetuna.sh` to deploy changes.)
 - **Tear it all down:** `terraform destroy` — **but** this releases the Elastic IP (new IP next time) and, unless you've snapshotted, the data volume goes too. Prefer `tuna-stop` for everyday pauses.
 
-The raw start/stop commands (for reference, from the process log) are:
+The raw start/stop commands the `tuna-*` shortcuts wrap (start/stop is the `ic-tuna` InstanceController role) are:
 
 ```bash
-aws ec2 stop-instances  --instance-ids <id> --region ap-southeast-7 --profile tuna
-aws ec2 start-instances --instance-ids <id> --region ap-southeast-7 --profile tuna
+aws ec2 stop-instances  --instance-ids <id> --region ap-southeast-7 --profile ic-tuna
+aws ec2 start-instances --instance-ids <id> --region ap-southeast-7 --profile ic-tuna
 ```
 
 ---
@@ -287,9 +287,9 @@ aws ec2 start-instances --instance-ids <id> --region ap-southeast-7 --profile tu
 
 The **`scripts/`** folder turns all the AWS housekeeping into friendly `tuna-*` commands so any teammate can sign in and run the server without memorizing AWS CLI incantations.
 
-- **`install-tuna-shortcuts.sh`** — one-time setup: installs the AWS CLI v2 + the SSM Session Manager plugin (if missing), creates the SSO profiles (`op-tuna`, `ic-tuna`, `ad-tuna`), and wires the shortcuts into your shell.
+- **`install-tuna-shortcuts.sh`** — one-time setup: installs the AWS CLI v2 + the SSM Session Manager plugin (if missing), creates the SSO profiles (`op-tuna`, `ic-tuna`, `ad-tuna`), and wires the shortcuts into your shell. The **same script runs on macOS, Linux, and Windows (in Git Bash)** — it auto-installs the AWS CLI + SSM plugin on each and adds their folders to `PATH` so it finishes in one run.
 - **`tuna-shortcuts.sh`** — the `tuna-*` functions themselves (sourced by your shell rc).
-- **`bootstrap-windows.ps1`** — a one-command Windows bootstrap that installs Git for Windows, then runs the bash installer for you.
+- **`script-README.md`** — the in-folder quick-start for these scripts (the same material is folded into this README).
 
 The three profiles map to three IAM Identity Center roles, so each teammate uses only the access they need:
 
@@ -314,35 +314,23 @@ chmod +x scripts/install-tuna-shortcuts.sh
 
 Then run the `source …` line the script prints (e.g. `source ~/.zshrc` on macOS, `source ~/.bashrc` on most Linux).
 
-**Windows (easiest — one PowerShell command, installs everything including Git Bash):**
+**Windows — run it in Git Bash** (which ships with Git for Windows). The *same* `install-tuna-shortcuts.sh` works on Windows: it detects the OS, downloads and silently installs the **AWS CLI v2** and the **SSM Session Manager plugin** for you (a Windows installer window may appear), and adds their install folders to `PATH` so the run completes without a reinstall loop.
 
-Get the repo first (clone it if you have git, or download the ZIP from GitHub and extract it), then in **PowerShell**, from the repo root:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap-windows.ps1
-```
-
-That installs Git for Windows (if missing) via `winget`, then runs the bash installer (AWS CLI + SSM plugin + profiles + shortcuts). When it finishes, open **Git Bash** and:
-
-```bash
-source ~/.bashrc
-tuna-login-op        # or tuna-login-ic / tuna-login-ad
-```
-
-**Windows (manual alternative, if you already have Git Bash):** run the bash installer directly from Git Bash:
+First get Git for Windows if you don't already have it — this is what provides **Git Bash**: install once from https://git-scm.com/download/win, or `winget install -e --id Git.Git`. Then, in **Git Bash**:
 
 ```bash
 git clone https://github.com/PsyVita/RapidAmente-TelemeTuna.git
 cd RapidAmente-TelemeTuna
 ./scripts/install-tuna-shortcuts.sh
 source ~/.bashrc
+tuna-login-op        # or tuna-login-ic / tuna-login-ad
 ```
 
 **Notes for Windows:**
 
-- The `tuna-*` commands run in **Git Bash**, not PowerShell/CMD (they're bash). The PowerShell bootstrap is only the installer; daily use is in Git Bash. WSL also works and behaves like the Linux instructions above.
-- `winget` is needed for the auto-install (built into Windows 10 1709+ / 11). On older Windows, install Git for Windows manually first, then use the manual alternative.
-- UAC / installer windows may pop up for the AWS CLI / SSM plugin — approve them. If `aws` isn't found right after a first-time install, reopen the shell and re-run.
+- Use **Git Bash**, not PowerShell or CMD — the `tuna-*` commands are bash. WSL also works and behaves like the Linux instructions above.
+- A UAC / installer window may pop up for the AWS CLI or the SSM plugin — approve it.
+- Git Bash inherits a *snapshot* of `PATH`, so if `aws` isn't found right after a first-time install, **reopen Git Bash** and re-run. The installer and the shortcuts both re-add the AWS CLI / SSM plugin folders (`/c/Program Files/Amazon/...`) to `PATH` to minimize this.
 
 ### Everyday use
 
@@ -417,6 +405,8 @@ When you start the project with Docker, six things run together. You don't insta
 > 💡 **Why these ports?** The **host** ports are deliberately shifted (`5433` instead of the usual 5432, `1881` instead of 1880, `3001` instead of 3000, `1884` instead of 1883 for MQTT, `5051` instead of the usual 5050) so they don't collide with other software you might already have running. On a cloud deployment, replace `localhost` with the server's public IP.
 
 > 🛰️ **MQTT port note (read this if you touch the broker):** the published host port is **1884**, but **`mosquitto.conf` sets `listener 1883`**, so Mosquitto actually listens on **1883 inside the container**. `docker-compose.yaml` therefore maps **`1884:1883`** (host 1884 → container 1883). External publishers (the ESP32, `mosquitto_pub`) connect to **`<host-or-cloud-ip>:1884`**; clients *inside* the Docker network reach the broker at **`mosquitto:1883`** (the listener port). If you change the MQTT port, change **all three together**: the `listener` in `mosquitto.conf`, the **Port** on the Node-RED MQTT-broker node (`flows.json`), and **both sides** of the Compose mapping — and keep the Node-RED broker port equal to the `mosquitto.conf` listener.
+>
+> ⚠️ **Heads-up — the committed flow uses `1884` here.** `flows.json` currently sets the Node-RED MQTT-broker config node to **`mosquitto` : `1884`**. But the broker listens on **1883 *inside* the Docker network**, so the containerized Node-RED should connect to **`mosquitto:1883`** — host port `1884` is only for *external* publishers (the ESP32, `mosquitto_pub`) reaching the broker through the host. If the **Connection** panel reads *Disconnected* while the stack is up and data isn't landing, open that MQTT-broker node, set **Port = 1883**, and Deploy.
 
 > 🔌 **Other internal container ports** (used by container-to-container links, not published as shown): `postgresdb:5432`, `grafana:3000`, `node-red:1880`, `pgadmin:80`. Grafana also has **anonymous viewing enabled** (`GF_AUTH_ANONYMOUS_ENABLED=true`, role `Viewer`) and a `300ms` minimum dashboard refresh; the timezone for Node-RED is `Asia/Bangkok`.
 
@@ -626,7 +616,7 @@ docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d
 
 An external volume survives `docker compose down -v`, container recreation, and image upgrades — the telemetry lives on the provider's disk, not in a volume Compose feels free to remove. **Only `postgres_data` is protected this way**, because it's the only irreplaceable data: Grafana's dashboards and datasource are re-provisioned from `services/grafana/provisioning/` on every start, and the Mosquitto/pgAdmin volumes are convenience-only, so they stay as managed named volumes. *(On the Terraform-built server, the boot script does the `docker volume create` for you and binds it to the dedicated EBS disk.)*
 
-> 🧱 The compose files follow the modern Compose spec, so there is **no top-level `version:` key** (it's obsolete). Image pins: `postgres:16` (pinned), plus `grafana/grafana:latest`, `eclipse-mosquitto:latest`, `flyway/flyway:latest`, `dpage/pgadmin4:latest`, and a custom Node-RED image built from `nodered/node-red:latest`. Every long-running service has a healthcheck and `restart: unless-stopped`; Flyway intentionally runs once (`command: migrate`) and exits.
+> 🧱 The compose files follow the modern Compose spec, so there is **no top-level `version:` key** (it's obsolete). Image pins: `postgres:16` (pinned), plus `grafana/grafana:latest`, `eclipse-mosquitto:latest`, `flyway/flyway:latest`, `dpage/pgadmin4:latest`, and a custom Node-RED image built from `nodered/node-red:latest`. Every long-running service has a healthcheck, and all of them set `restart: unless-stopped` **except Mosquitto** (it has a healthcheck but no restart policy in `docker-compose.yaml` — add one if you want the broker to self-recover after a crash). Flyway intentionally runs once (`command: migrate`) and exits (no healthcheck, no restart).
 
 ### Step 4 — Check that it's working
 
@@ -828,7 +818,7 @@ The ESP32 has no wall clock, and MQTT never queues data on the ESP32 side — an
 
 **Why is Flyway "exited" in `docker compose ps`?** That's its design: run migrations, quit. Check it succeeded with `docker compose logs flyway`.
 
-**Why the shifted ports (5433/1881/3001/1884/5051)?** To avoid colliding with default installs of the same tools on your machine. Inside the Docker network most services still talk on their standard ports (e.g. `postgresdb:5432`, `grafana:3000`, `node-red:1880`) — the published host port is what's shifted. **Mosquitto is the subtle one:** `mosquitto.conf` sets `listener 1883`, so the broker listens on **1883 inside the container** and Compose publishes it as **`1884:1883`**; external publishers use host **1884** while in-network clients use `mosquitto:1883`. ⚠️ If you change the MQTT port, keep all three in sync: `mosquitto.conf`'s `listener`, the Node-RED MQTT-broker node's port, and **both sides** of the compose port mapping — and make the Node-RED broker port equal the listener.
+**Why the shifted ports (5433/1881/3001/1884/5051)?** To avoid colliding with default installs of the same tools on your machine. Inside the Docker network most services still talk on their standard ports (e.g. `postgresdb:5432`, `grafana:3000`, `node-red:1880`) — the published host port is what's shifted. **Mosquitto is the subtle one:** `mosquitto.conf` sets `listener 1883`, so the broker listens on **1883 inside the container** and Compose publishes it as **`1884:1883`**; external publishers use host **1884** while in-network clients use `mosquitto:1883`. ⚠️ If you change the MQTT port, keep all three in sync: `mosquitto.conf`'s `listener`, the Node-RED MQTT-broker node's port, and **both sides** of the compose port mapping — and make the Node-RED broker port equal the listener. *(Worth knowing: the committed `flows.json` currently sets that broker node to `mosquitto:1884`; for the in-Docker broker it should be `1883` — see the MQTT port note in [the services section](#-whats-inside-the-box-the-services).)*
 
 **Is it safe to click "Test Injection" twice?** Yes — a new run kills the previous one (the generator clears its interval timer first). Timestamps are current-time so the runs just append.
 
@@ -882,10 +872,9 @@ RapidAmente-TelemeTuna/
 │       └── compute/                ← EC2 instance, EBS data volume, Elastic IP
 │           └── user_data.sh.tftpl  ← first-boot script (installs Docker, clones, starts stack)
 ├── scripts/                        ← team setup + tuna-* control shortcuts
-│   ├── README.md                   ← scripts quick-start (folded into this README)
-│   ├── install-tuna-shortcuts.sh   ← one-time: AWS CLI + SSM plugin + SSO profiles + shortcuts
-│   ├── tuna-shortcuts.sh           ← the tuna-* functions (sourced by your shell rc)
-│   └── bootstrap-windows.ps1       ← one-command Windows bootstrap (installs Git Bash, then the above)
+│   ├── script-README.md            ← scripts quick-start (folded into this README)
+│   ├── install-tuna-shortcuts.sh   ← one-time: AWS CLI + SSM plugin + SSO profiles + shortcuts (macOS/Linux/Windows-Git-Bash)
+│   └── tuna-shortcuts.sh           ← the tuna-* functions (sourced by your shell rc)
 └── services/
     ├── database/
     │   └── migrations/             ← SQL files Flyway runs to build the tables
@@ -942,7 +931,7 @@ They count only within the selected time range — widen or narrow the time pick
 You still have `postgresdb:5432` configured. Locally it must be `localhost:5433` with credentials matching your `.env`.
 
 **Node-RED can't connect to the MQTT broker.**
-In-network clients must use the broker's **listener** port. `mosquitto.conf` sets `listener 1883`, so the Node-RED MQTT-broker node's **Server** should be `mosquitto` and its **Port** should match that listener. Make sure `mosquitto.conf`'s `listener`, the Node-RED node's port, and the compose mapping (`1884:<listener>`) all agree.
+In-network clients must use the broker's **listener** port. `mosquitto.conf` sets `listener 1883`, so the Node-RED MQTT-broker node's **Server** should be `mosquitto` and its **Port** should match that listener. **The committed `flows.json` ships this node at port `1884` — change it to `1883`** so it matches the in-container listener. Make sure `mosquitto.conf`'s `listener`, the Node-RED node's port, and the compose mapping (`1884:<listener>`) all agree.
 
 **Teammates can't open the dashboards.**
 Cloud: use the cloud public IP (or `tuna-grafana`); check ports 3001/1881/5051 are allowed for their IP in the security group (`admin_cidr`). Local: host's LAN IP (not `localhost`), same subnet, host firewall open.
@@ -965,7 +954,7 @@ Check the exact device name (`ls /dev/cu.*` on macOS, Device Manager on Windows)
 ### Cloud / Terraform troubleshooting
 
 **`terraform apply` fails on credentials.**
-Sign in first: `aws sso login --profile tuna` (or `tuna-login-op`). Make sure the profile's account/region match the Terraform `aws_region`.
+Sign in first with `tuna-login-op` (equivalently `aws sso login --profile op-tuna`). Make sure the profile's account/region match the Terraform `aws_region`.
 
 **The server is up but Grafana won't load for a few minutes.**
 The boot script is still installing Docker, cloning the repo, and starting containers. Give it a couple of minutes; then `tuna-grafana`. To watch progress, `tuna-ssm` in and run `sudo docker ps` / check `/var/log/cloud-init-output.log`.
@@ -1017,10 +1006,12 @@ This project follows [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PA
 - **Cloud deployment via Terraform.** Added the `infrastructure/` infrastructure-as-code that provisions the whole stack on AWS in one `terraform apply`: an EC2 server, a static **Elastic IP**, a dedicated **encrypted EBS data disk** for PostgreSQL, a firewall (**security group**) scoped to your IP, and a self-configuring first-boot script that installs Docker, clones the repo, and starts the stack automatically. Split into `network` / `secrets` / `iam` / `compute` modules.
 - **Secrets via SSM Parameter Store.** Production credentials are stored in AWS SSM (passwords as `SecureString`) and written into the instance `.env` at boot — production no longer depends on `.env.example`.
 - **No-SSH administration.** Shell access is through **SSM Session Manager** (no port 22, fully audited); the instance enforces **IMDSv2** and a least-privilege IAM role that can read only its own secrets.
-- **`tuna-*` operator shortcuts.** Added `scripts/` with one-time setup (AWS CLI + SSM plugin + the `op-/ic-/ad-tuna` SSO profiles), a Windows PowerShell bootstrap, and friendly `tuna-start` / `tuna-stop` / `tuna-status` / `tuna-logs` / `tuna-ssm` commands.
+- **`tuna-*` operator shortcuts.** Added `scripts/` with a one-time, **cross-platform** setup (AWS CLI + SSM plugin + the `op-/ic-/ad-tuna` SSO profiles) that runs the same on macOS, Linux, and Windows (Git Bash), plus friendly `tuna-start` / `tuna-stop` / `tuna-status` / `tuna-logs` / `tuna-ssm` commands.
 - **Production compose documented.** Clarified use of the `docker-compose.production.yaml` override (external `postgres_data` volume, bound to the EBS disk on the cloud box).
 - **Docs.** Expanded this README with cloud/Terraform and operations sections, an updated folder layout, and matching FAQ/troubleshooting/glossary entries.
 - **Backward compatible** — the local Docker workflow (Option B) is unchanged from v1.0.
+
+> 📝 **Documentation revision (June 2026).** This README was re-verified against every file in the repo and corrected where it had drifted: the Windows setup now documents the **Git Bash installer** (the earlier `bootstrap-windows.ps1` was removed in favour of a single cross-platform `install-tuna-shortcuts.sh`); the `scripts/` quick-start filename is `script-README.md`; **Mosquitto** is noted as having a healthcheck but **no `restart: unless-stopped`**; SSO sign-in uses the real `op-/ic-/ad-tuna` profiles (there is no single `tuna` profile); shipping new code is done with the on-box `update-telemetuna.sh` (not `tuna-restart`); and the committed `flows.json` MQTT-broker node is flagged as pointing at `mosquitto:1884` when the in-Docker broker listens on **1883**.
 
 ### v1.0 — Initial release
 
