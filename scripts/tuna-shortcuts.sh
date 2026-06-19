@@ -30,22 +30,32 @@ tuna-check() {
   fi
 }
 
+# Look up the instance ID by tag. Prints a clear message (and returns non-zero) when
+# nothing is found — e.g. the stack is down / not deployed, or you're not logged in.
 tuna-id() {
-  aws ec2 describe-instances \
+  local id
+  id="$(aws ec2 describe-instances \
     --filters "Name=tag:Name,Values=telemetuna-prod" \
               "Name=instance-state-name,Values=pending,running,stopping,stopped" \
     --query "Reservations[].Instances[].InstanceId" --output text \
-    --region "$TUNA_REGION" --profile "$TUNA_PROFILE"
+    --region "$TUNA_REGION" --profile "$TUNA_PROFILE" 2>/dev/null)"
+  if [ -z "$id" ] || [ "$id" = "None" ]; then
+    echo "No 'telemetuna-prod' instance found — the stack looks down or not deployed (terraform apply), or you're not logged in (try tuna-check)." >&2
+    return 1
+  fi
+  printf '%s\n' "$id"
 }
-tuna-start() { aws ec2 start-instances --instance-ids "$(tuna-id)" --region "$TUNA_REGION" --profile "$TUNA_PROFILE"; }
-tuna-stop()  { aws ec2 stop-instances  --instance-ids "$(tuna-id)" --region "$TUNA_REGION" --profile "$TUNA_PROFILE"; }
+tuna-start()  { local id; id="$(tuna-id)" || return 1; aws ec2 start-instances --instance-ids "$id" --region "$TUNA_REGION" --profile "$TUNA_PROFILE"; }
+tuna-stop()   { local id; id="$(tuna-id)" || return 1; aws ec2 stop-instances  --instance-ids "$id" --region "$TUNA_REGION" --profile "$TUNA_PROFILE"; }
 tuna-status() {
-  aws ec2 describe-instances --instance-ids "$(tuna-id)" \
+  local id; id="$(tuna-id)" || return 1
+  aws ec2 describe-instances --instance-ids "$id" \
     --query "Reservations[].Instances[].{ID:InstanceId,State:State.Name,IP:PublicIpAddress}" \
     --output table --region "$TUNA_REGION" --profile "$TUNA_PROFILE"
 }
 tuna-ip() {
-  aws ec2 describe-instances --instance-ids "$(tuna-id)" \
+  local id; id="$(tuna-id)" || return 1
+  aws ec2 describe-instances --instance-ids "$id" \
     --query "Reservations[].Instances[].PublicIpAddress" --output text \
     --region "$TUNA_REGION" --profile "$TUNA_PROFILE"
 }
@@ -58,11 +68,11 @@ _tuna_browse() {
 }
 # The UI ports (3001/1881/5051) are open in the security group, so these just
 # open the public URL directly — no SSM tunnel needed, works for any role.
-tuna-grafana() { _tuna_browse "http://$(tuna-ip):3001"; }   # Grafana
-tuna-nodered() { _tuna_browse "http://$(tuna-ip):1881"; }   # Node-RED
-tuna-pgadmin() { _tuna_browse "http://$(tuna-ip):5051"; }   # pgAdmin
+tuna-grafana() { local ip; ip="$(tuna-ip)" || return 1; _tuna_browse "http://$ip:3001"; }   # Grafana
+tuna-nodered() { local ip; ip="$(tuna-ip)" || return 1; _tuna_browse "http://$ip:1881"; }   # Node-RED
+tuna-pgadmin() { local ip; ip="$(tuna-ip)" || return 1; _tuna_browse "http://$ip:5051"; }   # pgAdmin
 
-tuna-ssm() { aws ssm start-session --target "$(tuna-id)" --region "$TUNA_REGION" --profile "$TUNA_PROFILE"; }
+tuna-ssm() { local id; id="$(tuna-id)" || return 1; aws ssm start-session --target "$id" --region "$TUNA_REGION" --profile "$TUNA_PROFILE"; }
 
 # --- Remote one-shot commands: run on the box via SSM and print the output. ---
 # Need an SSM-capable role (op-tuna/ad-tuna) AND the instance running.
