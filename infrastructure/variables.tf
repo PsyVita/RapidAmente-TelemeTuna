@@ -37,9 +37,9 @@ variable "root_volume_size" {
 }
 
 variable "data_volume_size" {
-  description = "Size (GB) of the dedicated Postgres data disk."
+  description = "Size (GB) of the dedicated Postgres data disk. gp3 can grow later (never shrink)."
   type        = number
-  default     = 20
+  default     = 5
 }
 
 variable "repo_url" {
@@ -95,10 +95,4 @@ variable "pgadmin_password" {
   description = "pgAdmin password (set in terraform.tfvars; never committed)"
   type        = string
   sensitive   = true
-}
-
-variable "cli_profile" {
-  description = "Local AWS CLI/SSO profile name used in the SSM helper output. Developer-specific; override in your gitignored terraform.tfvars."
-  type        = string
-  default     = "op-tuna"
 }

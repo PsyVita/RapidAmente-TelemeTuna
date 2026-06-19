@@ -5,7 +5,7 @@ project     = "telemetuna"
 environment = "prod"
 admin_cidr  = "0.0.0.0/0"
 root_volume_size = 10
-data_volume_size = 10   
+data_volume_size = 5   
 
 # App credentials. ALL of these (usernames, db name, email, passwords) are pushed into
 # SSM Parameter Store by Terraform and read back by the EC2 boot script to build
@@ -22,7 +22,3 @@ pgadmin_email      = "admin@admin.com"
 postgres_password      = "REPLACE_with_strong_postgres_password"
 grafana_admin_password = "REPLACE_with_strong_grafana_password"
 pgadmin_password       = "REPLACE_with_strong_pgadmin_password"
-
-# The AWS CLI profile to use for SSM Session Manager (for `terraform output ssm_start_session`).
-
-cli_profile = "op-tuna"

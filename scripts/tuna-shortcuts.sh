@@ -3,7 +3,7 @@
 # Region is fixed; the active profile defaults to op-tuna and is switched by tuna-login-*.
 
 TUNA_REGION="${TUNA_REGION:-ap-southeast-7}"
-TUNA_PROFILE="${TUNA_PROFILE:-op-tuna}"
+TUNA_PROFILE="${TUNA_PROFILE:-ic-tuna}"
 
 # Each login picks a role for THIS shell: signs in AND repoints the tuna-* actions.
 tuna-login-op() { export TUNA_PROFILE=op-tuna; export AWS_PROFILE=op-tuna; aws sso login --profile op-tuna; }

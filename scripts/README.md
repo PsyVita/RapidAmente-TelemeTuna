@@ -25,8 +25,25 @@ Then run the `source ...` line the script prints (e.g. `source ~/.zshrc` on macO
 
 ### Windows
 
-Run it from **Git Bash** (ships with Git for Windows) — the script handles the
-Windows installers for AWS CLI and the SSM plugin automatically:
+**Easiest — one PowerShell command (installs everything, including Git Bash):**
+
+Get the repo first (clone if you have git, or download the ZIP from GitHub and
+extract it), then in **PowerShell**, from the repo root:
+
+```
+powershell -ExecutionPolicy Bypass -File scripts\bootstrap-windows.ps1
+```
+
+That installs Git for Windows (if missing) via winget, then runs the bash installer
+(AWS CLI + SSM plugin + profiles + shortcuts). When it finishes, open **Git Bash** and:
+
+```
+source ~/.bashrc
+tuna-login-op        # or tuna-login-ic / tuna-login-ad
+```
+
+**Manual alternative (if you already have Git Bash):** run the bash installer directly
+from Git Bash:
 
 ```
 git clone https://github.com/PsyVita/RapidAmente-TelemeTuna.git
@@ -36,11 +53,13 @@ source ~/.bashrc
 ```
 
 Notes for Windows:
-- Use **Git Bash**, not PowerShell or CMD (the script is bash). WSL works too and
-  behaves like the Linux instructions above.
-- After AWS CLI installs for the first time you may need to **close and reopen Git
-  Bash** so `aws` is on your PATH, then re-run the script.
-- A Windows installer window may pop up for the AWS CLI / SSM plugin — complete it.
+- The `tuna-*` commands run in **Git Bash**, not PowerShell/CMD (they're bash). The
+  PowerShell bootstrap is only the installer; daily use is in Git Bash. WSL also works
+  and behaves like the Linux instructions above.
+- `winget` is needed for the auto-install (built into Windows 10 1709+ / 11). On older
+  Windows, install Git for Windows manually first, then use the manual alternative.
+- UAC / installer windows may pop up for AWS CLI / the SSM plugin — approve them. If
+  `aws` isn't found right after a first-time install, reopen the shell and re-run.
 
 ---
 
