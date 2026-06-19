@@ -25,25 +25,11 @@ Then run the `source ...` line the script prints (e.g. `source ~/.zshrc` on macO
 
 ### Windows
 
-**Easiest — one PowerShell command (installs everything, including Git Bash):**
+Run it in **Git Bash** (which ships with Git for Windows). If you don't have Git for
+Windows yet, install it once from https://git-scm.com/download/win — or
+`winget install -e --id Git.Git` — which gives you both `git` and Git Bash.
 
-Get the repo first (clone if you have git, or download the ZIP from GitHub and
-extract it), then in **PowerShell**, from the repo root:
-
-```
-powershell -ExecutionPolicy Bypass -File scripts\bootstrap-windows.ps1
-```
-
-That installs Git for Windows (if missing) via winget, then runs the bash installer
-(AWS CLI + SSM plugin + profiles + shortcuts). When it finishes, open **Git Bash** and:
-
-```
-source ~/.bashrc
-tuna-login-op        # or tuna-login-ic / tuna-login-ad
-```
-
-**Manual alternative (if you already have Git Bash):** run the bash installer directly
-from Git Bash:
+Then, in **Git Bash**:
 
 ```
 git clone https://github.com/PsyVita/RapidAmente-TelemeTuna.git
@@ -52,14 +38,11 @@ cd RapidAmente-TelemeTuna
 source ~/.bashrc
 ```
 
-Notes for Windows:
-- The `tuna-*` commands run in **Git Bash**, not PowerShell/CMD (they're bash). The
-  PowerShell bootstrap is only the installer; daily use is in Git Bash. WSL also works
-  and behaves like the Linux instructions above.
-- `winget` is needed for the auto-install (built into Windows 10 1709+ / 11). On older
-  Windows, install Git for Windows manually first, then use the manual alternative.
-- UAC / installer windows may pop up for AWS CLI / the SSM plugin — approve them. If
-  `aws` isn't found right after a first-time install, reopen the shell and re-run.
+The installer auto-installs AWS CLI + the SSM plugin on Windows too. Notes:
+- Use **Git Bash**, not PowerShell or CMD — the `tuna-*` commands are bash. (WSL also
+  works and behaves like the Linux instructions above.)
+- A UAC / installer window may pop up for AWS CLI or the SSM plugin — approve it. If
+  `aws` isn't found right after a first-time install, reopen Git Bash and re-run.
 
 ---
 
