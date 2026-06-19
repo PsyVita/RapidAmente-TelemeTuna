@@ -81,6 +81,13 @@ ensure_aws_cli() {
       # Run msiexec via cmd to ensure the script waits for it to finish
       cmd.exe //c "start /wait msiexec.exe /i AWSCLIV2.msi /qb"
       rm -f AWSCLIV2.msi
+      # The MSI updates the SYSTEM PATH, but this already-running shell won't see it.
+      # Add the install dir to PATH for the rest of this run (no Git Bash restart needed).
+      local d
+      for d in "/c/Program Files/Amazon/AWSCLIV2" "/c/Program Files (x86)/Amazon/AWSCLIV2"; do
+        if [ -d "$d" ]; then PATH="$d:$PATH"; fi
+      done
+      export PATH
       ;;
     *)
       echo "ERROR: unsupported OS. Install AWS CLI manually:" >&2
@@ -129,6 +136,12 @@ ensure_ssm_plugin() {
       echo "Please complete the setup in the window that just popped up..."
       cmd.exe //c "start /wait SessionManagerPluginSetup.exe"
       rm -f SessionManagerPluginSetup.exe
+      # Make the plugin usable in THIS shell without a restart (PATH not yet refreshed).
+      local d
+      for d in "/c/Program Files/Amazon/SessionManagerPlugin/bin" "/c/Program Files (x86)/Amazon/SessionManagerPlugin/bin"; do
+        if [ -d "$d" ]; then PATH="$d:$PATH"; fi
+      done
+      export PATH
       ;;
     *)
       echo "WARN: can't auto-install the Session Manager plugin on this OS — see AWS docs." >&2
