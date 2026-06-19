@@ -54,8 +54,22 @@ if [[ "$SSO_START_URL" == *REPLACE* ]]; then
   exit 1
 fi
 
+# Git Bash / VS Code terminals inherit a snapshot of PATH, so a freshly-installed (or
+# already-installed) tool may not be visible. Adding its known install folder to PATH
+# lets us DETECT it instead of reinstalling. No-op on macOS/Linux (those dirs won't exist).
+AWSCLI_DIRS=("/c/Program Files/Amazon/AWSCLIV2" "/c/Program Files (x86)/Amazon/AWSCLIV2")
+SSM_DIRS=("/c/Program Files/Amazon/SessionManagerPlugin/bin" "/c/Program Files (x86)/Amazon/SessionManagerPlugin/bin")
+_winpath_add() {
+  local d
+  for d in "$@"; do
+    if [ -d "$d" ]; then PATH="$d:$PATH"; fi
+  done
+  export PATH
+}
+
 # ---- Ensure AWS CLI v2 is installed -----------------------------------------
 ensure_aws_cli() {
+  _winpath_add "${AWSCLI_DIRS[@]}"
   if command -v aws >/dev/null 2>&1; then return 0; fi
   echo "AWS CLI not found — installing the latest v2..."
   case "$(uname -s)" in
@@ -81,13 +95,6 @@ ensure_aws_cli() {
       # Run msiexec via cmd to ensure the script waits for it to finish
       cmd.exe //c "start /wait msiexec.exe /i AWSCLIV2.msi /qb"
       rm -f AWSCLIV2.msi
-      # The MSI updates the SYSTEM PATH, but this already-running shell won't see it.
-      # Add the install dir to PATH for the rest of this run (no Git Bash restart needed).
-      local d
-      for d in "/c/Program Files/Amazon/AWSCLIV2" "/c/Program Files (x86)/Amazon/AWSCLIV2"; do
-        if [ -d "$d" ]; then PATH="$d:$PATH"; fi
-      done
-      export PATH
       ;;
     *)
       echo "ERROR: unsupported OS. Install AWS CLI manually:" >&2
@@ -96,9 +103,9 @@ ensure_aws_cli() {
       ;;
   esac
   
-  # Note: On Windows Git Bash, the terminal might need a restart to recognize 'aws' in the PATH immediately after install.
+  _winpath_add "${AWSCLI_DIRS[@]}"
   if ! command -v aws >/dev/null 2>&1; then
-    echo "WARN: AWS CLI installed, but you may need to restart Git Bash for the 'aws' command to be recognized."
+    echo "WARN: AWS CLI installed but not detected — restart Git Bash (or fully quit + reopen VS Code) and re-run."
     return 0
   fi
   echo "AWS CLI ready: $(aws --version)"
@@ -106,6 +113,7 @@ ensure_aws_cli() {
 
 # ---- Ensure the SSM Session Manager plugin (for tuna-ssm/nodered/pgadmin) ----
 ensure_ssm_plugin() {
+  _winpath_add "${SSM_DIRS[@]}"
   if command -v session-manager-plugin >/dev/null 2>&1; then return 0; fi
   echo "Session Manager plugin not found — installing..."
   case "$(uname -s)" in
@@ -136,12 +144,6 @@ ensure_ssm_plugin() {
       echo "Please complete the setup in the window that just popped up..."
       cmd.exe //c "start /wait SessionManagerPluginSetup.exe"
       rm -f SessionManagerPluginSetup.exe
-      # Make the plugin usable in THIS shell without a restart (PATH not yet refreshed).
-      local d
-      for d in "/c/Program Files/Amazon/SessionManagerPlugin/bin" "/c/Program Files (x86)/Amazon/SessionManagerPlugin/bin"; do
-        if [ -d "$d" ]; then PATH="$d:$PATH"; fi
-      done
-      export PATH
       ;;
     *)
       echo "WARN: can't auto-install the Session Manager plugin on this OS — see AWS docs." >&2
@@ -149,6 +151,7 @@ ensure_ssm_plugin() {
       ;;
   esac
   
+  _winpath_add "${SSM_DIRS[@]}"
   if command -v session-manager-plugin >/dev/null 2>&1; then
     echo "Session Manager plugin ready."
   else

@@ -5,6 +5,17 @@
 TUNA_REGION="${TUNA_REGION:-ap-southeast-7}"
 TUNA_PROFILE="${TUNA_PROFILE:-ic-tuna}"
 
+# On Windows (Git Bash), make sure AWS CLI + the SSM plugin are on PATH even when this
+# shell started with a stale PATH (VS Code / Git Bash inherit a PATH snapshot, so a
+# tool installed after the shell opened isn't seen). No-op on macOS/Linux — those
+# folders don't exist there, so nothing is added.
+for _d in "/c/Program Files/Amazon/AWSCLIV2" "/c/Program Files (x86)/Amazon/AWSCLIV2" \
+          "/c/Program Files/Amazon/SessionManagerPlugin/bin" "/c/Program Files (x86)/Amazon/SessionManagerPlugin/bin"; do
+  if [ -d "$_d" ] && [[ ":$PATH:" != *":$_d:"* ]]; then PATH="$_d:$PATH"; fi
+done
+export PATH
+unset _d
+
 # Each login picks a role for THIS shell: signs in AND repoints the tuna-* actions.
 tuna-login-op() { export TUNA_PROFILE=op-tuna; export AWS_PROFILE=op-tuna; aws sso login --profile op-tuna; }
 tuna-login-ic() { export TUNA_PROFILE=ic-tuna; export AWS_PROFILE=ic-tuna; aws sso login --profile ic-tuna; }
