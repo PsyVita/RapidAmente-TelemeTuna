@@ -1,4 +1,4 @@
-# 🐟 TelemeTuna v1.0
+# 🐟 TelemeTuna v1.1
 
 **TelemeTuna** is a self-contained telemetry platform for the **RapidAmente** electric race car. It catches live sensor data streamed from the car, cleans it up, stores it safely in a database, and draws it on live dashboards.
 
@@ -30,6 +30,7 @@ It is built almost entirely out of ready-made building blocks that run inside **
 18. [Project folder layout](#-project-folder-layout)
 19. [Troubleshooting](#-troubleshooting)
 20. [Glossary (plain-English definitions)](#-glossary-plain-english-definitions)
+21. [Changelog](#-changelog)
 
 ---
 
@@ -1004,5 +1005,31 @@ A profile only authorizes roles you're actually assigned in Identity Center. SSM
 - **Bitmask** — one number holding up to 16 yes/no fault switches, one per bit.
 - **Frame** — one complete reading: 15 comma-separated data fields (16 with a leading timestamp).
 - **FD** — "frame dropped": the log level for discarded frames.
+
+---
+
+## 🗒️ Changelog
+
+This project follows [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`): backward-compatible new capability bumps the **minor** version, breaking changes bump the **major**, and fixes bump the **patch**.
+
+### v1.1 — Cloud deployment & operations
+
+- **Cloud deployment via Terraform.** Added the `infrastructure/` infrastructure-as-code that provisions the whole stack on AWS in one `terraform apply`: an EC2 server, a static **Elastic IP**, a dedicated **encrypted EBS data disk** for PostgreSQL, a firewall (**security group**) scoped to your IP, and a self-configuring first-boot script that installs Docker, clones the repo, and starts the stack automatically. Split into `network` / `secrets` / `iam` / `compute` modules.
+- **Secrets via SSM Parameter Store.** Production credentials are stored in AWS SSM (passwords as `SecureString`) and written into the instance `.env` at boot — production no longer depends on `.env.example`.
+- **No-SSH administration.** Shell access is through **SSM Session Manager** (no port 22, fully audited); the instance enforces **IMDSv2** and a least-privilege IAM role that can read only its own secrets.
+- **`tuna-*` operator shortcuts.** Added `scripts/` with one-time setup (AWS CLI + SSM plugin + the `op-/ic-/ad-tuna` SSO profiles), a Windows PowerShell bootstrap, and friendly `tuna-start` / `tuna-stop` / `tuna-status` / `tuna-logs` / `tuna-ssm` commands.
+- **Production compose documented.** Clarified use of the `docker-compose.production.yaml` override (external `postgres_data` volume, bound to the EBS disk on the cloud box).
+- **Docs.** Expanded this README with cloud/Terraform and operations sections, an updated folder layout, and matching FAQ/troubleshooting/glossary entries.
+- **Backward compatible** — the local Docker workflow (Option B) is unchanged from v1.0.
+
+### v1.0 — Initial release
+
+- Self-contained **local telemetry platform** on Docker: PostgreSQL, Node-RED, Grafana, Mosquitto, Flyway, and pgAdmin, started with a single `docker compose up -d`.
+- **Ingestion** via live MQTT (topic `car_telemetry`, QoS 2), CSV replay (raw and processed), and an optional local serial path.
+- **Node-RED pipeline**: arrival timestamping, frame parsing, raw→real conversion, IGBT/motor temperature lookup, healing of continuous values from the last known-good reading, flag/bitmask validation, and structured event logging with a `warn`/`error`/`FD`/`critical` severity model.
+- **Flyway migrations V1–V4**: `telemetry_records`, `event_logs`, the `err`/`warn` bit dictionaries, and the unique-timestamp constraint.
+- **Pre-provisioned Grafana** "EV TelemeTuna Dashboard" with a live dashboard tab and a pipeline-health tab, plus a built-in fake-data generator for testing without hardware.
+
+> Releasing this set of changes? Tag it: `git tag -a v1.1.0 -m "Cloud deployment & operations" && git push --tags`.
 
 ---
