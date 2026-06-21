@@ -221,8 +221,8 @@ echo "         tuna-login-op     Operator (most tasks)"
 echo "         tuna-login-ic     InstanceController (start/stop only)"
 echo "         tuna-login-ad     Admin"
 echo
-echo "    3) Verify you are signed in:"
-echo "         tuna-check"
+echo "    3) Verify your setup and that you are signed in:"
+echo "         tuna-doctor"
 echo "==================================================================="
 echo
 echo "  All commands (preview):"

@@ -59,9 +59,10 @@ tuna-login-ad      # Admin
 Then, for example:
 
 ```
-tuna-check         # confirm you're signed in
+tuna-doctor        # confirm setup/login (prints your role ARN) + diagnose issues
 tuna-start         # boot the server
 tuna-status        # show its state + public IP
+tuna-health        # full status: instance, Docker, disk, UIs
 tuna-grafana       # open the dashboards
 tuna-stop          # pause it when you're done
 tuna-help          # full list of commands

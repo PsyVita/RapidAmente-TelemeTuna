@@ -345,9 +345,10 @@ tuna-login-ad      # Admin
 Then, for example:
 
 ```bash
-tuna-check         # confirm you're signed in (prints your role ARN)
+tuna-doctor        # confirm setup/login (prints your role ARN) + diagnose issues
 tuna-start         # boot the server
 tuna-status        # show its state + public IP
+tuna-health        # full status: instance, Docker, disk, UIs
 tuna-grafana       # open the dashboards in your browser
 tuna-stop          # pause it when you're done
 tuna-help          # full list of commands
@@ -360,13 +361,13 @@ The full command set (`tuna-help` prints these as two tables):
 | Command | What it does |
 |---|---|
 | `tuna-login-op` / `-ic` / `-ad` | Sign in and select the role for this shell |
-| `tuna-whoami` | Show which profile the actions use |
-| `tuna-check` | Check whether you're logged in (role ARN) |
+| `tuna-doctor` | Diagnose setup / login / role (prints your role ARN) |
+| `tuna-health` | Full status: instance, Docker, disk, UIs |
 | `tuna-start` | Start the instance and resume the stack |
 | `tuna-stop` | Stop the instance (pause; data safe, same IP) |
 | `tuna-status` | Show instance ID, state, and public IP |
 | `tuna-ip` | Print just the public IP |
-| `tuna-grafana` / `tuna-nodered` / `tuna-pgadmin` | Open that UI in your browser |
+| `tuna-grafana` / `tuna-nodered` / `tuna-pgadmin` | Show that UI's status + open it in your browser |
 | `tuna-help` | Show the help |
 
 **SSM-capable roles only (`op-tuna` / `ad-tuna`) + instance must be running:**
@@ -377,9 +378,11 @@ The full command set (`tuna-help` prints these as two tables):
 | `tuna-ps` | Container status + health |
 | `tuna-logs [svc]` | Tail logs; one service: `tuna-logs grafana` |
 | `tuna-restart [svc]` | Restart the stack, or just `tuna-restart grafana` |
-| `tuna-disk` | Show disk usage on the box |
+| `tuna-prod-up [svc]` | Start the prod stack (`compose up -d`); confirms, then points to `tuna-ps` |
+| `tuna-prod-down [svc]` | Stop + remove the prod stack (`compose down`; data volumes kept). Asks to confirm |
+| `tuna-storage` | Storage usage: OS/root volume + Postgres data volume (`/mnt/pgdata`) |
 
-Under the hood, the UI shortcuts just open the public URL (the ports are open in the security group, so no tunnel is needed), while `tuna-ps`/`tuna-logs`/`tuna-restart`/`tuna-disk` run remote one-shot commands on the box through **SSM `send-command`** and print the output locally.
+Under the hood, the UI shortcuts just open the public URL (the ports are open in the security group, so no tunnel is needed), while `tuna-ps`/`tuna-logs`/`tuna-restart`/`tuna-storage` run remote one-shot commands on the box through **SSM `send-command`** and print the output locally.
 
 ### Notes
 
