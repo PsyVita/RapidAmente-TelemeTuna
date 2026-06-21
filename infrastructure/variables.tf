@@ -49,6 +49,29 @@ variable "repo_url" {
 }
 
 
+# --- Backups: daily standard-tier EBS snapshots + Recycle Bin ---------------
+# Change any of these and `terraform apply` — it updates the policy in place
+# (NO terraform destroy; the volume and instance are never touched).
+
+variable "snapshot_cron" {
+  description = "When to snapshot the Postgres volume (DLM cron, UTC). Default: 17:00 UTC = 00:00 Asia/Bangkok (daily midnight Thailand time)."
+  type        = string
+  default     = "cron(0 17 ? * * *)"
+}
+
+variable "standard_retain_count" {
+  description = "How many of the most recent standard-tier snapshots to keep before deletion (then Recycle Bin)."
+  type        = number
+  default     = 30
+}
+
+variable "recycle_bin_retention_days" {
+  description = "Days a deleted snapshot stays recoverable in the AWS Recycle Bin."
+  type        = number
+  default     = 7
+}
+
+
 # --- App credentials (non-secret: usernames / db / email) -------------------
 # These become SSM parameters and are written into the instance .env at boot,
 # so the app no longer depends on .env.example in production.

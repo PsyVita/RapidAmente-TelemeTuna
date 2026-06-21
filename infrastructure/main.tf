@@ -44,3 +44,15 @@ module "compute" {
   security_group_id     = module.network.security_group_id
   instance_profile_name = module.iam.instance_profile_name
 }
+
+# Daily standard-tier EBS snapshots of the Postgres data volume + a Recycle Bin
+# recovery window. Targets the volume by its Backup=postgres tag, so it has no
+# dependency on the compute module beyond that volume existing.
+module "backup" {
+  source                     = "./modules/backup"
+  project                    = var.project
+  environment                = var.environment
+  snapshot_cron              = var.snapshot_cron
+  standard_retain_count      = var.standard_retain_count
+  recycle_bin_retention_days = var.recycle_bin_retention_days
+}

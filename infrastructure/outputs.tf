@@ -16,3 +16,8 @@ output "grafana_url" {
   description = "Grafana dashboards (plain HTTP, port 3001)."
   value       = "http://${module.compute.public_ip}:3001"
 }
+
+output "snapshot_policy_id" {
+  description = "DLM snapshot lifecycle policy ID for the Postgres data volume."
+  value       = module.backup.dlm_policy_id
+}
