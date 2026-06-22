@@ -55,4 +55,5 @@ module "backup" {
   snapshot_cron              = var.snapshot_cron
   standard_retain_count      = var.standard_retain_count
   recycle_bin_retention_days = var.recycle_bin_retention_days
+  snapshot_state             = var.snapshot_state
 }

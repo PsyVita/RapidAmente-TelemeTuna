@@ -5,7 +5,7 @@
 
 CREATE TABLE event_logs (
     time     TIMESTAMPTZ NOT NULL,
-    level    TEXT        NOT NULL,    -- 'warn' | 'critical' | 'info' | etc.
+    level    TEXT        NOT NULL,    -- 'warn' | 'error' | 'FD' | 'critical'
     node     TEXT        NOT NULL,    -- which Node-RED node emitted it
     message  TEXT        NOT NULL,    -- human-readable description
     fields   TEXT[]                   -- optional list of involved field names

@@ -4,7 +4,6 @@
 # Never commit secrets to GitHub. The .env.example is safe to commit.
 .env
 *.env
-!services/.env.example
 
 # =========================
 # Application Stack (Node-RED)

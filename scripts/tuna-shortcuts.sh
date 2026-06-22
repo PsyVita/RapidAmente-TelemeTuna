@@ -127,19 +127,40 @@ tuna-id() {
   fi
   printf '%s\n' "$id"
 }
+# Current EC2 state (running / pending / stopping / stopped / ...). One cheap EC2 call.
+_tuna_state() {
+  aws ec2 describe-instances --instance-ids "$1" \
+    --query "Reservations[].Instances[].State.Name" --output text \
+    --region "$TUNA_REGION" --profile "$TUNA_PROFILE" 2>/dev/null
+}
 tuna-start() {
-  local id begin; id="$(tuna-id)" || return 1
+  local id begin state; id="$(tuna-id)" || return 1
   begin="$(_tuna_now)"
   printf '\n   %s🐟  Starting TelemeTuna%s  (%s)\n\n' "$_TUNA_CYAN" "$_TUNA_RESET" "$id"
-  if ! aws ec2 start-instances --instance-ids "$id" \
-        --region "$TUNA_REGION" --profile "$TUNA_PROFILE" >/dev/null 2>&1; then
-    printf '   %s✘%s Could not start the instance — run tuna-doctor to diagnose.\n' "$_TUNA_RED" "$_TUNA_RESET"
-    return 1
-  fi
-  _tuna_wait "EC2 instance running" "running" \
-    aws ec2 describe-instances --instance-ids "$id" \
-      --query "Reservations[].Instances[].State.Name" --output text \
-      --region "$TUNA_REGION" --profile "$TUNA_PROFILE"
+  state="$(_tuna_state "$id")"
+  case "$state" in
+    running)
+      printf '   %s↳ Instance is already running.%s\n' "$_TUNA_BI" "$_TUNA_RESET" ;;
+    pending)
+      printf '   %s↳ Instance is already starting...%s\n' "$_TUNA_BI" "$_TUNA_RESET"
+      _tuna_wait "EC2 instance running" "running" \
+        aws ec2 describe-instances --instance-ids "$id" \
+          --query "Reservations[].Instances[].State.Name" --output text \
+          --region "$TUNA_REGION" --profile "$TUNA_PROFILE" ;;
+    stopping)
+      printf '   %s⚠%s Instance is STOPPING right now — wait for it to fully stop, then run tuna-start again.\n' "$_TUNA_YELLOW" "$_TUNA_RESET"
+      return 1 ;;
+    *)
+      if ! aws ec2 start-instances --instance-ids "$id" \
+            --region "$TUNA_REGION" --profile "$TUNA_PROFILE" >/dev/null 2>&1; then
+        printf '   %s✘%s Could not start the instance — run tuna-doctor to diagnose.\n' "$_TUNA_RED" "$_TUNA_RESET"
+        return 1
+      fi
+      _tuna_wait "EC2 instance running" "running" \
+        aws ec2 describe-instances --instance-ids "$id" \
+          --query "Reservations[].Instances[].State.Name" --output text \
+          --region "$TUNA_REGION" --profile "$TUNA_PROFILE" ;;
+  esac
   # Report whether Docker is up (needs an SSM-capable role). Never auto-starts it.
   if aws ssm describe-instance-information \
         --filters "Key=InstanceIds,Values=$id" \
@@ -167,7 +188,12 @@ tuna-start() {
   printf '\n   %s🌊  Grafana → http://%s:3001%s   %s(total %ds)%s\n\n' "$_TUNA_GREEN" "$ip" "$_TUNA_RESET" "$_TUNA_DIM" "$total" "$_TUNA_RESET"
 }
 tuna-stop() {
-  local id kind; id="$(tuna-id)" || return 1
+  local id kind state; id="$(tuna-id)" || return 1
+  state="$(_tuna_state "$id")"
+  if [ "$state" = "stopped" ] || [ "$state" = "stopping" ]; then
+    printf '\n   %s🐟  TelemeTuna%s  (%s)\n\n   %s↳ Instance is already %s.%s\n\n' "$_TUNA_CYAN" "$_TUNA_RESET" "$id" "$_TUNA_BI" "$state" "$_TUNA_RESET"
+    return 0
+  fi
   _tuna_confirm "Stop instance $id?" || { printf '   Cancelled.\n'; return 1; }
   printf '\n   %s🐟  Stopping TelemeTuna%s  (%s)\n\n' "$_TUNA_CYAN" "$_TUNA_RESET" "$id"
   # Report Docker's state right now (best-effort; needs an SSM-capable role).

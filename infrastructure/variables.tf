@@ -71,6 +71,17 @@ variable "recycle_bin_retention_days" {
   default     = 7
 }
 
+variable "snapshot_state" {
+  description = "Whether automatic snapshots run: ENABLED or DISABLED. Set DISABLED to temporarily pause NEW snapshots (existing snapshots, the policy, and the Recycle Bin are kept); ENABLED to resume."
+  type        = string
+  default     = "ENABLED"
+
+  validation {
+    condition     = contains(["ENABLED", "DISABLED"], var.snapshot_state)
+    error_message = "snapshot_state must be \"ENABLED\" or \"DISABLED\"."
+  }
+}
+
 
 # --- App credentials (non-secret: usernames / db / email) -------------------
 # These become SSM parameters and are written into the instance .env at boot,

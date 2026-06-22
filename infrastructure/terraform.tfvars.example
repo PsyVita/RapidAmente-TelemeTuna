@@ -28,9 +28,13 @@ data_volume_size = 5           # Postgres data disk (GB) — gp3 can grow later,
 #
 # standard_retain_count       — how many recent snapshots to keep (1-1000); older roll off.
 # recycle_bin_retention_days  — how long a DELETED snapshot stays recoverable (1-365).
+# snapshot_state              — ENABLED (normal) or DISABLED to temporarily pause NEW
+#                               snapshots. Pausing keeps existing snapshots, the policy,
+#                               and the Recycle Bin; flip back to ENABLED + apply to resume.
 snapshot_cron              = "cron(0 17 ? * * *)" # daily, 00:00 Asia/Bangkok
 standard_retain_count      = 30                   # keep ~1 month of daily snapshots
 recycle_bin_retention_days = 7                    # recover deleted snapshots for 7 days
+snapshot_state             = "ENABLED"            # set "DISABLED" to temporarily pause snapshots
 
 # --- App credentials: non-secret (usernames / db / email) --------------------
 # Pushed into SSM Parameter Store and written into the instance .env at boot.
