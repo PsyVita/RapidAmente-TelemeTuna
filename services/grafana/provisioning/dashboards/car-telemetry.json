@@ -2658,7 +2658,7 @@
         "description": "",
         "id": 4,
         "links": [],
-        "title": "Voltage and Current",
+        "title": "Voltage and Current Over Time",
         "vizConfig": {
           "group": "timeseries",
           "kind": "VizConfig",
