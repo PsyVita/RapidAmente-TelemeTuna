@@ -45,7 +45,7 @@ variable "data_volume_size" {
 variable "repo_url" {
   description = "Git URL of the application repo to deploy."
   type        = string
-  default     = "https://github.com/PsyVita/RapidAmente-TelemeTuna.git"
+  default     = "https://github.com/PsyVita/Rapidamente-TelemeTuna.git"
 }
 
 

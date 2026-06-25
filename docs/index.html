@@ -618,7 +618,7 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
   <div class="card">
     <h4>📊 Grafana — the one thing you actually open</h4>
     <p>The dashboards live at <code>http://&lt;server-ip&gt;:3001</code>. <b>Anonymous viewing is on</b> — open it and read everything <i>without logging in</i>. A login is only needed to <i>edit</i> dashboards, which is a developer/maintainer task, not a viewer one.</p>
-    <div class="note green"><b>Current Rapidamente server:</b> <code>http://43.209.99.144:3001</code> &nbsp;(ask your admin to confirm — a full rebuild can change it).</div>
+    <div class="note green"><b>Your team’s server:</b> ask whoever runs the platform for the current Grafana address — a full rebuild can change it.</div>
   </div>
   <div class="card">
     <h4>The rest — viewers barely touch these</h4>
@@ -786,8 +786,8 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
   <div class="rule"></div>
   <div class="qs">
     <h4>⚡ The impatient path (a real run)</h4>
-<pre><code>git clone https://github.com/PsyVita/RapidAmente-TelemeTuna.git
-cd RapidAmente-TelemeTuna       # repo root — compose + .env live here
+<pre><code>git clone https://github.com/PsyVita/Rapidamente-TelemeTuna.git
+cd Rapidamente-TelemeTuna       # repo root — compose + .env live here
 cp .env.example .env            # then EDIT the passwords  (tip: code .  opens it in VS Code)
 docker volume create postgres_data   # one-time: the database's safe, external home
 docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</code></pre>
@@ -806,8 +806,8 @@ docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</c
 
   <h3 id="install-steps">4.1 Step by step</h3>
   <h4>1 · Get the project</h4>
-  <pre><code>git clone https://github.com/PsyVita/RapidAmente-TelemeTuna.git
-cd RapidAmente-TelemeTuna</code></pre>
+  <pre><code>git clone https://github.com/PsyVita/Rapidamente-TelemeTuna.git
+cd Rapidamente-TelemeTuna</code></pre>
   <h4>2 · Create &amp; edit the secrets file</h4>
   <pre><code>cp .env.example .env   # both files live at the repo root
 code .                 # (optional) open the project in VS Code to edit .env</code></pre>
@@ -937,7 +937,7 @@ terraform apply     # type "yes" to build it</code></pre>
   <pre><code>terraform output                    # instance_id, public_ip, grafana_url
 terraform output -raw grafana_url   # e.g. http://203.0.113.5:3001</code></pre>
   <div class="note green"><b>Day-to-day you barely touch Terraform.</b> Use it to <i>build</i>, <i>change</i>, or <i>tear down</i> the server; everyday start/stop/health is the <a href="#maintenance"><code>tuna-*</code> commands</a> (§7). ⚠️ <code>terraform destroy</code> <b>releases the Elastic IP</b> (new IP next time) and — unless you've snapshotted — deletes the data disk. For everyday pauses use <code>tuna-stop</code>, never destroy.</div>
-  <div class="note"><b>🔐 Secrets never touch the repo.</b> Passwords set in <code>terraform.tfvars</code> (which stays on your machine) are pushed to <b>SSM Parameter Store</b>; the instance builds its own <code>/opt/RapidAmente-TelemeTuna/.env</code> from SSM at boot. Read it on the box with <code>sudo cat /opt/RapidAmente-TelemeTuna/.env</code>. Production never depends on <code>.env.example</code>.</div>
+  <div class="note"><b>🔐 Secrets never touch the repo.</b> Passwords set in <code>terraform.tfvars</code> (which stays on your machine) are pushed to <b>SSM Parameter Store</b>; the instance builds its own <code>/opt/Rapidamente-TelemeTuna/.env</code> from SSM at boot. Read it on the box with <code>sudo cat /opt/Rapidamente-TelemeTuna/.env</code>. Production never depends on <code>.env.example</code>.</div>
 
   <h3 id="deploy-cloud">6.2 ☁️ Cloud by hand — the manual way <span class="pill" style="color:var(--dim);border-color:var(--line2)">still supported</span></h3>
   <p>Prefer to build the VM yourself — another provider, or AWS without Terraform? Fully viable. Just reproduce, by hand, the <b>same settings Terraform applies</b> so the two stay interchangeable:</p>
@@ -979,8 +979,8 @@ docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</c
   <h3 id="maint-ops">7.1 🐙 Operating the AWS server — the <code>tuna-*</code> commands</h3>
   <p>The <code>scripts/</code> folder turns all the AWS housekeeping into friendly <code>tuna-*</code> commands, so any teammate can sign in and run the server without memorizing AWS CLI incantations. <b>No SSH anywhere</b> — shell access is via AWS <b>SSM Session Manager</b> (nothing to leak, fully audited).</p>
   <h4>One-time setup (macOS · Linux · Windows Git Bash)</h4>
-  <pre><code>git clone https://github.com/PsyVita/RapidAmente-TelemeTuna.git
-cd RapidAmente-TelemeTuna
+  <pre><code>git clone https://github.com/PsyVita/Rapidamente-TelemeTuna.git
+cd Rapidamente-TelemeTuna
 ./scripts/install-tuna-shortcuts.sh     # installs AWS CLI v2 + SSM plugin + SSO profiles
 source ~/.zshrc      # macOS · use ~/.bashrc on Linux / Git Bash</code></pre>
   <p>The same script runs everywhere — on Windows use <b>Git Bash</b> (not PowerShell/CMD); it auto-installs the AWS CLI and SSM plugin and adds them to <code>PATH</code>. It creates the three SSO profiles (<code>op-tuna</code>, <code>ic-tuna</code>, <code>ad-tuna</code>) and is safe to re-run.</p>
@@ -1012,8 +1012,8 @@ tuna-login-ad      # Admin</code></pre>
   </table></div>
   <p>Under the hood the UI shortcuts just open the public URL (the ports are already open in the security group, so no tunnel is needed); <code>tuna-ps</code>/<code>tuna-logs</code>/<code>tuna-restart</code>/<code>tuna-storage</code> run one-shot commands on the box through <b>SSM send-command</b> and print the output locally.</p>
   <h4>Once you're inside <code>tuna-ssm</code> (a real shell on the server)</h4>
-  <p>If you do open a full SSM shell, these are the fundamentals — the project lives at <code>/opt/RapidAmente-TelemeTuna</code> and Docker commands need <code>sudo</code>:</p>
-  <pre><code>cd /opt/RapidAmente-TelemeTuna        # the project lives here
+  <p>If you do open a full SSM shell, these are the fundamentals — the project lives at <code>/opt/Rapidamente-TelemeTuna</code> and Docker commands need <code>sudo</code>:</p>
+  <pre><code>cd /opt/Rapidamente-TelemeTuna        # the project lives here
 sudo docker ps                        # what's running
 sudo docker compose -f docker-compose.yaml -f docker-compose.production.yaml ps
 sudo docker compose -f docker-compose.yaml -f docker-compose.production.yaml logs -f grafana
@@ -1023,7 +1023,7 @@ sudo ./update-telemetuna.sh           # git pull + rebuild (ship new code)
 exit                                  # leave the SSM session</code></pre>
   <p style="font-size:13px;color:var(--faint)">Most of these are also one-liners from your own machine (<code>tuna-ps</code>, <code>tuna-logs</code>, <code>tuna-storage</code>), so you rarely need the full shell — reach for <code>tuna-ssm</code> when you want to poke around directly.</p>
   <div class="note"><b>The raw AWS CLI underneath</b> (if you'd rather type it yourself): start/stop is <code>aws ec2 start-instances</code> / <code>stop-instances --instance-ids &lt;id&gt; --region ap-southeast-7 --profile ic-tuna</code>; a shell is <code>aws ssm start-session --target &lt;id&gt; --profile op-tuna</code>.</div>
-  <div class="note green"><b>Two day-2 jobs worth knowing:</b> <b>Save money, keep the IP</b> — <code>tuna-stop</code> overnight, <code>tuna-start</code> next session (the Elastic IP and all data stay put). <b>Ship new code</b> — SSH-free via the on-box <code>sudo /opt/RapidAmente-TelemeTuna/update-telemetuna.sh</code> (it runs <code>git pull</code> then rebuilds). <code>tuna-restart</code> only restarts running containers — it does <i>not</i> pull new code.</div>
+  <div class="note green"><b>Two day-2 jobs worth knowing:</b> <b>Save money, keep the IP</b> — <code>tuna-stop</code> overnight, <code>tuna-start</code> next session (the Elastic IP and all data stay put). <b>Ship new code</b> — SSH-free via the on-box <code>sudo /opt/Rapidamente-TelemeTuna/update-telemetuna.sh</code> (it runs <code>git pull</code> then rebuilds). <code>tuna-restart</code> only restarts running containers — it does <i>not</i> pull new code.</div>
 
   <h3 id="maint-data">7.2 Protecting the data</h3>
   <ul>
@@ -1466,13 +1466,13 @@ GROUP BY field ORDER BY count DESC;</code></pre>
     <li><b>Install AWS CLI v2</b> (so it can read SSM).</li>
     <li><b>Mount the dedicated Postgres data volume</b> — find the non-root disk, format <code>ext4</code> if blank, add to <code>/etc/fstab</code> (mounted at <code>/mnt/pgdata</code>), and remove <code>lost+found</code> so Postgres can <code>initdb</code> into a clean folder.</li>
     <li><b>Read config + secrets from SSM</b> Parameter Store (decrypting the passwords).</li>
-    <li><b>Clone the repo</b> into <code>/opt/RapidAmente-TelemeTuna</code>.</li>
+    <li><b>Clone the repo</b> into <code>/opt/Rapidamente-TelemeTuna</code>.</li>
     <li><b>Hand the Node-RED folder to uid 1000</b> so the container can write to its <code>/data</code> mount.</li>
     <li><b>Bind the <code>postgres_data</code> Docker volume to the EBS disk</b> (<code>/mnt/pgdata</code>).</li>
     <li><b>Write <code>.env</code> entirely from SSM</b> (<code>umask 077</code>) — production does <i>not</i> depend on <code>.env.example</code>.</li>
     <li><b>Write helper scripts &amp; auto-start the stack</b> — creates <code>start-telemetuna.sh</code> and <code>update-telemetuna.sh</code>, then brings the stack up with both compose files.</li>
   </ol>
-  <div class="note"><b>Self-starting by design.</b> Every service uses <code>restart: unless-stopped</code>, so the stack comes back by itself after a reboot or stop/start without re-running the script. Two helper scripts stay on the box: <code>sudo /opt/RapidAmente-TelemeTuna/start-telemetuna.sh</code> (bring it up) and <code>sudo /opt/RapidAmente-TelemeTuna/update-telemetuna.sh</code> (<code>git pull</code> + rebuild — to ship app updates).</div>
+  <div class="note"><b>Self-starting by design.</b> Every service uses <code>restart: unless-stopped</code>, so the stack comes back by itself after a reboot or stop/start without re-running the script. Two helper scripts stay on the box: <code>sudo /opt/Rapidamente-TelemeTuna/start-telemetuna.sh</code> (bring it up) and <code>sudo /opt/Rapidamente-TelemeTuna/update-telemetuna.sh</code> (<code>git pull</code> + rebuild — to ship app updates).</div>
   </div>
 
   <div class="subtopic" id="infra-security">
@@ -1718,7 +1718,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   <div class="cards">
     <div class="card" style="border-color:var(--tuna)">
       <h4>📦 Repository</h4>
-      <div class="big">All code, flows, dashboards, and migrations:<br><a href="https://github.com/PsyVita/RapidAmente-TelemeTuna"><b>github.com/PsyVita/RapidAmente-TelemeTuna</b></a></div>
+      <div class="big">All code, flows, dashboards, and migrations:<br><a href="https://github.com/PsyVita/Rapidamente-TelemeTuna"><b>github.com/PsyVita/Rapidamente-TelemeTuna</b></a></div>
     </div>
     <div class="card" style="border-color:var(--accent)">
       <h4>💬 Contact</h4>
@@ -2038,7 +2038,7 @@ document.querySelectorAll('.gf').forEach(gf=>{
   r_setup_port:{title:"“Port already in use”",status:"bad",who:["you"],
     body:"Something on the machine owns 5433 / 1881 / 1884 / 3001 / 5051 — stop it, or remap the left side of the port mapping in <code>docker-compose.yaml</code>."},
   r_setup_login:{title:"Can't log in to Grafana / pgAdmin",status:"bad",who:["you"],
-    body:"Use the values from <code>.env</code> (on the cloud box: <code>sudo cat /opt/RapidAmente-TelemeTuna/.env</code>). Changed them after first start? They're baked in — change them in-app, or <code>down -v</code> (dev only!) and restart. Note: viewers watch Grafana anonymously, so they never need a login."},
+    body:"Use the values from <code>.env</code> (on the cloud box: <code>sudo cat /opt/Rapidamente-TelemeTuna/.env</code>). Changed them after first start? They're baked in — change them in-app, or <code>down -v</code> (dev only!) and restart. Note: viewers watch Grafana anonymously, so they never need a login."},
   r_setup_flyway:{title:"Flyway shows “exited”",status:"ok",who:["you"],
     body:"That's success, not a failure — Flyway builds the schema once and quits. Confirm with <code>docker compose logs flyway</code>."},
   r_cloud_auth:{title:"A tuna command says I'm not authorized",status:"bad",who:["you"],

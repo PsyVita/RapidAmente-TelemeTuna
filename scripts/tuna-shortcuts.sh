@@ -297,7 +297,7 @@ _tuna_run() {  # _tuna_run "<shell command>" -> prints stdout; on failure shows 
 }
 # The compose invocation used on the box (kept in one place). prod-up/down keep
 # compose's progress on stderr (shown only if it fails); logs/restart fold it in.
-_TUNA_COMPOSE="cd /opt/RapidAmente-TelemeTuna && docker compose -f docker-compose.yaml -f docker-compose.production.yaml"
+_TUNA_COMPOSE="cd /opt/Rapidamente-TelemeTuna && docker compose -f docker-compose.yaml -f docker-compose.production.yaml"
 
 tuna-ps() {
   local out rc

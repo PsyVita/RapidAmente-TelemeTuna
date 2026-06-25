@@ -14,8 +14,8 @@ Friendly `tuna-*` commands to sign in and run the TelemeTuna server, for any tea
 ### macOS / Linux
 
 ```
-git clone https://github.com/PsyVita/RapidAmente-TelemeTuna.git
-cd RapidAmente-TelemeTuna
+git clone https://github.com/PsyVita/Rapidamente-TelemeTuna.git
+cd Rapidamente-TelemeTuna
 chmod +x scripts/install-tuna-shortcuts.sh
 ./scripts/install-tuna-shortcuts.sh
 ```
@@ -32,8 +32,8 @@ Windows yet, install it once from https://git-scm.com/download/win — or
 Then, in **Git Bash**:
 
 ```
-git clone https://github.com/PsyVita/RapidAmente-TelemeTuna.git
-cd RapidAmente-TelemeTuna
+git clone https://github.com/PsyVita/Rapidamente-TelemeTuna.git
+cd Rapidamente-TelemeTuna
 ./scripts/install-tuna-shortcuts.sh
 source ~/.bashrc
 ```

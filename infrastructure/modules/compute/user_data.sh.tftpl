@@ -54,16 +54,16 @@ PGA_PASS=$(aws ssm get-parameter --name "/${project}/${environment}/pgadmin_pass
 
 echo "==> [5/9] Cloning the application repo"
 cd /opt
-if [ ! -d RapidAmente-TelemeTuna ]; then
-  git clone ${repo_url} RapidAmente-TelemeTuna
+if [ ! -d Rapidamente-TelemeTuna ]; then
+  git clone ${repo_url} Rapidamente-TelemeTuna
 fi
-cd RapidAmente-TelemeTuna
+cd Rapidamente-TelemeTuna
 
 # Node-RED bind-mounts ./services/nodered into the container as /data and runs as
 # uid 1000 (the node-red user). The repo is cloned as root, so without this the
 # container cannot write to /data ("EACCES: permission denied, mkdir /data/node_modules")
 # and crash-loops. Hand the directory to uid 1000 so Node-RED can write its working files.
-chown -R 1000:1000 /opt/RapidAmente-TelemeTuna/services/nodered
+chown -R 1000:1000 /opt/Rapidamente-TelemeTuna/services/nodered
 
 echo "==> [6/9] Binding the postgres_data volume to the EBS disk"
 docker volume inspect postgres_data >/dev/null 2>&1 || \
@@ -85,31 +85,31 @@ EOF
 
 echo "==> [8/9] Writing helper scripts"
 # Start the stack (first launch).
-cat > /opt/RapidAmente-TelemeTuna/start-telemetuna.sh <<'EOS'
+cat > /opt/Rapidamente-TelemeTuna/start-telemetuna.sh <<'EOS'
 #!/bin/bash
 set -euo pipefail
-cd /opt/RapidAmente-TelemeTuna
+cd /opt/Rapidamente-TelemeTuna
 docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d
 EOS
-chmod +x /opt/RapidAmente-TelemeTuna/start-telemetuna.sh
+chmod +x /opt/Rapidamente-TelemeTuna/start-telemetuna.sh
 
 # Pull latest code and restart (use this to ship app updates).
-cat > /opt/RapidAmente-TelemeTuna/update-telemetuna.sh <<'EOS'
+cat > /opt/Rapidamente-TelemeTuna/update-telemetuna.sh <<'EOS'
 #!/bin/bash
 set -euo pipefail
-cd /opt/RapidAmente-TelemeTuna
+cd /opt/Rapidamente-TelemeTuna
 git pull
 docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d --build
 EOS
-chmod +x /opt/RapidAmente-TelemeTuna/update-telemetuna.sh
+chmod +x /opt/Rapidamente-TelemeTuna/update-telemetuna.sh
 
 echo "==> [9/9] Starting the stack automatically (docker compose up -d)"
 # Auto-start: the volume is bound, secrets are written, and the known first-boot
 # permission issues (lost+found, node-red /data ownership) are already handled above,
 # so the stack can come up unattended. Containers use 'restart: unless-stopped', so
 # they also survive instance reboot/stop-start without re-running this script.
-/opt/RapidAmente-TelemeTuna/start-telemetuna.sh
+/opt/Rapidamente-TelemeTuna/start-telemetuna.sh
 
 echo "==> Setup complete. Stack is starting in the background."
 echo "    Check status: sudo docker ps"
-echo "    Ship updates: sudo /opt/RapidAmente-TelemeTuna/update-telemetuna.sh"
+echo "    Ship updates: sudo /opt/Rapidamente-TelemeTuna/update-telemetuna.sh"

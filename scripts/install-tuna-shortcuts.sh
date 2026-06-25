@@ -11,7 +11,7 @@
 #  HOW TO USE  — copy/paste, run ONCE per machine:
 #  1. Step 1: Paste this script into a terminal and run it (don't paste the #):
 #
-#    cd ~/githubProjects/RapidAmente-TelemeTuna
+#    cd ~/githubProjects/Rapidamente-TelemeTuna
 #    chmod +x scripts/install-tuna-shortcuts.sh
 #    ./scripts/install-tuna-shortcuts.sh
 #
