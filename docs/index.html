@@ -391,7 +391,9 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
       <div class="nv collapsed">
         <div class="navrow"><span class="caret">▾</span><a class="item" href="#install">4. Installation</a></div>
         <div class="kids">
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#install-steps">4.1 Step by step</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#install-steps">4.1 Get the project</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#install-env">4.2 Configure .env</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#install-cloud">4.3 Cloud extras</a></div>
         </div>
       </div>
       <div class="nv collapsed">
@@ -408,8 +410,6 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
         <div class="kids">
           <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-ops">6.1 Operating · tuna</a></div>
           <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-data">6.2 Protecting data</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-sec">6.3 Security</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-health">6.4 System health</a></div>
         </div>
       </div>
     </div>
@@ -646,7 +646,7 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
     <div class="gf-anno">
       <span class="gf-tog" data-tip="Annotation: marks on the charts the moment a fault bit (err) was set. Red.">Car Errors <span class="gf-sw"></span></span>
       <span class="gf-tog" data-tip="Annotation: marks the moment a warning bit (warn) was set. Yellow.">Car Warnings <span class="gf-sw"></span></span>
-      <span class="gf-tog" data-tip="Annotation: marks the moment a value was healed, with the field names. Purple.">Healed Frames <span class="gf-sw"></span></span>
+      <span class="gf-tog" data-tip="Annotation: marks the moment a value was healed, with the field names. Green.">Healed Frames <span class="gf-sw"></span></span>
       <span class="gf-tog" data-tip="Annotation: marks the moment a whole frame was dropped (FD). Grey.">Frame Drops <span class="gf-sw"></span></span>
       <span class="gf-tog" data-tip="Annotation: marks the moment a software bug was caught (critical). Blue.">Program Criticals <span class="gf-sw"></span></span>
       
@@ -706,6 +706,17 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
   <h3 id="read-health">3.2 Tab 2 · TelemeTuna Pipeline Health — the system</h3>
   <p>The system itself: the <b>Connection</b> fish (is data arriving right now?), the <b>Event Logs</b> feed, <b>counters</b> (healed · warnings · errors · criticals · frame drops · nulls), and <b>Healed Fields</b> (which values were repaired, and when). The fish's three states are explained in <a href="#colorcodes">3.3</a>.</p>
   <div class="note"><b>THE one rule:</b> every panel <i>except Connection</i> follows the <b>time picker</b> (top-right, default <i>Last 15 minutes</i>). "Live" tiles show the newest reading <i>inside that window</i>; counters count <i>within the window</i>. More on that in <a href="#read-time">3.5</a>.</div>
+
+  <h4>The four health levels — what the Event Log is telling you</h4>
+  <p>Every line in the Event Logs (and every counter) is tagged with one of four levels. They describe how the <b>pipeline</b> handled a reading — <b>not</b> a fault the car reported. (The car's own faults are the <code>err</code>/<code>warn</code> bitmasks shown as <b>Active Errors &amp; Warnings</b> on the <a href="#read-live">Car Live tab</a>; those come <i>from the car</i>, these come <i>from TelemeTuna</i>.)</p>
+  <div class="tablewrap"><table>
+    <tr><th>Level</th><th>When it fires</th><th>What happens to the value</th></tr>
+    <tr><td><span class="pill warn">warn</span></td><td>A value arrived out of range but is <b>healable</b> (a continuous reading — rpm, temps, volts…)</td><td>Replaced with the last known-good value (<b>healed</b>); the frame is still stored. A glitch we fixed.</td></tr>
+    <tr><td><span class="pill err">error</span></td><td>A value is wrong and <b>can't be safely guessed</b> — a status light or a fault bitmask</td><td>Stored as <b>null</b> (blank), never healed — copying an old "no fault" could hide a real one. A value we had to blank out.</td></tr>
+    <tr><td><span class="pill fd">FD</span></td><td>The <b>whole frame</b> is unusable — wrong field count, text where a number belongs, or a broken timestamp</td><td>The entire frame is <b>dropped</b> — nothing from it is stored. A whole reading thrown away.</td></tr>
+    <tr><td><span class="pill crit">critical</span></td><td>A <b>software/program bug</b> was caught by the safety net (not bad data — actual code)</td><td>That frame is skipped, the pipeline keeps running, and the failing station's name is logged. Worth reporting to a developer.</td></tr>
+  </table></div>
+  <div class="note orange"><b>Health levels ≠ car faults.</b> A wall of <span class="pill warn">warn</span>/<span class="pill err">error</span>/<span class="pill fd">FD</span> means the <i>radio or a sensor</i> is feeding messy data — it does <b>not</b> mean the car flagged a fault. An actual car fault shows up as a red/yellow row in <b>Active Errors &amp; Warnings</b> and as a <b>Car Errors/Warnings</b> annotation. A <span class="pill crit">critical</span> is the odd one out: it's a bug in the code, not the car or the data.</div>
   <div class="subtopic" id="colorcodes">
   <h3>3.3 Panel colours — normal vs danger</h3>
   <p class="lead">Every colour below is pulled straight from the dashboard's real configuration — so a newcomer can glance and know. The trap: <b>a lit light isn't automatically good.</b> For some, <code>1</code> (on) means good; for others it means trouble. Read the <i>meaning</i>, not just the colour.</p>
@@ -755,7 +766,7 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
     <tr><th>Toggle</th><th>Marks the moment…</th><th>Colour</th></tr>
     <tr><td><b>Car Errors</b></td><td>a fault bit was set (<code>err</code>)</td><td><span class="lt r">red</span></td></tr>
     <tr><td><b>Car Warnings</b></td><td>a warning bit was set (<code>warn</code>)</td><td><span class="lt y">yellow</span></td></tr>
-    <tr><td><b>Healed Frames</b></td><td>a value was repaired (with the field names)</td><td><span class="lt" style="color:var(--heal);border-color:var(--heal);background:rgba(199,146,234,.12)">purple</span></td></tr>
+    <tr><td><b>Healed Frames</b></td><td>a value was repaired (with the field names)</td><td><span class="lt g">green</span></td></tr>
     <tr><td><b>Frame Drops</b></td><td>a whole frame was discarded (<span class="pill fd">FD</span>)</td><td><span class="lt x">grey</span></td></tr>
     <tr><td><b>Program Criticals</b></td><td>a software bug was caught</td><td><span class="lt b">blue</span></td></tr>
   </table></div>
@@ -776,68 +787,55 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
   <span class="zonechip zc-o">🐙 FOR MAINTAINERS</span>
   <h2>4. Installation</h2>
   <div class="rule"></div>
-  <p class="lead">The <b>core install</b> — the same steps on any machine, whether a pit laptop or a cloud VM. It just gets the six-service stack running; <b>where</b> to run it (local · cloud · hybrid) and the networking for each is <a href="#deployment">§5 Deployment</a>. The Terraform path (<a href="#deploy-terraform">§5.1</a>) automates everything below for you.</p>
-  <div class="qs">
-    <h4>⚡ The impatient path (a real run)</h4>
-<pre><code>git clone https://github.com/PsyVita/Rapidamente-TelemeTuna.git
-cd Rapidamente-TelemeTuna       # repo root — compose + .env live here
-cp .env.example .env            # then EDIT the passwords  (tip: code .  opens it in VS Code)
-docker volume create postgres_data   # one-time: the database's safe, external home
-docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</code></pre>
-    <p style="font-size:13.5px;color:var(--dim);margin:0">Then open Grafana <code>:3001</code> (anonymous viewing) · Node-RED <code>:1881</code> · pgAdmin <code>:5051</code>. Just kicking the tyres with no real data yet? Bring up the <b>dev stack</b> instead (box below) and exercise it with the developer <a href="#generator">test generator</a> — never inject fake data into a production database.</p>
-  </div>
+  <p class="lead">Installation is just <b>getting the code and configuring it</b> — no running yet. The same prep works on any machine; <b>how</b> to actually run it (and the per-method differences) is <a href="#deployment">§5 Deployment</a>. Everyone does the base track (4.1–4.2); the Terraform cloud path adds two setup steps (4.3).</p>
 
-  <div class="note"><b>Two ways to bring the stack up — always know which you're running:</b>
-    <div class="tablewrap"><table>
-      <tr><th>Mode</th><th>Command</th><th>Use it for</th></tr>
-      <tr><td><b>Dev</b> (plain)</td><td><code>docker compose up -d</code></td><td>Testing &amp; experiments. Throwaway managed volume — safe to <code>down -v</code> and wipe.</td></tr>
-      <tr><td><b>Production</b> (override)</td><td><code>docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</code></td><td><b>The real thing.</b> Database lives on an <b>external</b> volume that <code>down -v</code> can't delete.</td></tr>
-    </table></div>
-    The only difference is the database volume: production marks <code>postgres_data</code> as <code>external</code> so real telemetry can't be wiped by accident. <b>Create that volume once first</b> — <code>docker volume create postgres_data</code> — and yes, that's needed for local production runs too, not just the cloud.</div>
-
-  <div class="note green"><b>Test first, then run for real.</b> Before you trust a setup, bring up the <b>dev</b> stack, fire a test MQTT publish (<a href="#feed-mqtt">§7.2.1</a>) or run the <a href="#generator">test generator</a>, and confirm data flows end-to-end (Grafana fills, the Connection fish turns blue). Switch to the <b>production</b> stack only when you're running it for actual work. If something still won't work and you suspect the code or the flow, hand it to a <a href="#services">developer</a> — that's their territory.</div>
-
-  <h3 id="install-steps">4.1 Step by step</h3>
-  <h4>1 · Get the project</h4>
+  <h3 id="install-steps">4.1 Get the project</h3>
+  <p>You need <b>Git</b>, plus — for a local or by-hand run — <b>Docker</b> (Docker Desktop, or Docker Engine + the Compose plugin). The Terraform cloud path instead needs <b>Terraform</b> and the admin script in <a href="#install-cloud">4.3</a>.</p>
   <pre><code>git clone https://github.com/PsyVita/Rapidamente-TelemeTuna.git
 cd Rapidamente-TelemeTuna</code></pre>
-  <h4>2 · Create &amp; edit the secrets file</h4>
-  <pre><code>cp .env.example .env   # both files live at the repo root
-code .                 # (optional) open the project in VS Code to edit .env</code></pre>
-  <p>Set <code>POSTGRES_USER/PASSWORD/DB</code> (Node-RED and Grafana pick these up automatically) · <code>GRAFANA_ADMIN_USER/PASSWORD</code> (only needed to <i>edit</i> dashboards — viewers watch anonymously) · <code>PGADMIN_EMAIL/PASSWORD</code> (the email only has to <i>look</i> like one). The file never goes to GitHub.</p>
-  <h4>3 · Create the database's external home <span class="pill ok">once</span></h4>
-  <pre><code>docker volume create postgres_data</code></pre>
-  <p>This is the safe, external volume the production stack stores telemetry in, so <code>docker compose down -v</code> can never erase it. Needed for <b>local production runs too</b>. (On the Terraform cloud box the boot script does this for you and binds it to a dedicated EBS disk.)</p>
-  <h4>4 · Start everything (production)</h4>
-  <pre><code>docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</code></pre>
-  <p>First run downloads/builds for minutes. Automatically: PostgreSQL → Flyway builds the tables and exits → Node-RED, Grafana, Mosquitto, pgAdmin stay up. <i>(Just testing? Use the dev stack — plain <code>docker compose up -d</code> — instead.)</i></p>
-  <h4>5 · Verify</h4>
+
+  <h3 id="install-env">4.2 Configure your secrets — <code>.env</code></h3>
+  <p>Copy the template and set your own values. The file holds passwords, so it's gitignored — it never goes to GitHub.</p>
+  <pre><code>cp .env.example .env
+code .                 # (optional) open in VS Code to edit .env</code></pre>
   <div class="tablewrap"><table>
-    <tr><th>Service</th><th>URL</th><th>Login</th></tr>
-    <tr><td>Node-RED</td><td><code>http://host:1881</code></td><td>none</td></tr>
-    <tr><td>Grafana</td><td><code>http://host:3001</code></td><td>none to view (anonymous) · .env to edit</td></tr>
-    <tr><td>pgAdmin</td><td><code>http://host:5051</code></td><td>from .env</td></tr>
+    <tr><th>Variable</th><th>What it's for</th></tr>
+    <tr><td><code>POSTGRES_USER / PASSWORD / DB</code></td><td>The database. Node-RED, Grafana and pgAdmin all read these automatically.</td></tr>
+    <tr><td><code>GRAFANA_ADMIN_USER / PASSWORD</code></td><td>Only needed to <i>edit</i> dashboards — viewers watch anonymously.</td></tr>
+    <tr><td><code>PGADMIN_EMAIL / PASSWORD</code></td><td>The pgAdmin login. The email only has to <i>look</i> like an email.</td></tr>
   </table></div>
-  <div class="note"><b>pgAdmin one-time setup:</b> <i>Servers → Register → Server</i> → Connection: Host <code>postgresdb</code>, Port <code>5432</code> (the inside-Docker address, not localhost:5433), plus your POSTGRES_* values. Tick <b>Save password</b>.</div>
-  <h4>Daily commands</h4>
-  <pre><code>docker compose ps          # what's running
-docker compose logs -f     # live logs
-docker compose logs flyway # confirm the DB got built
-docker compose down        # stop (keeps all data)</code></pre>
-  <p style="font-size:13px;color:var(--faint)">When managing the <b>production</b> stack, add <code>-f docker-compose.yaml -f docker-compose.production.yaml</code> to <code>ps</code>/<code>logs</code>/<code>down</code>. <code>docker compose down -v</code> wipes volumes — harmless on dev, but it <i>can't</i> touch the external <code>postgres_data</code> in production.</p>
-  <h4>Common installation hiccups</h4>
-  <div class="fix"><b>Flyway shows "exited":</b> success, not failure — it builds the schema once and quits. Verify with <code>docker compose logs flyway</code>. Details: <a href="#svc-flyway">Flyway</a>.</div>
-  <div class="fix"><b>"external volume postgres_data not found":</b> you started the production stack before creating the volume — run <code>docker volume create postgres_data</code> first (step 3).</div>
-  <div class="fix"><b>Port already in use:</b> something on the machine owns 5433/1881/1884/3001/5051 — stop it, or remap the left side of the port mapping in <code>docker-compose.yaml</code>.</div>
-  <div class="fix"><b>Can't log in to pgAdmin (or edit Grafana):</b> use the <code>.env</code> values. Changed them <i>after</i> first start? They're baked in — change in-app, or <code>down -v</code> (dev only!) and restart.</div>
-  <p style="margin-top:18px">✅ <b>Installed and verified?</b> Next, pick how to run it → <a href="#deployment">§5 Deployment</a> (local · cloud · hybrid), each listing the data-input options it supports.</p>
+  <div class="note"><b>On the Terraform cloud path you skip <code>.env</code> entirely.</b> The box builds its own from SSM at boot — set those same passwords in <code>terraform.tfvars</code> instead (4.3).</div>
+
+  <h3 id="install-cloud">4.3 Cloud extras — Terraform path only <span class="pill" style="color:var(--dim);border-color:var(--line2)">skip for local</span></h3>
+  <p>Two setup steps before you can deploy to AWS in <a href="#deploy-terraform">§5.1</a>.</p>
+  <h4>① Configure <code>terraform.tfvars</code> <span class="pill ok">optional</span></h4>
+  <p>Every variable has a working default, so a bare <code>terraform apply</code> already builds a server. Override only what you want — most teams set just the three passwords (and maybe <code>admin_cidr</code>).</p>
+  <pre><code>cd infrastructure
+cp terraform.tfvars.example terraform.tfvars
+code .                 # edit terraform.tfvars</code></pre>
+  <div class="card"><h4><code>postgres_password</code> · <code>grafana_admin_password</code> · <code>pgadmin_password</code> <span class="pill err">set these</span></h4><div class="big">The three logins (database · Grafana editing · pgAdmin). Use strong, unique values — they're stored <b>encrypted</b> in AWS SSM Parameter Store and written into the box's <code>.env</code> at boot, never committed. Realistically the only values you <i>must</i> change.</div></div>
+  <div class="card"><h4><code>admin_cidr</code> — who can reach the open ports</h4><div class="big">An IP range (CIDR form) allowed through the firewall to Grafana / Node-RED / pgAdmin / MQTT.
+    <ul style="margin:8px 0 0">
+      <li><b>Lock it to you:</b> run <code>curl ifconfig.me</code>, then set e.g. <code>203.0.113.5/32</code> — only your IP gets in.</li>
+      <li><b>Open to anywhere:</b> <code>0.0.0.0/0</code> lets anyone with the address connect — simplest for a roaming team or a pit on changing Wi-Fi. Fine for a prototype; just know the dashboards and broker are then publicly reachable (pair with MQTT auth/TLS if that worries you). The example file already ships <code>0.0.0.0/0</code>.</li>
+    </ul></div></div>
+  <div class="card"><h4><code>aws_region</code></h4><div class="big">Which AWS region to build in. Default <code>ap-southeast-7</code> (Asia Pacific · Bangkok) — change to whatever's nearest your team.</div></div>
+  <div class="card"><h4><code>instance_type</code> · <code>root_volume_size</code> · <code>data_volume_size</code></h4><div class="big">Server size and disks. Defaults <code>t3.small</code> / <code>20</code> GB / <code>5</code> GB are plenty — a 2-hour session is only a few MB. (gp3 disks can grow later, never shrink.)</div></div>
+  <div class="card"><h4>Everything else <span class="pill ok">leave default</span></h4><div class="big"><code>project</code> / <code>environment</code> (naming + the SSM path), <code>repo_url</code>, and the non-secret <code>postgres_user</code> / <code>postgres_db</code> / <code>grafana_admin_user</code> / <code>pgadmin_email</code> all have sensible defaults — only touch them if you're renaming or forking.</div></div>
+  <h4>② Run the admin script (once)</h4>
+  <p>This installs the AWS CLI v2, the SSM plugin, the three SSO profiles, and the friendly <code>tuna-*</code> commands — so you never hand-install AWS tooling. Safe to re-run. On <b>Windows</b> run it in <b>Git Bash</b> (not PowerShell/CMD).</p>
+  <pre><code>./scripts/install-tuna-shortcuts.sh
+source ~/.zshrc        # macOS · use ~/.bashrc on Linux / Git Bash</code></pre>
+  <p style="font-size:13px;color:var(--faint)">Full <code>tuna-*</code> command reference: <a href="#maintenance">§6.1</a>.</p>
+
+  <p style="margin-top:18px">✅ <b>Configured?</b> Next, run it → <a href="#deployment">§5 Deployment</a> (local · cloud · hybrid).</p>
 </section>
 
 <!-- ================= MAINTAINER: DEPLOYMENT ================= -->
 <section id="deployment" class="z-op">
   <h2>5. Deployment</h2>
   <div class="rule"></div>
-  <p class="lead">Four ways to run it. The team default is <b>Terraform on AWS</b> — but the by-hand cloud build, a single local PC, and a hybrid are all fully supported.</p>
+  <p class="lead">Four ways to run what you set up in <a href="#install">§4</a>. The team default is <b>Terraform on AWS</b> — but the by-hand cloud build, a single local PC, and a hybrid are all fully supported.</p>
 
   <div class="note"><b>Which data inputs work where?</b> Live MQTT works on every deployment; CSV replay happens in Node-RED on the host; a direct USB serial link needs physical access to the machine, so it's local-only. <i>How</i> to actually feed each one lives with the developers: <a href="#inputflows">§7.2.1 Input flows &amp; data input</a>.</div>
   <div class="tablewrap"><table>
@@ -848,84 +846,83 @@ docker compose down        # stop (keeps all data)</code></pre>
     <tr><td><b>5.4 Hybrid</b></td><td class="c-ok">✓ via cloud broker</td><td class="c-ok">✓</td><td class="c-ok">✓</td></tr>
   </table></div>
 
+  <div class="note orange"><b>Two compose modes — production vs normal.</b> The stack ships with two Compose setups, and which one you use depends on where you run it:
+    <div class="tablewrap"><table>
+      <tr><th>Mode</th><th>Command</th><th>Used for</th></tr>
+      <tr><td><b>Production</b></td><td><code>docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</code></td><td><b>The cloud</b> (Terraform &amp; by-hand). Database sits on an <b>external</b> volume bound to a dedicated disk, so <code>down -v</code> can never wipe real telemetry.</td></tr>
+      <tr><td><b>Normal / dev</b></td><td><code>docker compose up -d</code></td><td><b>Locally</b>, for development &amp; testing. A throwaway managed volume that's safe to <code>down -v</code> and reset.</td></tr>
+    </table></div>
+    The <i>only</i> difference is that database volume — services, ports, and flows are identical. On the Terraform box the boot script runs production for you; by hand you run it yourself; locally you just use the normal one.</div>
+
   <h3 id="deploy-terraform">5.1 ☁️ Cloud with Terraform — one command <span class="pill ok">team default</span></h3>
-  <p>The whole AWS server is described as code in the repo's <code>infrastructure/</code> folder. One <code>terraform apply</code> builds everything — server, static IP, encrypted database disk, firewall, secrets — and the box configures itself and starts the stack on first boot. No console clicking, no hand-copied passwords. <i>(Curious how the code works? That's the developer deep-dive in <a href="#infra">§8 Infrastructure as code</a>.)</i></p>
+  <p>One <code>terraform apply</code> builds the whole AWS server from the repo's <code>infrastructure/</code> folder, and the box configures itself and starts the production stack on first boot — no console clicking, no hand-copied passwords. <i>(First do the cloud setup — <a href="#install-cloud">§4.3</a>: <code>terraform.tfvars</code> + the admin script. Curious how the code works? <a href="#infra">§8 Infrastructure as code</a>.)</i></p>
   <h4>What one <code>apply</code> builds</h4>
   <div class="tablewrap"><table>
     <tr><th>Resource</th><th>What it is</th></tr>
     <tr><td>EC2 instance</td><td>Ubuntu 22.04 server (default <code>t3.small</code>) running the Docker stack</td></tr>
     <tr><td>Elastic IP</td><td>A static, unchanging public address that survives stop/start — the address the ESP32 &amp; team point at</td></tr>
     <tr><td>Encrypted EBS data disk</td><td>A separate <code>gp3</code> disk for PostgreSQL only, so snapshots target just the data</td></tr>
-    <tr><td>Security group</td><td>The firewall — opens only the platform's ports (1881/1884/3001/5051/5433), only to your IP</td></tr>
+    <tr><td>Security group</td><td>The firewall — opens only the platform's ports (1881/1884/3001/5051/5433), only to <code>admin_cidr</code></td></tr>
     <tr><td>IAM role + SSM secrets</td><td>The box reads its own passwords from SSM Parameter Store at boot — nothing lives in the repo</td></tr>
   </table></div>
-  <h4>Prerequisites</h4>
-  <p>You really only need to install <b>one</b> thing yourself: Terraform. Everything else — the AWS CLI v2, the SSM plugin, and the SSO profiles — is installed for you by the <code>scripts/install-tuna-shortcuts.sh</code> script (see <a href="#maintenance">§6.1</a>).</p>
-  <ul>
-    <li><b>Terraform ≥ 1.5</b> — <code>brew install terraform</code> (macOS), or developer.hashicorp.com/terraform/install.</li>
-    <li><b>Windows only:</b> <b>Git Bash</b> (from Git for Windows) — the <code>tuna-*</code> script runs there. macOS/Linux already have a suitable shell.</li>
-    <li>Then run <code>./scripts/install-tuna-shortcuts.sh</code> once and sign in with <code>tuna-login-op</code> (= <code>aws sso login --profile op-tuna</code>) — no hand-installing the AWS CLI or SSM plugin.</li>
-    <li>Your own public IP for <code>admin_cidr</code> — find it with <code>curl ifconfig.me</code>.</li>
-  </ul>
   <h4>Deploy</h4>
   <pre><code>cd infrastructure
-cp terraform.tfvars.example terraform.tfvars   # then EDIT it  (tip: code .  opens it in VS Code)
 terraform init      # download the AWS provider (pinned in .terraform.lock.hcl)
 terraform plan      # preview exactly what will be created
 terraform apply     # type "yes" to build it</code></pre>
-  <p>Edit <code>terraform.tfvars</code> before applying. The values that matter most:</p>
-  <div class="tablewrap"><table>
-    <tr><th>Variable</th><th>Set it to</th></tr>
-    <tr><td><code>admin_cidr</code></td><td><b>Your</b> public IP as CIDR, e.g. <code>203.0.113.5/32</code> — restricts every open port to you. <i>(The example ships <code>0.0.0.0/0</code> — tighten it.)</i></td></tr>
-    <tr><td><code>aws_region</code></td><td><code>ap-southeast-7</code> (Asia Pacific · Bangkok) by default</td></tr>
-    <tr><td><code>postgres_password</code> · <code>grafana_admin_password</code> · <code>pgadmin_password</code></td><td>Strong, unique values — stored encrypted in SSM, never committed</td></tr>
-    <tr><td><code>instance_type</code> · <code>root_volume_size</code> · <code>data_volume_size</code></td><td>Defaults <code>t3.small</code> / 20 GB / 5 GB are plenty (a 2-hour session ≈ a few MB)</td></tr>
-  </table></div>
-  <p>When it finishes, Terraform prints the outputs. Give the box a couple of minutes to install Docker and start the containers, then open Grafana:</p>
+  <p>Give the box a couple of minutes to install Docker and start the containers, then grab the URL:</p>
   <pre><code>terraform output                    # instance_id, public_ip, grafana_url
-terraform output -raw grafana_url   # e.g. http://203.0.113.5:3001</code></pre>
+terraform output -raw grafana_url   # e.g. http://&lt;your-ip&gt;:3001</code></pre>
   <div class="note green"><b>Day-to-day you barely touch Terraform.</b> Use it to <i>build</i>, <i>change</i>, or <i>tear down</i> the server; everyday start/stop/health is the <a href="#maintenance"><code>tuna-*</code> commands</a> (§6). ⚠️ <code>terraform destroy</code> <b>releases the Elastic IP</b> (new IP next time) and — unless you've snapshotted — deletes the data disk. For everyday pauses use <code>tuna-stop</code>, never destroy.</div>
-  <div class="note"><b>🔐 Secrets never touch the repo.</b> Passwords set in <code>terraform.tfvars</code> (which stays on your machine) are pushed to <b>SSM Parameter Store</b>; the instance builds its own <code>/opt/Rapidamente-TelemeTuna/.env</code> from SSM at boot. Read it on the box with <code>sudo cat /opt/Rapidamente-TelemeTuna/.env</code>. Production never depends on <code>.env.example</code>.</div>
+  <div class="note"><b>🔐 Secrets never touch the repo.</b> Passwords from <code>terraform.tfvars</code> are pushed to <b>SSM Parameter Store</b>; the instance builds its own <code>/opt/Rapidamente-TelemeTuna/.env</code> from SSM at boot (read it with <code>sudo cat /opt/Rapidamente-TelemeTuna/.env</code>). Production never depends on <code>.env.example</code>.</div>
 
   <h3 id="deploy-cloud">5.2 ☁️ Cloud by hand — the manual way <span class="pill" style="color:var(--dim);border-color:var(--line2)">still supported</span></h3>
-  <p>Prefer to build the VM yourself — another provider, or AWS without Terraform? Fully viable. Just reproduce, by hand, the <b>same settings Terraform applies</b> so the two stay interchangeable:</p>
+  <p>Prefer to build the VM yourself — another provider, or AWS without Terraform? Fully viable. Reproduce, by hand, the <b>same settings Terraform applies</b> so the two stay interchangeable:</p>
   <ol>
-    <li>Create a small VM — <b>Ubuntu 22.04</b>, ~<code>t3.small</code> (1–2 GB RAM) is plenty — with an <b>encrypted</b> root disk. Install Docker Engine + the Compose plugin → clone → the normal <a href="#install">installation</a>.</li>
-    <li><b>Give PostgreSQL its own disk</b> (as Terraform does). Attach a second <b>encrypted</b> volume, mount it at <code>/mnt/pgdata</code>, bind the database volume to it, and bring the stack up with the production override so the data can't be wiped:
+    <li>Create a small VM — <b>Ubuntu 22.04</b>, ~<code>t3.small</code> (1–2 GB RAM) — with an <b>encrypted</b> root disk. Install Docker Engine + the Compose plugin, then do the <a href="#install">§4 setup</a> (clone + <code>.env</code>).</li>
+    <li><b>Change every password in <code>.env</code> before starting.</b> Bots scan new public IPs within hours.</li>
+    <li><b>Give PostgreSQL its own disk</b> (as Terraform does): attach a second <b>encrypted</b> volume, mount it at <code>/mnt/pgdata</code>, bind the database volume to it, and bring up the <b>production</b> stack so data can't be wiped:
     <pre><code>docker volume create --driver local --opt type=none \
   --opt o=bind --opt device=/mnt/pgdata postgres_data
-docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</code></pre>
-    The override marks <code>postgres_data</code> as <code>external</code>, so even <code>docker compose down -v</code> refuses to delete it.</li>
-    <li><b>Assign an Elastic IP</b> (a static, unchanging public address) so the address the ESP32 and team use doesn't change on reboot.</li>
-    <li><b>Change every default password in <code>.env</code> before <code>up -d</code>.</b> Bots scan new public IPs within hours.</li>
-    <li>Open <i>only</i> these ports, scoped to your IP — this mirrors the Terraform security group exactly:
+docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</code></pre></li>
+    <li><b>Assign an Elastic / static IP</b> so the address the ESP32 and team use doesn't change on reboot.</li>
+    <li><b>Open only these ports</b>, scoped to your IP — done in the cloud firewall's (security group's) <b>inbound rules</b>. This mirrors the Terraform security group exactly:
       <div class="tablewrap"><table>
+        <colgroup><col style="width:62px"><col><col></colgroup>
         <tr><th>Port</th><th>Service</th><th>Restrict to</th></tr>
-        <tr><td><code>1884</code></td><td>MQTT — ESP32 publishes here (host 1884 → 1883 in-container)</td><td>your IP, or the pit's if static</td></tr>
-        <tr><td><code>3001</code></td><td>Grafana for the team</td><td>team IPs</td></tr>
-        <tr><td><code>1881</code></td><td>Node-RED editor</td><td>team IPs — it has no login!</td></tr>
-        <tr><td><code>5051</code></td><td>pgAdmin</td><td>team IPs</td></tr>
-        <tr><td><code>5433</code></td><td>PostgreSQL</td><td><b>keep closed</b> — nothing outside Docker needs it</td></tr>
-        <tr><td><code>22</code></td><td>SSH</td><td>Terraform opens <b>no</b> port 22 (it uses SSM). By hand, restrict it tightly or skip it.</td></tr>
+        <tr><td style="white-space:nowrap"><code>22</code></td><td>SSH</td><td>Terraform opens <b>no</b> port 22 (it uses SSM). By hand, restrict it tightly to your IP — or skip it.</td></tr>
+        <tr><td style="white-space:nowrap"><code>1884</code></td><td>MQTT — the ESP32 publishes here (host 1884 → 1883 in-container)</td><td>your IP, or the pit's if static</td></tr>
+        <tr><td style="white-space:nowrap"><code>3001</code></td><td>Grafana for the team</td><td>team IPs</td></tr>
+        <tr><td style="white-space:nowrap"><code>1881</code></td><td>Node-RED editor</td><td>team IPs — it has no login!</td></tr>
+        <tr><td style="white-space:nowrap"><code>5051</code></td><td>pgAdmin</td><td>team IPs</td></tr>
+        <tr><td style="white-space:nowrap"><code>5433</code></td><td>PostgreSQL</td><td><b>keep closed</b> — nothing outside Docker needs it</td></tr>
       </table></div></li>
-    <li>ESP32: any internet Wi-Fi (a phone hotspot works) + broker address = the public IP, port <b>1884</b>.</li>
-    <li>Enable the provider's automatic <b>disk snapshots</b> of the database volume — one-checkbox backup.</li>
+    <li>Point the ESP32 at the public IP, port <b>1884</b> (any internet Wi-Fi — a phone hotspot works), and enable the provider's automatic <b>disk snapshots</b> of the database volume.</li>
   </ol>
-  <div class="note"><b>Matching Terraform's hardening by hand (optional, recommended):</b> require <b>IMDSv2</b> on the instance, give it a <b>least-privilege role</b> instead of long-lived access keys, and prefer <b>SSM Session Manager</b> over an open port 22. Terraform does all three automatically in <a href="#deploy-terraform">5.1</a> — see <a href="#infra-security">§8 security model</a>.</div>
+  <div class="note"><b>Matching Terraform's hardening by hand (recommended):</b> require <b>IMDSv2</b>, give the box a <b>least-privilege role</b> instead of long-lived keys, and prefer <b>SSM Session Manager</b> over an open port 22. Terraform does all three automatically in <a href="#deploy-terraform">5.1</a> — see <a href="#infra-security">§8 security model</a>.</div>
 
   <h3 id="deploy-local">5.3 💻 Local — one PC</h3>
-  <p>Run the whole platform on one machine (a pit laptop). Best for development, testing, and tracks with zero connectivity.</p>
+  <p>Run the whole platform on one machine (a pit laptop) with the <b>normal</b> compose — no external volume, nothing cloud. Best for development, testing, and zero-connectivity tracks.</p>
   <ol>
-    <li><b>Install it</b> with the core <a href="#install">§4 Installation</a> steps — clone, set <code>.env</code>, create the <code>postgres_data</code> volume, <code>docker compose … up -d</code>. Nothing cloud-specific.</li>
-    <li><b>Open it</b> at <code>localhost</code> — Grafana <code>:3001</code>, Node-RED <code>:1881</code>, pgAdmin <code>:5051</code>.</li>
+    <li><b>Set up</b> with <a href="#install">§4</a> — clone and edit <code>.env</code>.</li>
+    <li><b>Start the normal (dev) stack:</b>
+    <pre><code>docker compose up -d</code></pre></li>
+    <li><b>Open it</b> at <code>localhost</code> — Grafana <code>:3001</code> (anonymous viewing), Node-RED <code>:1881</code>, pgAdmin <code>:5051</code>.</li>
     <li><b>Let teammates watch:</b> they swap <code>localhost</code> for the host's <b>LAN IP</b> (same Wi-Fi / subnet). The host firewall must allow <code>3001/1881/5051</code> — and <code>1884</code> if another machine publishes MQTT.</li>
   </ol>
+  <p style="margin-bottom:6px"><b>Everyday commands:</b></p>
+  <pre><code>docker compose ps          # what's running
+docker compose logs -f     # live logs (add 'flyway' to confirm the DB got built)
+docker compose down        # stop (keeps your data)</code></pre>
+  <div class="note"><b>pgAdmin first-run:</b> <i>Servers → Register → Server</i> → Connection: Host <code>postgresdb</code>, Port <code>5432</code> (the inside-Docker address, not <code>localhost:5433</code>), plus your <code>POSTGRES_*</code> values. Tick <b>Save password</b>.</div>
   <p><b>Inputs:</b> live MQTT (point the ESP32 at the host's LAN IP, port <code>1884</code>), CSV replay, and — uniquely to local — a <b>direct USB serial</b> link to the receiver. How to feed each: <a href="#inputflows">§7.2.1</a>.</p>
+
   <h3 id="deploy-hybrid">5.4 🔀 Hybrid — local stack, cloud broker</h3>
-  <p>The dashboards and database run locally, but the MQTT broker lives in the cloud — useful when the car needs a reachable broker yet the pit machine sits behind a strict network.</p>
+  <p>Dashboards and database run locally (normal compose), but the MQTT broker lives in the cloud — for when the car needs a reachable broker yet the pit machine sits behind a strict network.</p>
   <ol>
-    <li><b>Install the stack locally</b> with the core <a href="#install">§4 Installation</a> steps.</li>
-    <li><b>Point at the cloud broker:</b> set <i>both</i> the ESP32 and Node-RED's MQTT node to the cloud Mosquitto's address (port <code>1884</code>) instead of the local one.</li>
+    <li><b>Run the local stack</b> exactly as <a href="#deploy-local">5.3</a>:
+    <pre><code>docker compose up -d</code></pre></li>
+    <li><b>Point at the cloud broker:</b> in Node-RED's <code>mqtt in</code> node set the server to the cloud Mosquitto's address (port <code>1884</code>) and <b>Deploy</b>; point the ESP32 at the same address.</li>
   </ol>
   <p><b>Inputs:</b> live MQTT via the cloud broker, CSV replay, and USB serial all work. How to feed each: <a href="#inputflows">§7.2.1</a>.</p>
 </section>
@@ -991,15 +988,6 @@ exit                                  # leave the SSM session</code></pre>
     <li><b>Re-imports are always safe</b> — the unique-timestamp rule means replays can't double-count.</li>
   </ul>
 
-  <h3 id="maint-sec">6.3 Security, honestly</h3>
-  <ul>
-    <li><b>The car link is plaintext.</b> LoRa frames and MQTT (host port 1884, <code>allow_anonymous true</code>) are unauthenticated — a deliberate prototype trade-off. On a public IP, anyone allowed through the firewall to the broker could publish fake frames. Hardening path: Mosquitto username/password + TLS (port 8883), supported by both ESP32 and Node-RED.</li>
-    <li><b>The server itself is locked down</b> (Terraform): <b>no SSH / no port 22</b> — shell is SSM only; <b>IMDSv2 required</b>; a <b>least-privilege IAM role</b> that can read only its own seven SSM parameters; both EBS volumes <b>encrypted at rest</b>; and the firewall scoped to <code>admin_cidr</code>. Open <code>1884</code> wider only if the ESP32 publishes from a changing IP — and prefer adding MQTT auth/TLS if you do.</li>
-    <li><b>Node-RED's editor has no login</b> — treat port 1881 as admin-only in the firewall. Keep <code>5433</code> closed; nothing outside Docker needs the database.</li>
-  </ul>
-
-  <h3 id="maint-health">6.4 Watching system health</h3>
-  <p>The Pipeline Health tab is the operations dashboard: the three-state Connection fish, frame-drop and critical counters, the event log. From a teammate's machine, <code>tuna-health</code> rolls instance + Docker + disk + UI status into one readout. A growing <span class="pill warn">warn</span> count with the same healed field repeatedly = a sensor/wiring on its way out. Any <span class="pill crit">critical</span> = a software bug worth reporting — the station name is in the log entry.</p>
 </section>
 
 <!-- ================= DEV: SERVICES ================= -->
@@ -1008,6 +996,7 @@ exit                                  # leave the SSM session</code></pre>
   <h2>7. Services</h2>
   <div class="rule"></div>
   <p class="lead">Six services, one Docker network. Data enters through Mosquitto, gets processed by Node-RED, lands in PostgreSQL (whose schema Flyway builds), and comes out through Grafana and pgAdmin. Each has its own section:</p>
+  <div class="note orange"><b>Golden rule: develop locally, never on the cloud box.</b> Do all your editing on your own machine with the plain dev stack — <code>docker compose up -d</code> — then <b>commit and push</b>, and ship to the server with a <b>pull + rebuild</b> (<code>sudo /opt/Rapidamente-TelemeTuna/update-telemetuna.sh</code>, or <code>git pull</code> on the box). Editing flows, dashboards, or code <i>directly</i> on the cloud instance skips version control and is wiped on the next rebuild/re-provision. The dashboard/flow round-trip is spelled out in <a href="#perm-edit">§12.4</a>.</div>
   <div class="cards">
     <a class="card" href="#svc-mosquitto" style="border-color:var(--tuna)"><h4>Mosquitto</h4><div class="big">Message broker — the MQTT post office, and the QoS 2 detail.</div></a>
     <a class="card" href="#svc-nodered" style="border-color:var(--ok)"><h4>Node-RED</h4><div class="big">The pipeline — 10 stations, input flows, timestamping, healing, the test generator.</div></a>
@@ -1040,7 +1029,7 @@ exit                                  # leave the SSM session</code></pre>
   <div class="note"><b>Does the buffer distort timestamps?</b> In theory a replayed backlog would all get stamped at reconnect. In practice broker and Node-RED share <b>the same Docker network on the same machine</b>, so this leg basically never backlogs outside a deliberate Deploy. The buffer is free insurance. Deploy mid-session and you may see a small same-stamped cluster — the unique-time rule keeps one per millisecond and skips the rest.</div>
   <div class="fix"><b>If Mosquitto goes down:</b> ESP32 publishes go nowhere (lost); Node-RED's MQTT node auto-reconnects. Honest gap on the charts.</div>
   <div class="fix"><b>Why the Connection fish counts dropped frames as "connected":</b> it answers "is the link alive?", not "is the data good?" — a malformed frame that arrives still proves the radio + broker path works.</div>
-  <div class="fix"><b>Security:</b> anyone who can reach the published port <b>1884</b> can publish. Hardening = broker auth + TLS on 8883 (see <a href="#maintenance">Operations &amp; security</a>).</div>
+  <div class="fix"><b>Security:</b> anyone who can reach the published port <b>1884</b> can publish. Hardening = broker auth + TLS on 8883.</div>
   </div>
 
   <!-- ---------- NODE-RED ---------- -->
@@ -1176,6 +1165,9 @@ exit                                  # leave the SSM session</code></pre>
   <pre><code>mosquitto_pub -h &lt;server-ip&gt; -p 1884 -t car_telemetry \
   -m "15000,-8000,19660,12000,D,21357,11644,0,0,0,0,0,1,0,1"</code></pre>
   <div class="note"><b>1884 or 1883?</b> External publishers (the ESP32, <code>mosquitto_pub</code>) connect to the <b>host</b> port <code>1884</code>. Inside Docker the broker listens on <code>1883</code>, so Node-RED's own MQTT node uses <code>mosquitto:1883</code> — Compose maps <code>1884:1883</code> between them. More in <a href="#svc-mosquitto">7.1 Mosquitto</a>.</div>
+  <p style="font-size:12px;color:var(--faint);margin:10px 0 4px">⚠ MQTT troubleshooting</p>
+  <div class="fix"><b>No data appearing at all:</b> Connection fish first (Pipeline Health tab) → run the <a href="#generator">test generator</a> to isolate pipeline vs source → check <code>event_logs</code> for <span class="pill fd">FD</span> entries.</div>
+  <div class="fix"><b>Fish says Disconnected but the car is sending:</b> ESP32 broker address (cloud/host IP, <b>port 1884</b>)? Topic exactly <code>car_telemetry</code>? Port 1884 open in the firewall / security group?</div>
 
   <p id="feed-csv" style="margin-bottom:6px"><b>② CSV import — replays.</b> Two ideas: <b>drop the file in</b>, then <b>point Node-RED at it</b>. Both CSV types need a timestamp as the first column (16 columns total):</p>
   <ul>
@@ -1190,6 +1182,10 @@ exit                                  # leave the SSM session</code></pre>
     <li><b>View it:</b> in Grafana set the time picker to an absolute range covering the file's dates — the whole dashboard replays that session.</li>
   </ol>
   <div class="note orange"><b>CSV import writes into the real database — keep it to one trusted person.</b> It touches Node-RED and the server's files; not a routine action, and never a viewer one.</div>
+  <p style="font-size:12px;color:var(--faint);margin:10px 0 4px">⚠ CSV troubleshooting</p>
+  <div class="note" style="border-left-color:var(--warnc);background:rgba(255,209,102,.08)"><b>Replay looks frozen? That's normal — not a failure.</b> The live <b>gauges and status tiles are real-time instruments</b>, so on a CSV replay they sit at "–" / grey because nothing is arriving <i>right now</i>. Your imported readings show up on the <b>time-series charts at the timestamps the file carries</b> — set the time picker to an absolute range covering those dates and the whole dashboard (gauges included) replays that moment. Every panel except the Connection fish follows the time picker (<a href="#read-time">§3.5</a>).</div>
+  <div class="fix"><b>CSV rows all dropped:</b> the timestamp column is missing — 16 columns required.</div>
+  <div class="fix"><b>CSV import added no rows:</b> those timestamps already exist — duplicate protection (<a href="#svc-postgres">why</a>). Re-importing the same file is always safe.</div>
 
   <p id="serial" style="margin-bottom:6px"><b>③ Serial connection — local USB, no MQTT.</b> For when the LoRa receiver is plugged in by USB. Docker containers can't reach USB ports, so Node-RED must run <b>natively</b> (local deployment only). The serial nodes in the committed flow are disabled placeholders; the active local flow is provided separately.</p>
   <ol>
@@ -1200,14 +1196,17 @@ npm install node-red-node-serialport node-red-contrib-postgresql</code></pre></l
     <li><b>Stop the Docker Node-RED</b> so two brains never write at once: <code>docker compose stop node-red</code>.</li>
     <li><b>Start local Node-RED</b> → <code>http://localhost:1880</code> (note <b>1880</b>, not 1881). Import the provided local flow.</li>
     <li><b>Reconfigure PostgreSQL</b> — the step everyone misses: Host <code>localhost</code>, Port <code>5433</code> (you're outside Docker now), and switch each credential field from "env" type to plain <b>string</b> with the values from <code>.env</code>.</li>
-    <li><b>Configure the serial node:</b> device — macOS <code>/dev/cu.usbserial-0001</code>, Windows <code>COM5</code>, Linux <code>/dev/ttyUSB0</code> — baud <b>38400</b>, then <b>Deploy</b>. The node turns green; frames flow through the same pipeline into the Dockerized database.</li>
+    <li><b>Find your serial port.</b> Plug the receiver in by USB, then run the line for your OS in a terminal — the new entry that appears is your device:
+    <pre><code># macOS
+ls /dev/cu.*
+# Linux
+ls /dev/ttyUSB* /dev/ttyACM*
+# Windows (PowerShell)
+[System.IO.Ports.SerialPort]::GetPortNames()</code></pre>
+    Typical names: macOS <code>/dev/cu.usbserial-0001</code>, Linux <code>/dev/ttyUSB0</code>, Windows <code>COM5</code>. (Windows GUI alternative: <b>Device Manager → Ports (COM &amp; LPT)</b>.)</li>
+    <li><b>Configure the serial node:</b> set that device, baud <b>38400</b>, then <b>Deploy</b>. The node turns green; frames flow through the same pipeline into the Dockerized database.</li>
   </ol>
-
-  <h4>Data-input hiccups</h4>
-  <div class="fix"><b>No data appearing at all:</b> Connection fish first (Pipeline Health tab) → run the <a href="#generator">test generator</a> to isolate pipeline vs source → check <code>event_logs</code> for <span class="pill fd">FD</span> entries.</div>
-  <div class="fix"><b>Fish says Disconnected but the car is sending:</b> ESP32 broker address (cloud/host IP, <b>port 1884</b>)? Topic exactly <code>car_telemetry</code>? Port 1884 open in the firewall / security group?</div>
-  <div class="fix"><b>CSV rows all dropped:</b> the timestamp column is missing — 16 columns required.</div>
-  <div class="fix"><b>CSV import added no rows:</b> those timestamps already exist — duplicate protection (<a href="#svc-postgres">why</a>). Re-importing the same file is always safe.</div>
+  <p style="font-size:12px;color:var(--faint);margin:10px 0 4px">⚠ Serial troubleshooting</p>
   <div class="fix"><b>Serial port won't open / local Node-RED writes nothing:</b> check the exact device name &amp; baud 38400; and the DB config must be <code>localhost:5433</code> with string-typed credentials (env-typed fields resolve to empty outside Docker).</div>
   </div>
 
@@ -1236,7 +1235,7 @@ npm install node-red-node-serialport node-red-contrib-postgresql</code></pre></l
     <tr><td><b>Discrete signals</b> — status lights, fault bitmasks</td><td><span class="pill err">null + error</span>, never guessed</td><td>A fault can genuinely appear between frames; copying an old "no fault" could mask a real one.</td></tr>
     <tr><td><b>Broken structure</b> — wrong counts, text for numbers</td><td><span class="pill fd">whole frame dropped</span></td><td>If the structure can't be trusted, nothing inside it can.</td></tr>
   </table></div>
-  <div class="note purple"><b>Can healing hide problems?</b> No — three disclosures per repair: the row's own <code>healed_fields</code> column, a warn log entry naming the fields, and the purple chart annotation. A streak of the same healed field is itself a diagnosis: failing sensor or loose wiring.</div>
+  <div class="note purple"><b>Can healing hide problems?</b> No — three disclosures per repair: the row's own <code>healed_fields</code> column, a warn log entry naming the fields, and the green chart annotation. A streak of the same healed field is itself a diagnosis: failing sensor or loose wiring.</div>
   </div>
 
   <!-- ---------- GENERATOR ---------- -->
@@ -1332,7 +1331,7 @@ older than 5 minutes    → Disconnected &lt;×)))&gt;&lt;     (long dead, faded
   <ul>
     <li><b>Two tabs</b> (TabsLayout): Car Live Dashboard · TelemeTuna Pipeline Health.</li>
     <li><b>Counters</b> = <code>count(*)</code> per log level within the window, plus <b>Total Null Count</b> — a <code>num_nulls()</code> sum over flag/bitmask columns.</li>
-    <li><b>Annotations</b> (off by default): Car Errors (red), Car Warnings (yellow), Healed Frames (purple, with field names), Frame Drops (grey), Program Criticals (blue).</li>
+    <li><b>Annotations</b> (off by default): Car Errors (red), Car Warnings (yellow), Healed Frames (green, with field names), Frame Drops (grey), Program Criticals (blue).</li>
   </ul>
 
   <div class="subtopic" id="bitmasks">
