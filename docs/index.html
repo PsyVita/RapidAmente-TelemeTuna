@@ -395,29 +395,21 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
         </div>
       </div>
       <div class="nv collapsed">
-        <div class="navrow"><span class="caret">▾</span><a class="item" href="#feeding">5. Data input</a></div>
+        <div class="navrow"><span class="caret">▾</span><a class="item" href="#deployment">5. Deployment</a></div>
         <div class="kids">
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#feed-mqtt">5.1 MQTT · live</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#feed-csv">5.2 CSV import</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#serial">5.3 Serial connection</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#deploy-terraform">5.1 Cloud · Terraform</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#deploy-cloud">5.2 Cloud · by hand</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#deploy-local">5.3 Local</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#deploy-hybrid">5.4 Hybrid</a></div>
         </div>
       </div>
       <div class="nv collapsed">
-        <div class="navrow"><span class="caret">▾</span><a class="item" href="#deployment">6. Deployment</a></div>
+        <div class="navrow"><span class="caret">▾</span><a class="item" href="#maintenance">6. Operations &amp; security</a></div>
         <div class="kids">
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#deploy-terraform">6.1 Cloud · Terraform</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#deploy-cloud">6.2 Cloud · by hand</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#deploy-local">6.3 Local</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#deploy-hybrid">6.4 Hybrid</a></div>
-        </div>
-      </div>
-      <div class="nv collapsed">
-        <div class="navrow"><span class="caret">▾</span><a class="item" href="#maintenance">7. Operations &amp; security</a></div>
-        <div class="kids">
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-ops">7.1 Operating · tuna</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-data">7.2 Protecting data</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-sec">7.3 Security</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-health">7.4 System health</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-ops">6.1 Operating · tuna</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-data">6.2 Protecting data</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-sec">6.3 Security</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#maint-health">6.4 System health</a></div>
         </div>
       </div>
     </div>
@@ -428,36 +420,36 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
     <div class="catrow"><div class="grp gt">🐋 For developers · how it works</div></div>
     <div class="kids">
       <div class="nv collapsed">
-        <div class="navrow"><span class="caret">▾</span><a class="item" href="#services">8. Services</a></div>
+        <div class="navrow"><span class="caret">▾</span><a class="item" href="#services">7. Services</a></div>
         <div class="kids">
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#svc-mosquitto">8.1 Mosquitto · broker</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#svc-mosquitto">7.1 Mosquitto · broker</a></div>
           <div class="nv collapsed">
-            <div class="navrow"><span class="caret">▾</span><a class="item sub" href="#svc-nodered">8.2 Node-RED · pipeline</a></div>
+            <div class="navrow"><span class="caret">▾</span><a class="item sub" href="#svc-nodered">7.2 Node-RED · pipeline</a></div>
             <div class="kids">
-              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#inputflows">8.2.1 Input flows</a></div>
-              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#timestamps">8.2.2 Timestamping</a></div>
-              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#healing">8.2.3 Healing logic</a></div>
-              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#generator">8.2.4 Test generator</a></div>
+              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#inputflows">7.2.1 Input flows &amp; data input</a></div>
+              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#timestamps">7.2.2 Timestamping</a></div>
+              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#healing">7.2.3 Healing logic</a></div>
+              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#generator">7.2.4 Test generator</a></div>
             </div>
           </div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#svc-flyway">8.3 Flyway · migrations</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#svc-postgres">8.4 PostgreSQL · database</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#svc-flyway">7.3 Flyway · migrations</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#svc-postgres">7.4 PostgreSQL · database</a></div>
           <div class="nv collapsed">
-            <div class="navrow"><span class="caret">▾</span><a class="item sub" href="#svc-grafana">8.5 Grafana · visualization</a></div>
+            <div class="navrow"><span class="caret">▾</span><a class="item sub" href="#svc-grafana">7.5 Grafana · visualization</a></div>
             <div class="kids">
-              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#bitmasks">8.5.1 Fault decoding</a></div>
+              <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub2" href="#bitmasks">7.5.1 Fault decoding</a></div>
             </div>
           </div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#svc-pgadmin">8.6 pgAdmin · inspection</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#svc-pgadmin">7.6 pgAdmin · inspection</a></div>
         </div>
       </div>
       <div class="nv collapsed">
-        <div class="navrow"><span class="caret">▾</span><a class="item" href="#infra">9. Infrastructure (Terraform)</a></div>
+        <div class="navrow"><span class="caret">▾</span><a class="item" href="#infra">8. Infrastructure (Terraform)</a></div>
         <div class="kids">
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#infra-modules">9.1 The four modules</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#infra-boot">9.2 First-boot script</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#infra-security">9.3 Security model</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#infra-vars">9.4 Variables &amp; lifecycle</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#infra-modules">8.1 The four modules</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#infra-boot">8.2 First-boot script</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#infra-security">8.3 Security model</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#infra-vars">8.4 Variables &amp; lifecycle</a></div>
         </div>
       </div>
     </div>
@@ -467,20 +459,20 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
   <div class="cat" data-cat="ref">
     <div class="catrow"><div class="grp">Reference</div></div>
     <div class="kids">
-      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#troubleshooter">10. Guided troubleshooter</a></div>
+      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#troubleshooter">9. Guided troubleshooter</a></div>
       <div class="nv collapsed">
-        <div class="navrow"><span class="caret">▾</span><a class="item" href="#playground">11. 🧪 Playground</a></div>
+        <div class="navrow"><span class="caret">▾</span><a class="item" href="#playground">10. 🧪 Playground</a></div>
         <div class="kids">
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#pg-convert">11.1 Conversion · motion</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#pg-temp">11.2 Conversion · temps</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#pg-frame">11.3 Frame tester</a></div>
-          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#pg-bits">11.4 Bitmask builder</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#pg-convert">10.1 Conversion · motion</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#pg-temp">10.2 Conversion · temps</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#pg-frame">10.3 Frame tester</a></div>
+          <div class="navrow leaf"><span class="caret ghost">•</span><a class="item sub" href="#pg-bits">10.4 Bitmask builder</a></div>
         </div>
       </div>
-      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#glossary">12. Glossary</a></div>
-      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#permissions">13. Permissions &amp; access</a></div>
-      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#changelog">14. Changelog</a></div>
-      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#contact">15. Repository and contact</a></div>
+      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#glossary">11. Glossary</a></div>
+      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#permissions">12. Permissions &amp; access</a></div>
+      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#changelog">13. Changelog</a></div>
+      <div class="navrow leaf"><span class="caret ghost">•</span><a class="item" href="#contact">14. Repository and contact</a></div>
     </div>
   </div>
 </nav>
@@ -624,7 +616,7 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
     <h4>The rest — viewers barely touch these</h4>
     <div class="tablewrap"><table>
       <tr><th>What</th><th>Address</th><th>Does a viewer need it?</th></tr>
-      <tr><td>🧠 <b>Node-RED</b> — the pipeline editor</td><td><code>http://&lt;server-ip&gt;:1881</code></td><td>No — only for the CSV import task (<a href="#feed-csv">§5.2</a>), and only a trusted party</td></tr>
+      <tr><td>🧠 <b>Node-RED</b> — the pipeline editor</td><td><code>http://&lt;server-ip&gt;:1881</code></td><td>No — only for the CSV import task (<a href="#feed-csv">§7.2.1</a>), and only a trusted party</td></tr>
       <tr><td>🗄 <b>pgAdmin</b> — raw database browser</td><td><code>http://&lt;server-ip&gt;:5051</code></td><td>No — maintainers/devs only (needs a login)</td></tr>
     </table></div>
   </div>
@@ -729,7 +721,7 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
     <tr><td><b>Torque</b> (tile)</td><td class="c-ok">low → green</td><td>—</td><td class="c-bad">≥ 80 N·m → red</td><td>± up to 125 N·m · generic 80 threshold</td></tr>
     <tr><td><b>Drive Mode</b> (tile)</td><td>shows <b>N / D / R</b></td><td>—</td><td><span class="lt x">– grey</span> if corrupted</td><td>neutral colour, just a letter</td></tr>
   </table></div>
-  <div class="fix"><b>Heads-up — most of these are still placeholders, not real limits.</b> The Voltage, Current and Torque tiles just use Grafana's default green→red-at-80 flip; it isn't a tuned threshold for a ~200 V / 212 A / 125 N·m car. Treat the colours as rough cues only — a developer can set meaningful limits later (see <a href="#svc-grafana">8.5 Grafana</a>).</div>
+  <div class="fix"><b>Heads-up — most of these are still placeholders, not real limits.</b> The Voltage, Current and Torque tiles just use Grafana's default green→red-at-80 flip; it isn't a tuned threshold for a ~200 V / 212 A / 125 N·m car. Treat the colours as rough cues only — a developer can set meaningful limits later (see <a href="#svc-grafana">7.5 Grafana</a>).</div>
 
   <h4>The six status lights — where 0 / 1 flips meaning</h4>
   <p style="font-size:13.5px;color:var(--dim)">This is the part that catches everyone. Same number, opposite health, depending on the light:</p>
@@ -784,6 +776,7 @@ td.c-bad{background:rgba(255,94,94,.14)!important}
   <span class="zonechip zc-o">🐙 FOR MAINTAINERS</span>
   <h2>4. Installation</h2>
   <div class="rule"></div>
+  <p class="lead">The <b>core install</b> — the same steps on any machine, whether a pit laptop or a cloud VM. It just gets the six-service stack running; <b>where</b> to run it (local · cloud · hybrid) and the networking for each is <a href="#deployment">§5 Deployment</a>. The Terraform path (<a href="#deploy-terraform">§5.1</a>) automates everything below for you.</p>
   <div class="qs">
     <h4>⚡ The impatient path (a real run)</h4>
 <pre><code>git clone https://github.com/PsyVita/Rapidamente-TelemeTuna.git
@@ -802,7 +795,7 @@ docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</c
     </table></div>
     The only difference is the database volume: production marks <code>postgres_data</code> as <code>external</code> so real telemetry can't be wiped by accident. <b>Create that volume once first</b> — <code>docker volume create postgres_data</code> — and yes, that's needed for local production runs too, not just the cloud.</div>
 
-  <div class="note green"><b>Test first, then run for real.</b> Before you trust a setup, bring up the <b>dev</b> stack, fire a test MQTT publish (<a href="#feed-mqtt">5.1</a>) or run the <a href="#generator">test generator</a>, and confirm data flows end-to-end (Grafana fills, the Connection fish turns blue). Switch to the <b>production</b> stack only when you're running it for actual work. If something still won't work and you suspect the code or the flow, hand it to a <a href="#services">developer</a> — that's their territory.</div>
+  <div class="note green"><b>Test first, then run for real.</b> Before you trust a setup, bring up the <b>dev</b> stack, fire a test MQTT publish (<a href="#feed-mqtt">§7.2.1</a>) or run the <a href="#generator">test generator</a>, and confirm data flows end-to-end (Grafana fills, the Connection fish turns blue). Switch to the <b>production</b> stack only when you're running it for actual work. If something still won't work and you suspect the code or the flow, hand it to a <a href="#services">developer</a> — that's their territory.</div>
 
   <h3 id="install-steps">4.1 Step by step</h3>
   <h4>1 · Get the project</h4>
@@ -837,71 +830,26 @@ docker compose down        # stop (keeps all data)</code></pre>
   <div class="fix"><b>"external volume postgres_data not found":</b> you started the production stack before creating the volume — run <code>docker volume create postgres_data</code> first (step 3).</div>
   <div class="fix"><b>Port already in use:</b> something on the machine owns 5433/1881/1884/3001/5051 — stop it, or remap the left side of the port mapping in <code>docker-compose.yaml</code>.</div>
   <div class="fix"><b>Can't log in to pgAdmin (or edit Grafana):</b> use the <code>.env</code> values. Changed them <i>after</i> first start? They're baked in — change in-app, or <code>down -v</code> (dev only!) and restart.</div>
-</section>
-
-<!-- ================= MAINTAINER: DATA INPUT ================= -->
-<section id="feeding" class="z-op">
-  <h2>5. Data input</h2>
-  <div class="rule"></div>
-  <h3 id="feed-mqtt">5.1 MQTT — the live racing path</h3>
-  <p>Node-RED always listens on topic <code>car_telemetry</code>. The receiver ESP32 publishes 15-field frames to the broker (cloud IP or local host, <b>host port 1884</b>); they flow in and get stamped on arrival. Nothing to click. Hand-test from any machine:</p>
-  <pre><code>mosquitto_pub -h &lt;server-ip&gt; -p 1884 -t car_telemetry \
-  -m "15000,-8000,19660,12000,D,21357,11644,0,0,0,0,0,1,0,1"</code></pre>
-  <div class="note"><b>1884 or 1883?</b> External publishers (the ESP32, <code>mosquitto_pub</code>) connect to the <b>host</b> port <code>1884</code>. Inside Docker the broker listens on <code>1883</code>, so Node-RED's own MQTT node uses <code>mosquitto:1883</code> — Compose maps <code>1884:1883</code> between them. More in <a href="#svc-mosquitto">8.1 Mosquitto</a>.</div>
-  <h3 id="feed-csv">5.2 CSV import — replays</h3>
-  <div class="note orange"><b>This writes into the real database — keep it to one trusted person.</b> Importing a CSV touches Node-RED and the server's files; it isn't a routine action, and definitely not a viewer one.</div>
-  <p>Replaying an old session is two ideas — <b>drop the file in</b>, then <b>point Node-RED at it</b>. Both CSV types need a timestamp as the first column (16 columns total):</p>
-  <ul>
-    <li><b>Raw CSV</b> — timestamp + 15 raw fields → full cleaning pipeline (original times preserved).</li>
-    <li><b>Processed CSV</b> — timestamp + 15 already-converted fields → straight to the database (no double-cleaning, no re-healing).</li>
-  </ul>
-  <ol>
-    <li><b>Drop the file into the code's data folder:</b> <code>services/nodered/data/</code>. Inside the Node-RED container that folder is <code>/data/data/</code>, so <code>session.csv</code> becomes <code>/data/data/session.csv</code>.</li>
-    <li><b>Open Node-RED</b> → the <b>CSV Imports</b> tab.</li>
-    <li><b>Change the path in the node:</b> double-click the matching <b>file-in</b> node (commented <i>"Edit Path to Insert Your File"</i>), set <b>Filename</b> to <code>/data/data/session.csv</code>, click <b>Done</b>, then <b>Deploy</b>.</li>
-    <li><b>Run it:</b> click the inject button on <b>Load Raw CSV</b> or <b>Load Processed CSV</b>.</li>
-    <li><b>View it:</b> in Grafana, set the time picker to an absolute range covering the file's dates — the whole dashboard replays that session.</li>
-  </ol>
-  <h4>Data-input hiccups</h4>
-  <div class="fix"><b>No data appearing at all:</b> Connection fish first (Pipeline Health tab) → run the <a href="#generator">test generator</a> to isolate pipeline vs source → check <code>event_logs</code> for <span class="pill fd">FD</span> entries.</div>
-  <div class="fix"><b>Fish says Disconnected but the car is sending:</b> ESP32 broker address (cloud/host IP, <b>port 1884</b>)? Topic exactly <code>car_telemetry</code>? Port 1884 open in the firewall / security group?</div>
-  <div class="fix"><b>CSV rows all dropped:</b> the timestamp column is missing — 16 columns required.</div>
-  <div class="fix"><b>CSV import added no rows:</b> those timestamps already exist — duplicate protection doing its job (<a href="#svc-postgres">why</a>). Re-importing the same file is always safe.</div>
-
-  <div class="subtopic" id="serial">
-  <h3>5.3 Serial connection (local, no MQTT)</h3>
-  <p>For when the LoRa receiver is plugged into the computer by USB. Docker containers can't access USB ports, so Node-RED must run <b>natively</b>. The serial nodes in the committed flow are disabled placeholders; the active local flow is provided separately.</p>
-  <ol>
-    <li><b>Install Node.js</b> (LTS) from <a href="https://nodejs.org">nodejs.org</a>. Verify: <code>node --version</code> and <code>npm --version</code> both print numbers.</li>
-    <li><b>Install Node-RED:</b> <code>npm install -g --unsafe-perm node-red</code>. Run <code>node-red</code> once, stop it (Ctrl+C) — this creates <code>~/.node-red</code>.</li>
-    <li><b>Install the add-on nodes:</b>
-    <pre><code>cd ~/.node-red
-npm install node-red-node-serialport node-red-contrib-postgresql</code></pre></li>
-    <li><b>Stop the Docker Node-RED</b> so two brains never write at once: <code>docker compose stop node-red</code>. Leave everything else running.</li>
-    <li><b>Start local Node-RED</b> (<code>node-red</code>) → <code>http://localhost:1880</code> — note <b>1880</b>, not 1881. Import the provided local flow: menu ☰ → Import → paste → Import.</li>
-    <li><b>Reconfigure the PostgreSQL connection</b> — the step everyone misses. Double-click any PostgreSQL node → pencil ✏️ next to the <i>Telemetry DB</i> config:
-      <ul>
-        <li><b>Host</b> = <code>localhost</code> · <b>Port</b> = <code>5433</code> (you're <i>outside</i> Docker now — <code>postgresdb:5432</code> only resolves inside it).</li>
-        <li><b>User, Password, Database:</b> the Docker flow reads these as environment variables (field type "env"). Your native Node-RED has no such variables — <b>switch each field's type to plain string</b> and type the actual values from <code>.env</code>.</li>
-        <li>One shared config covers all DB nodes — set once, Update.</li>
-      </ul></li>
-    <li><b>Fix CSV paths</b> (if used): <code>/data/data/...</code> only exists inside the container — point the file-in nodes at a real path on disk.</li>
-    <li><b>Configure the serial node:</b> set your device — macOS <code>/dev/cu.usbserial-0001</code> (<code>ls /dev/cu.*</code>), Windows <code>COM5</code> (Device Manager → Ports), Linux <code>/dev/ttyUSB0</code> — and baud <b>38400</b>.</li>
-    <li><b>Deploy</b> (top-right). The serial node turns green; frames flow through the same pipeline into the Dockerized database, and Grafana keeps working unchanged.</li>
-  </ol>
-  <div class="fix"><b>Serial port won't open:</b> exact device name? Nothing else holding the port (Arduino IDE, another Node-RED)? Baud exactly 38400?</div>
-  <div class="fix"><b>Local Node-RED writes nothing to the DB:</b> almost always the connection config — must be <code>localhost:5433</code> with string-typed credentials. Env-typed fields silently resolve to empty outside Docker.</div>
-  </div>
+  <p style="margin-top:18px">✅ <b>Installed and verified?</b> Next, pick how to run it → <a href="#deployment">§5 Deployment</a> (local · cloud · hybrid), each listing the data-input options it supports.</p>
 </section>
 
 <!-- ================= MAINTAINER: DEPLOYMENT ================= -->
 <section id="deployment" class="z-op">
-  <h2>6. Deployment</h2>
+  <h2>5. Deployment</h2>
   <div class="rule"></div>
   <p class="lead">Four ways to run it. The team default is <b>Terraform on AWS</b> — but the by-hand cloud build, a single local PC, and a hybrid are all fully supported.</p>
 
-  <h3 id="deploy-terraform">6.1 ☁️ Cloud with Terraform — one command <span class="pill ok">team default</span></h3>
-  <p>The whole AWS server is described as code in the repo's <code>infrastructure/</code> folder. One <code>terraform apply</code> builds everything — server, static IP, encrypted database disk, firewall, secrets — and the box configures itself and starts the stack on first boot. No console clicking, no hand-copied passwords. <i>(Curious how the code works? That's the developer deep-dive in <a href="#infra">§9 Infrastructure as code</a>.)</i></p>
+  <div class="note"><b>Which data inputs work where?</b> Live MQTT works on every deployment; CSV replay happens in Node-RED on the host; a direct USB serial link needs physical access to the machine, so it's local-only. <i>How</i> to actually feed each one lives with the developers: <a href="#inputflows">§7.2.1 Input flows &amp; data input</a>.</div>
+  <div class="tablewrap"><table>
+    <tr><th>Deployment</th><th>Live MQTT<br>(radio)</th><th>CSV replay</th><th>USB serial</th></tr>
+    <tr><td><b>5.1 Cloud · Terraform</b></td><td class="c-ok">✓</td><td class="c-ok">✓</td><td class="c-bad">✗ no USB on a cloud VM</td></tr>
+    <tr><td><b>5.2 Cloud · by hand</b></td><td class="c-ok">✓</td><td class="c-ok">✓</td><td class="c-bad">✗ no USB on a cloud VM</td></tr>
+    <tr><td><b>5.3 Local · one PC</b></td><td class="c-ok">✓</td><td class="c-ok">✓</td><td class="c-ok">✓</td></tr>
+    <tr><td><b>5.4 Hybrid</b></td><td class="c-ok">✓ via cloud broker</td><td class="c-ok">✓</td><td class="c-ok">✓</td></tr>
+  </table></div>
+
+  <h3 id="deploy-terraform">5.1 ☁️ Cloud with Terraform — one command <span class="pill ok">team default</span></h3>
+  <p>The whole AWS server is described as code in the repo's <code>infrastructure/</code> folder. One <code>terraform apply</code> builds everything — server, static IP, encrypted database disk, firewall, secrets — and the box configures itself and starts the stack on first boot. No console clicking, no hand-copied passwords. <i>(Curious how the code works? That's the developer deep-dive in <a href="#infra">§8 Infrastructure as code</a>.)</i></p>
   <h4>What one <code>apply</code> builds</h4>
   <div class="tablewrap"><table>
     <tr><th>Resource</th><th>What it is</th></tr>
@@ -912,7 +860,7 @@ npm install node-red-node-serialport node-red-contrib-postgresql</code></pre></l
     <tr><td>IAM role + SSM secrets</td><td>The box reads its own passwords from SSM Parameter Store at boot — nothing lives in the repo</td></tr>
   </table></div>
   <h4>Prerequisites</h4>
-  <p>You really only need to install <b>one</b> thing yourself: Terraform. Everything else — the AWS CLI v2, the SSM plugin, and the SSO profiles — is installed for you by the <code>scripts/install-tuna-shortcuts.sh</code> script (see <a href="#maintenance">§7.1</a>).</p>
+  <p>You really only need to install <b>one</b> thing yourself: Terraform. Everything else — the AWS CLI v2, the SSM plugin, and the SSO profiles — is installed for you by the <code>scripts/install-tuna-shortcuts.sh</code> script (see <a href="#maintenance">§6.1</a>).</p>
   <ul>
     <li><b>Terraform ≥ 1.5</b> — <code>brew install terraform</code> (macOS), or developer.hashicorp.com/terraform/install.</li>
     <li><b>Windows only:</b> <b>Git Bash</b> (from Git for Windows) — the <code>tuna-*</code> script runs there. macOS/Linux already have a suitable shell.</li>
@@ -936,10 +884,10 @@ terraform apply     # type "yes" to build it</code></pre>
   <p>When it finishes, Terraform prints the outputs. Give the box a couple of minutes to install Docker and start the containers, then open Grafana:</p>
   <pre><code>terraform output                    # instance_id, public_ip, grafana_url
 terraform output -raw grafana_url   # e.g. http://203.0.113.5:3001</code></pre>
-  <div class="note green"><b>Day-to-day you barely touch Terraform.</b> Use it to <i>build</i>, <i>change</i>, or <i>tear down</i> the server; everyday start/stop/health is the <a href="#maintenance"><code>tuna-*</code> commands</a> (§7). ⚠️ <code>terraform destroy</code> <b>releases the Elastic IP</b> (new IP next time) and — unless you've snapshotted — deletes the data disk. For everyday pauses use <code>tuna-stop</code>, never destroy.</div>
+  <div class="note green"><b>Day-to-day you barely touch Terraform.</b> Use it to <i>build</i>, <i>change</i>, or <i>tear down</i> the server; everyday start/stop/health is the <a href="#maintenance"><code>tuna-*</code> commands</a> (§6). ⚠️ <code>terraform destroy</code> <b>releases the Elastic IP</b> (new IP next time) and — unless you've snapshotted — deletes the data disk. For everyday pauses use <code>tuna-stop</code>, never destroy.</div>
   <div class="note"><b>🔐 Secrets never touch the repo.</b> Passwords set in <code>terraform.tfvars</code> (which stays on your machine) are pushed to <b>SSM Parameter Store</b>; the instance builds its own <code>/opt/Rapidamente-TelemeTuna/.env</code> from SSM at boot. Read it on the box with <code>sudo cat /opt/Rapidamente-TelemeTuna/.env</code>. Production never depends on <code>.env.example</code>.</div>
 
-  <h3 id="deploy-cloud">6.2 ☁️ Cloud by hand — the manual way <span class="pill" style="color:var(--dim);border-color:var(--line2)">still supported</span></h3>
+  <h3 id="deploy-cloud">5.2 ☁️ Cloud by hand — the manual way <span class="pill" style="color:var(--dim);border-color:var(--line2)">still supported</span></h3>
   <p>Prefer to build the VM yourself — another provider, or AWS without Terraform? Fully viable. Just reproduce, by hand, the <b>same settings Terraform applies</b> so the two stay interchangeable:</p>
   <ol>
     <li>Create a small VM — <b>Ubuntu 22.04</b>, ~<code>t3.small</code> (1–2 GB RAM) is plenty — with an <b>encrypted</b> root disk. Install Docker Engine + the Compose plugin → clone → the normal <a href="#install">installation</a>.</li>
@@ -963,20 +911,31 @@ docker compose -f docker-compose.yaml -f docker-compose.production.yaml up -d</c
     <li>ESP32: any internet Wi-Fi (a phone hotspot works) + broker address = the public IP, port <b>1884</b>.</li>
     <li>Enable the provider's automatic <b>disk snapshots</b> of the database volume — one-checkbox backup.</li>
   </ol>
-  <div class="note"><b>Matching Terraform's hardening by hand (optional, recommended):</b> require <b>IMDSv2</b> on the instance, give it a <b>least-privilege role</b> instead of long-lived access keys, and prefer <b>SSM Session Manager</b> over an open port 22. Terraform does all three automatically in <a href="#deploy-terraform">6.1</a> — see <a href="#infra-security">§9 security model</a>.</div>
+  <div class="note"><b>Matching Terraform's hardening by hand (optional, recommended):</b> require <b>IMDSv2</b> on the instance, give it a <b>least-privilege role</b> instead of long-lived access keys, and prefer <b>SSM Session Manager</b> over an open port 22. Terraform does all three automatically in <a href="#deploy-terraform">5.1</a> — see <a href="#infra-security">§8 security model</a>.</div>
 
-  <h3 id="deploy-local">6.3 💻 Local — one PC</h3>
-  <p>Everything at <code>localhost</code>; teammates on the same subnet use the host's LAN IP. Best for development and zero-connectivity tracks. Host firewall must allow 3001/1881/5051 (and 1884 if another machine publishes MQTT).</p>
-  <h3 id="deploy-hybrid">6.4 🔀 Hybrid</h3>
-  <p>Local stack + cloud broker only: point both the ESP32 and Node-RED's MQTT node at the cloud Mosquitto. Useful behind strict pit networks.</p>
+  <h3 id="deploy-local">5.3 💻 Local — one PC</h3>
+  <p>Run the whole platform on one machine (a pit laptop). Best for development, testing, and tracks with zero connectivity.</p>
+  <ol>
+    <li><b>Install it</b> with the core <a href="#install">§4 Installation</a> steps — clone, set <code>.env</code>, create the <code>postgres_data</code> volume, <code>docker compose … up -d</code>. Nothing cloud-specific.</li>
+    <li><b>Open it</b> at <code>localhost</code> — Grafana <code>:3001</code>, Node-RED <code>:1881</code>, pgAdmin <code>:5051</code>.</li>
+    <li><b>Let teammates watch:</b> they swap <code>localhost</code> for the host's <b>LAN IP</b> (same Wi-Fi / subnet). The host firewall must allow <code>3001/1881/5051</code> — and <code>1884</code> if another machine publishes MQTT.</li>
+  </ol>
+  <p><b>Inputs:</b> live MQTT (point the ESP32 at the host's LAN IP, port <code>1884</code>), CSV replay, and — uniquely to local — a <b>direct USB serial</b> link to the receiver. How to feed each: <a href="#inputflows">§7.2.1</a>.</p>
+  <h3 id="deploy-hybrid">5.4 🔀 Hybrid — local stack, cloud broker</h3>
+  <p>The dashboards and database run locally, but the MQTT broker lives in the cloud — useful when the car needs a reachable broker yet the pit machine sits behind a strict network.</p>
+  <ol>
+    <li><b>Install the stack locally</b> with the core <a href="#install">§4 Installation</a> steps.</li>
+    <li><b>Point at the cloud broker:</b> set <i>both</i> the ESP32 and Node-RED's MQTT node to the cloud Mosquitto's address (port <code>1884</code>) instead of the local one.</li>
+  </ol>
+  <p><b>Inputs:</b> live MQTT via the cloud broker, CSV replay, and USB serial all work. How to feed each: <a href="#inputflows">§7.2.1</a>.</p>
 </section>
 
 <!-- ================= MAINTAINER: OPERATIONS ================= -->
 <section id="maintenance" class="z-op">
-  <h2>7. Operations &amp; security</h2>
+  <h2>6. Operations &amp; security</h2>
   <div class="rule"></div>
 
-  <h3 id="maint-ops">7.1 🐙 Operating the AWS server — the <code>tuna-*</code> commands</h3>
+  <h3 id="maint-ops">6.1 🐙 Operating the AWS server — the <code>tuna-*</code> commands</h3>
   <p>The <code>scripts/</code> folder turns all the AWS housekeeping into friendly <code>tuna-*</code> commands, so any teammate can sign in and run the server without memorizing AWS CLI incantations. <b>No SSH anywhere</b> — shell access is via AWS <b>SSM Session Manager</b> (nothing to leak, fully audited).</p>
   <h4>One-time setup (macOS · Linux · Windows Git Bash)</h4>
   <pre><code>git clone https://github.com/PsyVita/Rapidamente-TelemeTuna.git
@@ -989,7 +948,7 @@ source ~/.zshrc      # macOS · use ~/.bashrc on Linux / Git Bash</code></pre>
 tuna-login-ic      # InstanceController — start/stop only
 tuna-login-ad      # Admin</code></pre>
   <p>A profile only authorizes a role you've actually been assigned — <a href="#permissions">contact your org admin</a> if a login isn't authorized.</p>
-  <div class="note"><b>&ldquo;Maintainer&rdquo; is the persona; &ldquo;Operator&rdquo; is an AWS tier — don't mix them up.</b> A <b>maintainer</b> (the 🐙 persona who installs and runs TelemeTuna) signs in with one of two AWS tiers: <b>InstanceController</b> (start/stop the server — nothing else) or <b>Operator</b> (full day-to-day ops, including the SSM shell). So &ldquo;Operator&rdquo; here always means the AWS tier, never the persona. Not sure which tier you have or need? See <a href="#permissions">§13 Permissions &amp; access</a>.</div>
+  <div class="note"><b>&ldquo;Maintainer&rdquo; is the persona; &ldquo;Operator&rdquo; is an AWS tier — don't mix them up.</b> A <b>maintainer</b> (the 🐙 persona who installs and runs TelemeTuna) signs in with one of two AWS tiers: <b>InstanceController</b> (start/stop the server — nothing else) or <b>Operator</b> (full day-to-day ops, including the SSM shell). So &ldquo;Operator&rdquo; here always means the AWS tier, never the persona. Not sure which tier you have or need? See <a href="#permissions">§12 Permissions &amp; access</a>.</div>
   <h4>Everyday commands — any role</h4>
   <div class="tablewrap"><table>
     <tr><th>Command</th><th>What it does</th></tr>
@@ -1025,28 +984,28 @@ exit                                  # leave the SSM session</code></pre>
   <div class="note"><b>The raw AWS CLI underneath</b> (if you'd rather type it yourself): start/stop is <code>aws ec2 start-instances</code> / <code>stop-instances --instance-ids &lt;id&gt; --region ap-southeast-7 --profile ic-tuna</code>; a shell is <code>aws ssm start-session --target &lt;id&gt; --profile op-tuna</code>.</div>
   <div class="note green"><b>Two day-2 jobs worth knowing:</b> <b>Save money, keep the IP</b> — <code>tuna-stop</code> overnight, <code>tuna-start</code> next session (the Elastic IP and all data stay put). <b>Ship new code</b> — SSH-free via the on-box <code>sudo /opt/Rapidamente-TelemeTuna/update-telemetuna.sh</code> (it runs <code>git pull</code> then rebuilds). <code>tuna-restart</code> only restarts running containers — it does <i>not</i> pull new code.</div>
 
-  <h3 id="maint-data">7.2 Protecting the data</h3>
+  <h3 id="maint-data">6.2 Protecting the data</h3>
   <ul>
     <li><b><code>docker compose down -v</code> erases everything</b> — <i>unless</i> the database volume is <code>external</code>. In production it is: the <code>docker-compose.production.yaml</code> override marks <code>postgres_data</code> external, so Compose physically can't delete it. On the Terraform box it's also bound to a dedicated, encrypted EBS disk.</li>
     <li><b>Back it up for real:</b> enable <b>EBS snapshots</b> of the data volume (Terraform tags it <code>Backup = postgres</code> so a snapshot policy can target just it), and/or a scheduled <code>pg_dump</code>. A 2-hour session is only a few MB, so years of racing fit in single-digit GB.</li>
     <li><b>Re-imports are always safe</b> — the unique-timestamp rule means replays can't double-count.</li>
   </ul>
 
-  <h3 id="maint-sec">7.3 Security, honestly</h3>
+  <h3 id="maint-sec">6.3 Security, honestly</h3>
   <ul>
     <li><b>The car link is plaintext.</b> LoRa frames and MQTT (host port 1884, <code>allow_anonymous true</code>) are unauthenticated — a deliberate prototype trade-off. On a public IP, anyone allowed through the firewall to the broker could publish fake frames. Hardening path: Mosquitto username/password + TLS (port 8883), supported by both ESP32 and Node-RED.</li>
     <li><b>The server itself is locked down</b> (Terraform): <b>no SSH / no port 22</b> — shell is SSM only; <b>IMDSv2 required</b>; a <b>least-privilege IAM role</b> that can read only its own seven SSM parameters; both EBS volumes <b>encrypted at rest</b>; and the firewall scoped to <code>admin_cidr</code>. Open <code>1884</code> wider only if the ESP32 publishes from a changing IP — and prefer adding MQTT auth/TLS if you do.</li>
     <li><b>Node-RED's editor has no login</b> — treat port 1881 as admin-only in the firewall. Keep <code>5433</code> closed; nothing outside Docker needs the database.</li>
   </ul>
 
-  <h3 id="maint-health">7.4 Watching system health</h3>
+  <h3 id="maint-health">6.4 Watching system health</h3>
   <p>The Pipeline Health tab is the operations dashboard: the three-state Connection fish, frame-drop and critical counters, the event log. From a teammate's machine, <code>tuna-health</code> rolls instance + Docker + disk + UI status into one readout. A growing <span class="pill warn">warn</span> count with the same healed field repeatedly = a sensor/wiring on its way out. Any <span class="pill crit">critical</span> = a software bug worth reporting — the station name is in the log entry.</p>
 </section>
 
 <!-- ================= DEV: SERVICES ================= -->
 <section id="services" class="z-tech">
   <span class="zonechip zc-t">🐋 FOR DEVELOPERS</span>
-  <h2>8. Services</h2>
+  <h2>7. Services</h2>
   <div class="rule"></div>
   <p class="lead">Six services, one Docker network. Data enters through Mosquitto, gets processed by Node-RED, lands in PostgreSQL (whose schema Flyway builds), and comes out through Grafana and pgAdmin. Each has its own section:</p>
   <div class="cards">
@@ -1060,7 +1019,7 @@ exit                                  # leave the SSM session</code></pre>
 
   <!-- ---------- MOSQUITTO ---------- -->
   <div class="subtopic" id="svc-mosquitto">
-  <h3>8.1 Mosquitto (message broker)</h3>
+  <h3>7.1 Mosquitto (message broker)</h3>
   <p>MQTT is a publish/subscribe "post office": senders publish to a named <b>topic</b>; subscribers receive everything on topics they follow. Nobody needs anyone's address — only the broker's.</p>
   <pre><code>/mosquitto/config/mosquitto.conf
   listener 1883            # in-container port (Compose maps host 1884 → 1883)
@@ -1086,7 +1045,7 @@ exit                                  # leave the SSM session</code></pre>
 
   <!-- ---------- NODE-RED ---------- -->
   <div class="subtopic" id="svc-nodered">
-  <h3>8.2 Node-RED (pipeline)</h3>
+  <h3>7.2 Node-RED (pipeline)</h3>
   <p>Node-RED is a visual programming tool: logic lives in wired-together nodes. Four tabs — <b>Real-Time Imports</b>, <b>CSV Imports</b>, <b>Background Flow</b> (the pipeline), and <b>Test Node</b> (the <a href="#generator">generator</a>, kept separate so nobody clicks it by accident).</p>
   <h4>The Background Flow — ten stations, five jobs</h4>
   <p>The stations group into five jobs, color-coded below and in the diagram: <span style="color:var(--g-gate)">■</span> <b>Gatekeeping</b> (1–2: verify structure — nothing inside is trusted yet) · <span style="color:var(--g-conv)">■</span> <b>Conversion</b> (3–5: raw numbers → real units) · <span style="color:var(--g-heal)">■</span> <b>Repair</b> (6: the only station allowed to fix values) · <span style="color:var(--g-val)">■</span> <b>Strict validation &amp; packing</b> (7–9: discrete signals are never repaired, only accepted or nulled, then packed) · <span style="color:var(--g-store)">■</span> <b>Storage</b> (10: duplicate-proof insert). The order matters: you can't convert what isn't parsed, can't repair what isn't converted, and must never "repair" an alarm.</p>
@@ -1144,7 +1103,7 @@ exit                                  # leave the SSM session</code></pre>
 
   <!-- ---------- INPUT FLOWS ---------- -->
   <div class="subtopic" id="inputflows">
-  <h4 style="font-size:17px;color:var(--tuna2)">8.2.1 Input flows — every road into the pipeline</h4>
+  <h4 style="font-size:17px;color:var(--tuna2)">7.2.1 Input flows &amp; data input — every road in, and how to feed it</h4>
   <p>Four ways in. Note the two different entry points: live sources enter at <b>Station 1</b> (they need timestamping), while raw CSVs strip their timestamp on the CSV tab — with a stricter version of Strip Timestamp that <i>requires</i> 16 fields — and enter at <b>Station 2</b>. Processed CSVs skip the pipeline entirely.</p>
   <div class="diagram small">
   <svg viewBox="0 0 860 360" xmlns="http://www.w3.org/2000/svg">
@@ -1209,11 +1168,52 @@ exit                                  # leave the SSM session</code></pre>
     <li><b>Raw CSV</b> uses its own, stricter Strip Timestamp (16 fields or the row is dropped — historical data must carry its own time) → <code>link in 2</code> → enters at Station 2, keeping the file's original timestamps.</li>
     <li><b>Processed CSV</b> never touches the Background Flow: parse, then straight to the database. Already-cleaned data must not be converted or healed twice.</li>
   </ul>
+
+  <h4 style="font-size:16px;color:#fff;margin-top:22px">Feeding data in — the three ways</h4>
+  <p>The flows above are the roads in; here is how you actually push data down them. Live MQTT is the racing default, CSV replays an old session, and serial is the local USB option.</p>
+
+  <p id="feed-mqtt" style="margin-bottom:6px"><b>① Live MQTT — the racing path.</b> Node-RED always listens on topic <code>car_telemetry</code>. The receiver ESP32 publishes 15-field frames to the broker (cloud IP or local host, <b>host port 1884</b>); they flow in and get stamped on arrival — nothing to click. Hand-test from any machine:</p>
+  <pre><code>mosquitto_pub -h &lt;server-ip&gt; -p 1884 -t car_telemetry \
+  -m "15000,-8000,19660,12000,D,21357,11644,0,0,0,0,0,1,0,1"</code></pre>
+  <div class="note"><b>1884 or 1883?</b> External publishers (the ESP32, <code>mosquitto_pub</code>) connect to the <b>host</b> port <code>1884</code>. Inside Docker the broker listens on <code>1883</code>, so Node-RED's own MQTT node uses <code>mosquitto:1883</code> — Compose maps <code>1884:1883</code> between them. More in <a href="#svc-mosquitto">7.1 Mosquitto</a>.</div>
+
+  <p id="feed-csv" style="margin-bottom:6px"><b>② CSV import — replays.</b> Two ideas: <b>drop the file in</b>, then <b>point Node-RED at it</b>. Both CSV types need a timestamp as the first column (16 columns total):</p>
+  <ul>
+    <li><b>Raw CSV</b> — timestamp + 15 raw fields → full cleaning pipeline (original times preserved).</li>
+    <li><b>Processed CSV</b> — timestamp + 15 already-converted fields → straight to the database (no double-cleaning, no re-healing).</li>
+  </ul>
+  <ol>
+    <li><b>Drop the file into</b> <code>services/nodered/data/</code>. Inside the container that folder is <code>/data/data/</code>, so <code>session.csv</code> becomes <code>/data/data/session.csv</code>.</li>
+    <li><b>Open Node-RED</b> → the <b>CSV Imports</b> tab.</li>
+    <li><b>Set the path:</b> double-click the matching <b>file-in</b> node (commented <i>"Edit Path to Insert Your File"</i>), set <b>Filename</b> to <code>/data/data/session.csv</code>, <b>Done</b>, then <b>Deploy</b>.</li>
+    <li><b>Run it:</b> click inject on <b>Load Raw CSV</b> or <b>Load Processed CSV</b>.</li>
+    <li><b>View it:</b> in Grafana set the time picker to an absolute range covering the file's dates — the whole dashboard replays that session.</li>
+  </ol>
+  <div class="note orange"><b>CSV import writes into the real database — keep it to one trusted person.</b> It touches Node-RED and the server's files; not a routine action, and never a viewer one.</div>
+
+  <p id="serial" style="margin-bottom:6px"><b>③ Serial connection — local USB, no MQTT.</b> For when the LoRa receiver is plugged in by USB. Docker containers can't reach USB ports, so Node-RED must run <b>natively</b> (local deployment only). The serial nodes in the committed flow are disabled placeholders; the active local flow is provided separately.</p>
+  <ol>
+    <li><b>Install Node.js</b> (LTS) from <a href="https://nodejs.org">nodejs.org</a>; verify <code>node --version</code> &amp; <code>npm --version</code>.</li>
+    <li><b>Install Node-RED:</b> <code>npm install -g --unsafe-perm node-red</code>. Run <code>node-red</code> once, stop it (Ctrl+C) — creates <code>~/.node-red</code>.</li>
+    <li><b>Add the nodes:</b> <pre><code>cd ~/.node-red
+npm install node-red-node-serialport node-red-contrib-postgresql</code></pre></li>
+    <li><b>Stop the Docker Node-RED</b> so two brains never write at once: <code>docker compose stop node-red</code>.</li>
+    <li><b>Start local Node-RED</b> → <code>http://localhost:1880</code> (note <b>1880</b>, not 1881). Import the provided local flow.</li>
+    <li><b>Reconfigure PostgreSQL</b> — the step everyone misses: Host <code>localhost</code>, Port <code>5433</code> (you're outside Docker now), and switch each credential field from "env" type to plain <b>string</b> with the values from <code>.env</code>.</li>
+    <li><b>Configure the serial node:</b> device — macOS <code>/dev/cu.usbserial-0001</code>, Windows <code>COM5</code>, Linux <code>/dev/ttyUSB0</code> — baud <b>38400</b>, then <b>Deploy</b>. The node turns green; frames flow through the same pipeline into the Dockerized database.</li>
+  </ol>
+
+  <h4>Data-input hiccups</h4>
+  <div class="fix"><b>No data appearing at all:</b> Connection fish first (Pipeline Health tab) → run the <a href="#generator">test generator</a> to isolate pipeline vs source → check <code>event_logs</code> for <span class="pill fd">FD</span> entries.</div>
+  <div class="fix"><b>Fish says Disconnected but the car is sending:</b> ESP32 broker address (cloud/host IP, <b>port 1884</b>)? Topic exactly <code>car_telemetry</code>? Port 1884 open in the firewall / security group?</div>
+  <div class="fix"><b>CSV rows all dropped:</b> the timestamp column is missing — 16 columns required.</div>
+  <div class="fix"><b>CSV import added no rows:</b> those timestamps already exist — duplicate protection (<a href="#svc-postgres">why</a>). Re-importing the same file is always safe.</div>
+  <div class="fix"><b>Serial port won't open / local Node-RED writes nothing:</b> check the exact device name &amp; baud 38400; and the DB config must be <code>localhost:5433</code> with string-typed credentials (env-typed fields resolve to empty outside Docker).</div>
   </div>
 
   <!-- ---------- TIMESTAMPS ---------- -->
   <div class="subtopic" id="timestamps">
-  <h4 style="font-size:17px;color:var(--tuna2)">8.2.2 Timestamping — who stamps, and why</h4>
+  <h4 style="font-size:17px;color:var(--tuna2)">7.2.2 Timestamping — who stamps, and why</h4>
   <p>A real engineering decision, documented inside the flow as a "Note to Future Developer": <b>the ESP32 sends no timestamps; Node-RED stamps each frame on arrival, silently.</b></p>
   <div class="note green"><b>Why that's accurate:</b> MQTT guarantees delivery only between the <i>broker and the platform</i>. It does <b>not</b> buffer on the ESP32 — if the car's link drops, readings made while offline are lost, never queued, never flushed later in a burst. Everything that arrives was sent in real time, so arrival timestamps don't condense or distort the charts.</div>
   <p><b>The honest cost:</b> radio dropouts = lost data and an honest gap — not delayed data. <b>The future path:</b> to survive disconnects, two changes must ship <i>together</i> — ① firmware buffering on the ESP32 and ② sender timestamps attached at measurement time (RTC or NTP). A flushed backlog arrives in seconds; only sender timestamps preserve when each reading actually happened. The pipeline <b>already accepts</b> the 16-field format, so that upgrade needs zero Node-RED changes.</p>
@@ -1229,7 +1229,7 @@ exit                                  # leave the SSM session</code></pre>
 
   <!-- ---------- HEALING ---------- -->
   <div class="subtopic" id="healing">
-  <h4 style="font-size:17px;color:var(--tuna2)">8.2.3 Healing logic — interpolate physics, never interpolate alarms</h4>
+  <h4 style="font-size:17px;color:var(--tuna2)">7.2.3 Healing logic — interpolate physics, never interpolate alarms</h4>
   <div class="tablewrap"><table>
     <tr><th>Data kind</th><th>Treatment</th><th>Why</th></tr>
     <tr><td><b>Continuous physics</b> — rpm, amp, volt, trq, temps, mode</td><td><span class="pill heal">healed</span> from the last good value</td><td>Changes smoothly; the 300-ms-old value is an excellent estimate. A repaired glitch is closer to truth than a hole.</td></tr>
@@ -1241,7 +1241,7 @@ exit                                  # leave the SSM session</code></pre>
 
   <!-- ---------- GENERATOR ---------- -->
   <div class="subtopic" id="generator">
-  <h4 style="font-size:17px;color:var(--tuna2)">8.2.4 Test data generator — the fake car</h4>
+  <h4 style="font-size:17px;color:var(--tuna2)">7.2.4 Test data generator — the fake car</h4>
   <p>A full simulator lives on its own <b>Test Node</b> tab — deliberately separated from the main flows so nobody clicks it by accident; it feeds the pipeline through a link-out → link-in wire. Click the inject button there and eleven phases run:</p>
   <div class="tablewrap"><table>
     <tr><th>Phase</th><th>What it proves</th></tr>
@@ -1261,7 +1261,7 @@ exit                                  # leave the SSM session</code></pre>
 
   <!-- ---------- FLYWAY ---------- -->
   <div class="subtopic" id="svc-flyway">
-  <h3>8.3 Flyway (migrations)</h3>
+  <h3>7.3 Flyway (migrations)</h3>
   <p>Flyway answers one question: <b>how does the database get its tables, reliably, on any machine?</b> The answer is <b>migrations</b> — versioned SQL files applied once each, in order.</p>
   <ul>
     <li>Files live in <code>database/migrations/</code>, named <code>V&lt;number&gt;__&lt;name&gt;.sql</code>.</li>
@@ -1281,7 +1281,7 @@ exit                                  # leave the SSM session</code></pre>
 
   <!-- ---------- POSTGRES ---------- -->
   <div class="subtopic" id="svc-postgres">
-  <h3>8.4 PostgreSQL (database)</h3>
+  <h3>7.4 PostgreSQL (database)</h3>
   <p>PostgreSQL is the system of record — four tables, all built by <a href="#svc-flyway">Flyway</a>.</p>
   <h4>telemetry_records — one row per reading</h4>
   <div class="tablewrap"><table>
@@ -1310,7 +1310,7 @@ exit                                  # leave the SSM session</code></pre>
 
   <!-- ---------- GRAFANA ---------- -->
   <div class="subtopic" id="svc-grafana">
-  <h3>8.5 Grafana (visualization)</h3>
+  <h3>7.5 Grafana (visualization)</h3>
   <p>Grafana is fully <b>provisioned from the repo</b> — no hand-built dashboards. Two files: <code>datasource.yaml</code> (connects to <code>postgresdb:5432</code>; credentials arrive as environment variables from <code>.env</code>, so no secrets in the file) and <code>car-telemetry.json</code> (the entire EV TelemeTuna Dashboard). Wipe Grafana, restart, and the dashboard is back identically.</p>
   <h4>How panels get data</h4>
   <pre><code>-- history charts: everything in the selected window
@@ -1336,7 +1336,7 @@ older than 5 minutes    → Disconnected &lt;×)))&gt;&lt;     (long dead, faded
   </ul>
 
   <div class="subtopic" id="bitmasks">
-  <h4 style="font-size:17px;color:var(--tuna2)">8.5.1 Fault decoding — bitmasks</h4>
+  <h4 style="font-size:17px;color:var(--tuna2)">7.5.1 Fault decoding — bitmasks</h4>
   <p><code>err</code> and <code>warn</code> are single numbers whose binary digits are independent fault switches — e.g. <code>err = 136 = 128 + 8</code> means bits 7 and 3 are on: two simultaneous faults in one number. Grafana decodes at display time with <code>err &amp; (1 &lt;&lt; bit)</code> against the dictionary tables — compact storage, and definitions can be corrected later without touching history. The 16+16 definitions come from the motor controller's manual (migration V3).</p>
   <a class="pgbtn" href="#pg-bits">🧪 Build a bitmask yourself in the Playground →</a>
   <details><summary>Full error-bit dictionary (err)</summary><div class="body"><div class="tablewrap"><table>
@@ -1382,7 +1382,7 @@ older than 5 minutes    → Disconnected &lt;×)))&gt;&lt;     (long dead, faded
 
   <!-- ---------- PGADMIN ---------- -->
   <div class="subtopic" id="svc-pgadmin">
-  <h3>8.6 pgAdmin (inspection)</h3>
+  <h3>7.6 pgAdmin (inspection)</h3>
   <p>pgAdmin is the standard web UI for PostgreSQL — the place to verify exactly what was stored when a chart makes you suspicious, or to run ad-hoc SQL.</p>
   <ul>
     <li><b>Why it connects to <code>postgresdb:5432</code>:</b> pgAdmin runs <i>inside</i> the Docker network next to the database — container names resolve there and internal ports apply. <code>localhost:5433</code> is for tools <i>outside</i> Docker.</li>
@@ -1403,13 +1403,13 @@ GROUP BY field ORDER BY count DESC;</code></pre>
 
 <!-- ================= DEV: INFRASTRUCTURE (TERRAFORM) ================= -->
 <section id="infra" class="z-tech">
-  <h2>9. Infrastructure as code (Terraform &amp; AWS)</h2>
+  <h2>8. Infrastructure as code (Terraform &amp; AWS)</h2>
   <div class="rule"></div>
-  <p class="lead">Maintainers only need <a href="#deploy-terraform">terraform apply</a> (§6.1). This section is the other half: <b>how the code actually works</b>, module by module. Everything lives in the repo's <code>infrastructure/</code> folder.</p>
+  <p class="lead">Maintainers only need <a href="#deploy-terraform">terraform apply</a> (§5.1). This section is the other half: <b>how the code actually works</b>, module by module. Everything lives in the repo's <code>infrastructure/</code> folder.</p>
   <p><b>Why infrastructure-as-code?</b> Instead of clicking around the AWS console, the entire server is <i>described in files</i> — reproducible, reviewable in git, and destroyable in one command. Terraform reads the desired state, diffs it against what already exists, and makes only the changes needed.</p>
 
   <div class="subtopic" id="infra-modules">
-  <h3>9.1 The four modules</h3>
+  <h3>8.1 The four modules</h3>
   <p>A small <b>root module</b> wires four <b>child modules</b> together. Terraform infers the dependency order automatically from the references between them (<code>secrets → iam</code>, <code>network → compute</code>, <code>iam → compute</code>) — no manual ordering.</p>
   <pre><code>infrastructure/
 ├── versions.tf      # Terraform ≥ 1.5, AWS provider ~> 5.0
@@ -1459,7 +1459,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   </div>
 
   <div class="subtopic" id="infra-boot">
-  <h4 style="font-size:17px;color:var(--tuna2)">9.2 The first-boot script (<code>user_data.sh.tftpl</code>)</h4>
+  <h4 style="font-size:17px;color:var(--tuna2)">8.2 The first-boot script (<code>user_data.sh.tftpl</code>)</h4>
   <p>The instance configures itself on first boot in <b>nine logged steps</b> — you never SSH in to set it up (and there's no SSH to use):</p>
   <ol style="font-size:13.5px">
     <li><b>Install Docker + Compose plugin.</b></li>
@@ -1476,7 +1476,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   </div>
 
   <div class="subtopic" id="infra-security">
-  <h4 style="font-size:17px;color:var(--tuna2)">9.3 Security model</h4>
+  <h4 style="font-size:17px;color:var(--tuna2)">8.3 Security model</h4>
   <div class="tablewrap"><table>
     <tr><th>Control</th><th>How</th></tr>
     <tr><td><b>No SSH</b></td><td>No port 22; shell is SSM Session Manager only — nothing to leak, fully audited.</td></tr>
@@ -1490,7 +1490,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   </div>
 
   <div class="subtopic" id="infra-vars">
-  <h4 style="font-size:17px;color:var(--tuna2)">9.4 Variables, outputs &amp; lifecycle</h4>
+  <h4 style="font-size:17px;color:var(--tuna2)">8.4 Variables, outputs &amp; lifecycle</h4>
   <p><b>Inputs</b> (<code>variables.tf</code>, set in <code>terraform.tfvars</code>): <code>aws_region</code> (<code>ap-southeast-7</code>), <code>project</code>/<code>environment</code> (naming + the SSM path), <code>admin_cidr</code> (required), <code>instance_type</code> (<code>t3.small</code>), <code>root_volume_size</code> (20), <code>data_volume_size</code> (5), <code>repo_url</code>, the four non-secret credentials, and the three secret passwords (<code>sensitive = true</code>).</p>
   <p><b>Outputs</b> (<code>terraform output</code>): <code>instance_id</code>, <code>public_ip</code> (the Elastic IP), and <code>grafana_url</code>.</p>
   <div class="note green"><b>Lifecycle.</b> <code>terraform plan</code> previews · <code>terraform apply</code> builds/updates · <code>terraform destroy</code> tears down — but releases the Elastic IP and, unless snapshotted, the data volume. For everyday pauses use <code>tuna-stop</code>/<code>tuna-start</code>. State and <code>*.tfvars</code> are gitignored and never committed.</div>
@@ -1500,7 +1500,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
 
 <!-- ================= REFERENCE · TROUBLESHOOTER ================= -->
 <section id="troubleshooter" class="z-ref">
-  <h2><span class="tag">REFERENCE</span>10. Guided troubleshooter</h2>
+  <h2><span class="tag">REFERENCE</span>9. Guided troubleshooter</h2>
   <div class="rule"></div>
   <p class="lead">No jargon, no scrolling through fixes. Whether you're watching, maintaining, or developing — tell it what you're seeing and it walks you to the likely cause.</p>
   <div class="trouble" id="tsbox" role="group" aria-label="Guided troubleshooter">
@@ -1523,12 +1523,12 @@ GROUP BY field ORDER BY count DESC;</code></pre>
 
 <!-- ================= PLAYGROUND ================= -->
 <section id="playground" class="z-tech">
-  <h2><span class="tag">PLAYGROUND</span>11. 🧪 Playground</h2>
+  <h2><span class="tag">PLAYGROUND</span>10. 🧪 Playground</h2>
   <div class="rule"></div>
   <p class="lead">Everything here runs the pipeline's real formulas, live in your browser. Nothing is sent anywhere.</p>
 
   <div class="subtopic" id="pg-convert" style="border-top:none;padding-top:0;margin-top:8px">
-  <h3>11.1 Conversion · raw → real (motion values)</h3>
+  <h3>10.1 Conversion · raw → real (motion values)</h3>
   <div class="tool">
     <h4>Stations 3–4 — independent inputs per field</h4>
     <p style="font-size:13.5px;color:var(--dim)">Valid raw range for all four: <b>−32767 … 32767</b> (the only values the hardware can produce). Type anything outside it and the pipeline sets the value to <b>null + warn</b> — then Station 6 heals it from the last good value.</p>
@@ -1542,7 +1542,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   </div>
 
   <div class="subtopic" id="pg-temp">
-  <h3>11.2 Conversion · temperatures</h3>
+  <h3>10.2 Conversion · temperatures</h3>
   <div class="tool">
     <h4>Station 5 — two different recipes</h4>
     <p style="font-size:13.5px;color:var(--dim)"><b>IGBT:</b> valid raw <b>16308 … 28480</b> (the 32-point calibration table; interpolated between points). <b>Motor:</b> valid raw <b>10000 … 20000</b> (linear: 11446 → 30 °C, 16000 → 100 °C). Outside the range, the converter refuses to guess: <b>null + warn → healed</b> at Station 6.</p>
@@ -1554,7 +1554,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   </div>
 
   <div class="subtopic" id="pg-frame">
-  <h3>11.3 Frame tester</h3>
+  <h3>10.3 Frame tester</h3>
   <div class="tool">
     <h4>Stations 1–8 — paste a frame, get the verdict</h4>
     <p style="font-size:13.5px;color:var(--dim)">Faithful simulation: timestamp rules, structure checks, conversion, healing (demo snapshot = a healthy idle car), flag and bitmask validation. Output = the stored row + the log entries it would generate.</p>
@@ -1578,7 +1578,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   </div>
 
   <div class="subtopic" id="pg-bits">
-  <h3>11.4 Bitmask builder</h3>
+  <h3>10.4 Bitmask builder</h3>
   <div class="tool">
     <h4>One number, sixteen switches</h4>
     <p style="font-size:13.5px;color:var(--dim)">Click bits to see how a single number encodes multiple faults at once — exactly what Grafana decodes on the dashboard (<a href="#bitmasks">how</a>). <code>err</code> and <code>warn</code> are <b>independent</b> 16-bit masks, each with its own dictionary (migration V3) — build either below.</p>
@@ -1592,14 +1592,14 @@ GROUP BY field ORDER BY count DESC;</code></pre>
     <div class="bits warn" id="bitrow-warn"></div>
     <div class="bitout">warn = <span class="val" id="bitval-warn" style="color:var(--warnc)">0</span></div>
     <div class="bitlist warn" id="bitlist-warn">No bits set — no active warnings.</div>
-    <a class="pgbtn" href="#bitmasks">📖 See the full err &amp; warn bit dictionaries → 8.5.1 Fault decoding</a>
+    <a class="pgbtn" href="#bitmasks">📖 See the full err &amp; warn bit dictionaries → 7.5.1 Fault decoding</a>
   </div>
   </div>
 </section>
 
 <!-- ================= REFERENCE ================= -->
 <section id="glossary" class="z-ref">
-  <h2><span class="tag">REFERENCE</span>12. Glossary</h2>
+  <h2><span class="tag">REFERENCE</span>11. Glossary</h2>
   <div class="rule"></div>
   <div class="tablewrap"><table>
     <tr><td><b>ESP32</b></td><td>Small Wi-Fi microcontroller; one sends from the car, one receives and publishes.</td></tr>
@@ -1626,13 +1626,13 @@ GROUP BY field ORDER BY count DESC;</code></pre>
 
 <!-- ================= REFERENCE · PERMISSIONS ================= -->
 <section id="permissions" class="z-ref">
-  <h2><span class="tag">REFERENCE</span>13. Permissions &amp; access</h2>
+  <h2><span class="tag">REFERENCE</span>12. Permissions &amp; access</h2>
   <div class="rule"></div>
   <p class="lead">TelemeTuna is open to <b>watch</b> and locked down to <b>change</b>. Here is exactly who can do what.</p>
   <div class="note green"><b>The three rules in one breath:</b> &#9312; <b>anyone</b> can watch the dashboards (Grafana is anonymous — no login). &#9313; Only <b>developers</b> get a login to <i>edit</i> dashboards, and they do it on their <b>local dev stack first</b>. &#9314; Running the cloud server is split into <b>InstanceController</b> (start/stop only) and <b>Operator</b> (full ops), with <b>Admin</b> above both — all granted per-person by the org admin.</div>
 
   <div class="subtopic" id="perm-aws">
-  <h3>13.1 AWS roles (granted by the org admin via SSO)</h3>
+  <h3>12.1 AWS roles (granted by the org admin via SSO)</h3>
   <div class="tablewrap"><table>
     <tr><th>Role</th><th>Sign in</th><th>What it can do</th><th>Typically</th></tr>
     <tr><td><b>Viewer</b></td><td><i>none needed to watch</i></td><td>Read-only AWS console view. <b>You don't even need this to watch dashboards.</b></td><td>most of the team</td></tr>
@@ -1644,7 +1644,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   </div>
 
   <div class="subtopic" id="perm-matrix">
-  <h3>13.2 Capability matrix</h3>
+  <h3>12.2 Capability matrix</h3>
   <div class="tablewrap"><table>
     <tr><th>Capability</th><th>Viewer</th><th>InstanceController</th><th>Operator</th><th>Admin</th></tr>
     <tr><td>Watch Grafana dashboards</td><td class="c-ok">&#10003; *</td><td class="c-ok">&#10003;</td><td class="c-ok">&#10003;</td><td class="c-ok">&#10003;</td></tr>
@@ -1658,7 +1658,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   </div>
 
   <div class="subtopic" id="perm-app">
-  <h3>13.3 Application logins (separate from AWS)</h3>
+  <h3>12.3 Application logins (separate from AWS)</h3>
   <p>These live in <code>.env</code> (or SSM in production) and are independent of the AWS roles above:</p>
   <div class="tablewrap"><table>
     <tr><th>Surface</th><th>Login?</th><th>Who gets it</th></tr>
@@ -1671,7 +1671,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
   </div>
 
   <div class="subtopic" id="perm-edit">
-  <h3>13.4 Editing dashboards — local dev first</h3>
+  <h3>12.4 Editing dashboards — local dev first</h3>
   <div class="note"><b>Never live-edit production Grafana.</b> Grafana re-provisions its dashboards from the repo on <i>every</i> start, so a change made directly in production is lost on the next rebuild. The safe workflow keeps it versioned in git:</div>
   <ol>
     <li>Bring up your <b>local dev stack</b> (<code>docker compose up -d</code>) and open Grafana at <code>localhost:3001</code>.</li>
@@ -1685,17 +1685,17 @@ GROUP BY field ORDER BY count DESC;</code></pre>
 
 <!-- ================= REFERENCE · CHANGELOG ================= -->
 <section id="changelog" class="z-ref">
-  <h2><span class="tag">REFERENCE</span>14. Changelog</h2>
+  <h2><span class="tag">REFERENCE</span>13. Changelog</h2>
   <div class="rule"></div>
   <p class="lead">TelemeTuna follows <a href="https://semver.org/">semantic versioning</a> (<code>MAJOR.MINOR.PATCH</code>) — new capability bumps the minor, breaking changes the major, fixes the patch.</p>
 
   <div class="card" style="border-color:var(--tuna)">
     <h4>v1.1 — Cloud deployment &amp; operations <span class="pill ok">current</span></h4>
     <ul>
-      <li><b>Cloud via Terraform.</b> One <code>terraform apply</code> builds the whole AWS server — EC2, a static Elastic IP, an encrypted EBS data disk, a firewall scoped to your IP, and a self-configuring first-boot script. Split into <code>network</code>/<code>secrets</code>/<code>iam</code>/<code>compute</code> modules (<a href="#infra">§9</a>).</li>
+      <li><b>Cloud via Terraform.</b> One <code>terraform apply</code> builds the whole AWS server — EC2, a static Elastic IP, an encrypted EBS data disk, a firewall scoped to your IP, and a self-configuring first-boot script. Split into <code>network</code>/<code>secrets</code>/<code>iam</code>/<code>compute</code> modules (<a href="#infra">§8</a>).</li>
       <li><b>Secrets via SSM Parameter Store.</b> Production passwords live in SSM (<code>SecureString</code>) and are written into the instance <code>.env</code> at boot — production no longer depends on <code>.env.example</code>.</li>
       <li><b>No-SSH administration.</b> Shell access is SSM Session Manager only (no port 22); IMDSv2 required; a least-privilege IAM role that reads only its own seven secrets.</li>
-      <li><b><code>tuna-*</code> maintainer shortcuts.</b> Cross-platform setup plus friendly <code>tuna-start</code>/<code>tuna-stop</code>/<code>tuna-health</code>/<code>tuna-doctor</code>/<code>tuna-ssm</code>/<code>tuna-logs</code> commands (<a href="#maintenance">§7</a>).</li>
+      <li><b><code>tuna-*</code> maintainer shortcuts.</b> Cross-platform setup plus friendly <code>tuna-start</code>/<code>tuna-stop</code>/<code>tuna-health</code>/<code>tuna-doctor</code>/<code>tuna-ssm</code>/<code>tuna-logs</code> commands (<a href="#maintenance">§6</a>).</li>
       <li><b>Production compose by default.</b> The external <code>postgres_data</code> volume (bound to the EBS disk on the cloud box) means <code>down -v</code> can't wipe the database; Mosquitto now self-recovers via <code>restart: unless-stopped</code>.</li>
       <li><b>Backward compatible</b> — the local Docker workflow is unchanged from v1.0.</li>
     </ul>
@@ -1713,7 +1713,7 @@ GROUP BY field ORDER BY count DESC;</code></pre>
 </section>
 
 <section id="contact" class="z-ref">
-  <h2><span class="tag">REFERENCE</span>15. Repository and contact</h2>
+  <h2><span class="tag">REFERENCE</span>14. Repository and contact</h2>
   <div class="rule"></div>
   <div class="cards">
     <div class="card" style="border-color:var(--tuna)">
@@ -2042,7 +2042,7 @@ document.querySelectorAll('.gf').forEach(gf=>{
   r_setup_flyway:{title:"Flyway shows “exited”",status:"ok",who:["you"],
     body:"That's success, not a failure — Flyway builds the schema once and quits. Confirm with <code>docker compose logs flyway</code>."},
   r_cloud_auth:{title:"A tuna command says I'm not authorized",status:"bad",who:["you"],
-    body:"A profile only authorizes a role you've actually been assigned. SSM commands (<code>tuna-ps</code> / <code>tuna-logs</code> / <code>tuna-ssm</code>) need an SSM-capable tier (<code>op-tuna</code> / <code>ad-tuna</code>) and the instance running. Need a role? Contact your org admin (<a href=\"#permissions\">§13</a>)."},
+    body:"A profile only authorizes a role you've actually been assigned. SSM commands (<code>tuna-ps</code> / <code>tuna-logs</code> / <code>tuna-ssm</code>) need an SSM-capable tier (<code>op-tuna</code> / <code>ad-tuna</code>) and the instance running. Need a role? Contact your org admin (<a href=\"#permissions\">§12</a>)."},
   r_cloud_creds:{title:"terraform apply fails on credentials",status:"bad",who:["you"],
     body:"Sign in first with <code>tuna-login-op</code> (= <code>aws sso login --profile op-tuna</code>). Make sure the profile's account and region match the Terraform <code>aws_region</code>."},
   r_cloud_boot:{title:"Server's up but Grafana won't load for a few minutes",status:"ok",who:["you"],
